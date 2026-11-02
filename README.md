@@ -17,6 +17,9 @@ quando un vino va bevuto.
   dalla stampante etichette (automazione) o dal browser.
 - **Finestra di beva**: le bottiglie da bere presto o oltre la finestra sono
   evidenziate; ogni mattina alle 10 arriva una notifica per quelle nuove.
+- **Etichette lette con l'AI** (Gemini, chiave gratuita): fotografi l'etichetta e
+  si compilano nome, produttore, annata, tipo, zona, vitigno, finestra di beva,
+  descrizione e abbinamenti; oppure scrivi il nome e "Completa dal nome".
 - **Storico** di bottiglie bevute, regalate, rotte… con "Rimetti" per gli errori.
 
 ## Installazione (HACS)
@@ -25,7 +28,8 @@ quando un vino va bevuto.
    tipo **Integrazione**.
 2. Scarica **TaponBon** e **riavvia Home Assistant**.
 3. **Impostazioni → Dispositivi e servizi → Aggiungi integrazione → TaponBon**.
-4. In una dashboard aggiungi la scheda:
+4. Facoltativo: **Configura** → incolla la chiave Gemini (gratis su aistudio.google.com).
+5. In una dashboard aggiungi la scheda:
 
    ```yaml
    type: custom:taponbon-card

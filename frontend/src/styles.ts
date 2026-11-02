@@ -195,6 +195,15 @@ export const sharedStyles = css`
   .field.wide {
     grid-column: 1 / -1;
   }
+  .form > *,
+  .field {
+    min-width: 0;
+  }
+  .field input,
+  .field textarea {
+    width: 100%;
+    min-width: 0;
+  }
   .field input,
   .field textarea,
   .field select {

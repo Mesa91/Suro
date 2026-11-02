@@ -1,4 +1,4 @@
-import { LitElement, html, nothing } from "lit";
+import { LitElement, html, css, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { Bottle, Snapshot, WINE_FIELDS } from "./types";
 import { sharedStyles } from "./styles";
@@ -52,8 +52,121 @@ export class AddDialog extends LitElement {
   @state() private _values: Record<string, any> = { type: "red" };
   @state() private _quantity = 1;
   @state() private _busy = false;
+  @state() private _reading = "";
 
-  static styles = sharedStyles;
+  static styles = [
+    sharedStyles,
+    css`
+      .ai {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 10px;
+        align-items: center;
+        padding: 14px;
+        margin-bottom: 16px;
+        border-radius: 16px;
+        border: 1px solid rgba(216, 180, 106, 0.25);
+        background:
+          radial-gradient(120% 140% at 0% 0%, rgba(216, 180, 106, 0.12), transparent 55%),
+          rgba(255, 255, 255, 0.025);
+      }
+      .ai-title {
+        font-weight: 600;
+      }
+      .ai .note {
+        margin-top: 2px;
+      }
+      .ai-buttons {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+      }
+      .reading {
+        grid-column: 1 / -1;
+        height: 3px;
+        border-radius: 2px;
+        background: linear-gradient(90deg, transparent, var(--tb-gold), transparent);
+        background-size: 40% 100%;
+        background-repeat: no-repeat;
+        animation: tb-scan 1.1s linear infinite;
+      }
+      @keyframes tb-scan {
+        from { background-position: -40% 0; }
+        to { background-position: 140% 0; }
+      }
+      input[type="file"] {
+        display: none;
+      }
+    `,
+  ];
+
+  private _merge(wine: Record<string, any>, overwrite: boolean) {
+    const next = { ...this._values };
+    for (const [k, v] of Object.entries(wine)) {
+      if (v === null || v === undefined || v === "") continue;
+      if (overwrite || next[k] === undefined || next[k] === null || String(next[k]).trim() === "") next[k] = v;
+    }
+    this._values = next;
+  }
+
+  private async _photo(e: Event) {
+    const input = e.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = "";
+    if (!file) return;
+    this._reading = "Leggo l'etichetta…";
+    try {
+      const image = await shrink(file);
+      const res = await this.card.ws({ type: "taponbon/ai_recognize", image });
+      this._merge(res.wine, true);
+      this.card.toast("Etichetta letta: controlla i dati e aggiungi");
+    } catch {
+      /* the card already showed the error */
+    } finally {
+      this._reading = "";
+    }
+  }
+
+  private async _fill() {
+    if (!String(this._values.name || "").trim()) {
+      this.card.toast("Scrivi almeno il nome del vino");
+      return;
+    }
+    this._reading = "Completo i dati…";
+    try {
+      const res = await this.card.ws({ type: "taponbon/ai_fill", wine: this._values });
+      this._merge(res.wine, false);
+      this.card.toast("Dati completati");
+    } catch {
+      /* shown by the card */
+    } finally {
+      this._reading = "";
+    }
+  }
+
+  private _renderAI() {
+    if (!this.data.ai) {
+      return html`<div class="ai"><div>
+        <div class="ai-title">✨ Compilazione automatica</div>
+        <div class="note">Aggiungi una chiave Gemini (gratuita) in Impostazioni → Dispositivi e servizi → TaponBon → Configura per leggere le etichette con una foto.</div>
+      </div></div>`;
+    }
+    return html`<div class="ai">
+      <div>
+        <div class="ai-title">✨ Compilazione automatica</div>
+        <div class="note">${this._reading || "Fotografa l'etichetta, oppure scrivi il nome e lascia fare all'AI."}</div>
+      </div>
+      <div class="ai-buttons">
+        <label class="btn primary small" style="cursor:pointer">
+          📷 Foto etichetta
+          <input type="file" accept="image/*" capture="environment" ?disabled=${!!this._reading} @change=${this._photo} />
+        </label>
+        <button class="btn small" ?disabled=${!!this._reading} @click=${this._fill}>Completa dal nome</button>
+      </div>
+      ${this._reading ? html`<div class="reading"></div>` : nothing}
+    </div>`;
+  }
 
   private _close() {
     this.dispatchEvent(new CustomEvent("close"));
@@ -108,6 +221,7 @@ export class AddDialog extends LitElement {
             <button class="close" @click=${this._close}>✕</button>
           </div>
           <div class="dialog-body">
+            ${this._renderAI()}
             ${renderWineForm(this.data, this._values, (k, v) => (this._values = { ...this._values, [k]: v }))}
             <div class="form" style="margin-top:10px">
               <label class="field">
@@ -130,5 +244,23 @@ export class AddDialog extends LitElement {
         </div>
       </div>
     `;
+  }
+}
+
+/** Downscale a photo to keep the upload small (Gemini reads 1280 px fine). */
+async function shrink(file: File, max = 1280): Promise<string> {
+  const url = URL.createObjectURL(file);
+  try {
+    const img = new Image();
+    img.src = url;
+    await img.decode();
+    const scale = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(img.naturalWidth * scale);
+    canvas.height = Math.round(img.naturalHeight * scale);
+    canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
+    return canvas.toDataURL("image/jpeg", 0.85);
+  } finally {
+    URL.revokeObjectURL(url);
   }
 }

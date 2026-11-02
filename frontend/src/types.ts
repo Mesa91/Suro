@@ -30,6 +30,9 @@ export interface Bottle {
   drink_until?: number | null;
   price?: number | null;
   notes?: string;
+  alcohol?: string;
+  description?: string;
+  food_pairings?: string;
   rack_id: string | null;
   row: number | null;
   col: number | null;
@@ -50,6 +53,7 @@ export interface Snapshot {
   types: Record<string, { label: string; color: string }>;
   reasons: Record<string, string>;
   history_count: number;
+  ai: boolean;
 }
 
 export interface CardConfig {
@@ -68,8 +72,11 @@ export const WINE_FIELDS: { key: keyof Bottle; label: string; kind: "text" | "nu
   { key: "grape", label: "Vitigno", kind: "text" },
   { key: "drink_from", label: "Da bere dal", kind: "year" },
   { key: "drink_until", label: "Da bere entro il", kind: "year" },
+  { key: "alcohol", label: "Gradazione", kind: "text" },
   { key: "price", label: "Prezzo (€)", kind: "number" },
-  { key: "notes", label: "Note", kind: "area" },
+  { key: "food_pairings", label: "Abbinamenti", kind: "area" },
+  { key: "description", label: "Descrizione", kind: "area" },
+  { key: "notes", label: "Note personali", kind: "area" },
 ];
 
 export function wineTitle(b: { name?: string; vintage?: number | null }): string {

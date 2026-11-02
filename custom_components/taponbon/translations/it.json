@@ -59,5 +59,25 @@
         }
       }
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Opzioni di TaponBon",
+        "description": "Per leggere le etichette con l'intelligenza artificiale serve una chiave Gemini: la crei gratis su aistudio.google.com → Get API key.",
+        "data": {
+          "gemini_api_key": "Chiave API Gemini",
+          "gemini_model": "Modello Gemini"
+        },
+        "data_description": {
+          "gemini_model": "Lascia gemini-2.5-flash se non sai quale scegliere."
+        }
+      }
+    },
+    "error": {
+      "invalid_key": "La chiave non è valida.",
+      "bad_model": "Questo modello non esiste.",
+      "cannot_connect": "Impossibile contattare Gemini: controlla la connessione."
+    }
   }
 }

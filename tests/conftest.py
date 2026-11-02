@@ -39,7 +39,7 @@ _stub("homeassistant.helpers.storage", Store=FakeStore)
 pkg = types.ModuleType("tb")
 pkg.__path__ = [str(ROOT)]
 sys.modules["tb"] = pkg
-for name in ("const", "logic", "labels", "store"):
+for name in ("const", "logic", "labels", "store", "ai"):
     spec = importlib.util.spec_from_file_location(f"tb.{name}", ROOT / f"{name}.py")
     mod = importlib.util.module_from_spec(spec)
     sys.modules[f"tb.{name}"] = mod

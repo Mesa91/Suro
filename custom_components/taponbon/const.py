@@ -8,7 +8,7 @@ STORAGE_VERSION = 1
 
 # Card: served from the integration folder and loaded on every dashboard.
 CARD_URL = "/taponbon/taponbon-card.js"
-CARD_VERSION = "20261102f"  # bump with every frontend build to bust the cache
+CARD_VERSION = "20261102g"  # bump with every frontend build to bust the cache
 
 # Wine types: key -> (Italian label, colour used on the rack).
 WINE_TYPES: dict[str, tuple[str, str]] = {
@@ -47,3 +47,7 @@ EVENT_DRINK_ALERT = f"{DOMAIN}_drink_alert"
 
 ALERT_HOUR = 10
 SCAN_DEBOUNCE_SECONDS = 15
+
+# Options (config entry): Gemini.
+CONF_GEMINI_KEY = "gemini_api_key"
+CONF_GEMINI_MODEL = "gemini_model"

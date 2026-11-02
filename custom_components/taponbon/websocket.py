@@ -10,7 +10,7 @@ import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 
-from . import core, labels
+from . import ai, core, labels
 from .const import (
     CONF_ALERT_DAYS,
     CONF_AUTO_LABELS,
@@ -27,6 +27,7 @@ def async_register(hass: HomeAssistant) -> None:
         ws_subscribe, ws_get_data, ws_add_bottles, ws_update_bottle, ws_move_bottle,
         ws_remove_bottle, ws_get_history, ws_restore, ws_save_rack, ws_delete_rack,
         ws_get_label, ws_request_label, ws_take_code, ws_update_settings, ws_get_alerts,
+        ws_ai_recognize, ws_ai_fill,
     ):
         websocket_api.async_register_command(hass, handler)
 
@@ -54,7 +55,57 @@ def _snapshot(hass: HomeAssistant) -> dict[str, Any]:
         "types": {k: {"label": v[0], "color": v[1]} for k, v in WINE_TYPES.items()},
         "reasons": REMOVAL_REASONS,
         "history_count": len(store.history),
+        "ai": bool(_gemini(hass)[0]),
     }
+
+
+def _gemini(hass: HomeAssistant) -> tuple[str, str]:
+    from .const import CONF_GEMINI_KEY, CONF_GEMINI_MODEL, DOMAIN
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    options = entries[0].options if entries else {}
+    return (options.get(CONF_GEMINI_KEY) or "").strip(), (options.get(CONF_GEMINI_MODEL) or ai.DEFAULT_MODEL).strip()
+
+
+async def _ai_call(hass, connection, msg, prompt: str, images: list[str]) -> None:
+    from homeassistant.helpers.aiohttp_client import async_get_clientsession
+
+    key, model = _gemini(hass)
+    if not key:
+        connection.send_error(msg["id"], "no_ai", "Aggiungi la chiave Gemini nelle opzioni di TaponBon "
+                              "(Impostazioni → Dispositivi e servizi → TaponBon → Configura).")
+        return
+    try:
+        wine = await ai.async_generate(async_get_clientsession(hass), key, model, prompt, images)
+    except ai.AIError as err:
+        connection.send_error(msg["id"], "ai_error", str(err))
+        return
+    connection.send_result(msg["id"], {"wine": wine})
+
+
+@websocket_api.websocket_command({
+    vol.Required("type"): "taponbon/ai_recognize",
+    vol.Required("image"): str,
+    vol.Optional("back_image"): str,
+})
+@websocket_api.async_response
+async def ws_ai_recognize(hass, connection, msg) -> None:
+    """Read a label photo (and optionally the back label)."""
+    images = [msg["image"]] + ([msg["back_image"]] if msg.get("back_image") else [])
+    await _ai_call(hass, connection, msg, ai.label_prompt(), images)
+
+
+@websocket_api.websocket_command({
+    vol.Required("type"): "taponbon/ai_fill",
+    vol.Required("wine"): dict,
+})
+@websocket_api.async_response
+async def ws_ai_fill(hass, connection, msg) -> None:
+    """Complete a wine from what is already known (name, producer, vintage…)."""
+    if not str(msg["wine"].get("name") or "").strip():
+        connection.send_error(msg["id"], "no_name", "Scrivi almeno il nome del vino")
+        return
+    await _ai_call(hass, connection, msg, ai.fill_prompt(msg["wine"]), [])
 
 
 @websocket_api.websocket_command({vol.Required("type"): "taponbon/subscribe"})
