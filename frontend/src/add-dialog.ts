@@ -53,13 +53,15 @@ export class AddDialog extends LitElement {
   @state() private _quantity = 1;
   @state() private _busy = false;
   @state() private _reading = "";
+  @state() private _front = "";
+  @state() private _back = "";
 
   static styles = [
     sharedStyles,
     css`
       .ai {
         display: grid;
-        grid-template-columns: 1fr auto;
+        grid-template-columns: auto 1fr;
         gap: 10px;
         align-items: center;
         padding: 14px;
@@ -76,11 +78,64 @@ export class AddDialog extends LitElement {
       .ai .note {
         margin-top: 2px;
       }
-      .ai-buttons {
+      .slots {
         display: flex;
-        gap: 6px;
-        flex-wrap: wrap;
-        justify-content: flex-end;
+        gap: 8px;
+      }
+      .slot {
+        position: relative;
+        width: 74px;
+        height: 96px;
+        border-radius: 12px;
+        border: 1px dashed rgba(216, 180, 106, 0.45);
+        background: rgba(0, 0, 0, 0.25);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        cursor: pointer;
+        overflow: hidden;
+        transition: border-color 0.15s, background 0.15s;
+      }
+      .slot:hover {
+        border-color: var(--tb-gold);
+        background: rgba(216, 180, 106, 0.08);
+      }
+      .slot.has {
+        border-style: solid;
+      }
+      .slot.off {
+        opacity: 0.4;
+        cursor: default;
+      }
+      .slot img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .slot .plus {
+        font-size: 1.4em;
+      }
+      .slot-label {
+        position: relative;
+        font-size: 0.72em;
+        text-align: center;
+        line-height: 1.15;
+        padding: 2px 6px;
+        border-radius: 8px;
+      }
+      .slot.has .slot-label {
+        margin-top: auto;
+        margin-bottom: 6px;
+        background: rgba(0, 0, 0, 0.65);
+      }
+      .slot-label small {
+        display: block;
+        color: var(--tb-ink-2);
+        font-size: 0.9em;
       }
       .reading {
         grid-column: 1 / -1;
@@ -110,22 +165,46 @@ export class AddDialog extends LitElement {
     this._values = next;
   }
 
-  private async _photo(e: Event) {
+  private async _photo(e: Event, side: "front" | "back") {
     const input = e.target as HTMLInputElement;
     const file = input.files?.[0];
     input.value = "";
     if (!file) return;
-    this._reading = "Leggo l'etichetta…";
+    const image = await shrink(file);
+    if (side === "front") this._front = image;
+    else this._back = image;
+    if (this._front) await this._read();
+  }
+
+  /** Read whatever photos are there (front, plus back if given). */
+  private async _read() {
+    this._reading = this._back ? "Leggo fronte e retro…" : "Leggo l'etichetta…";
     try {
-      const image = await shrink(file);
-      const res = await this.card.ws({ type: "taponbon/ai_recognize", image });
+      const res = await this.card.ws({
+        type: "taponbon/ai_recognize",
+        image: this._front,
+        ...(this._back ? { back_image: this._back } : {}),
+      });
       this._merge(res.wine, true);
-      this.card.toast("Etichetta letta: controlla i dati e aggiungi");
+      this.card.toast(this._back ? "Fronte e retro letti: controlla i dati" : "Etichetta letta: controlla i dati");
     } catch {
       /* the card already showed the error */
     } finally {
       this._reading = "";
     }
+  }
+
+  private _slot(side: "front" | "back") {
+    const image = side === "front" ? this._front : this._back;
+    const label = side === "front" ? "Fronte" : "Retro";
+    const disabled = !!this._reading || (side === "back" && !this._front);
+    return html`<label class="slot ${image ? "has" : ""} ${disabled ? "off" : ""}"
+        title=${side === "back" && !this._front ? "Prima fotografa il fronte" : `Foto ${label.toLowerCase()}`}>
+      ${image ? html`<img src=${image} alt=${label} />` : html`<span class="plus">📷</span>`}
+      <span class="slot-label">${label}${side === "back" && !image ? html`<small>facoltativo</small>` : nothing}</span>
+      <input type="file" accept="image/*" capture="environment" ?disabled=${disabled}
+        @change=${(e: Event) => this._photo(e, side)} />
+    </label>`;
   }
 
   private async _fill() {
@@ -153,16 +232,14 @@ export class AddDialog extends LitElement {
       </div></div>`;
     }
     return html`<div class="ai">
-      <div>
+      <div class="slots">${this._slot("front")}${this._slot("back")}</div>
+      <div class="ai-side">
         <div class="ai-title">✨ Compilazione automatica</div>
-        <div class="note">${this._reading || "Fotografa l'etichetta, oppure scrivi il nome e lascia fare all'AI."}</div>
-      </div>
-      <div class="ai-buttons">
-        <label class="btn primary small" style="cursor:pointer">
-          📷 Foto etichetta
-          <input type="file" accept="image/*" capture="environment" ?disabled=${!!this._reading} @change=${this._photo} />
-        </label>
-        <button class="btn small" ?disabled=${!!this._reading} @click=${this._fill}>Completa dal nome</button>
+        <div class="note">${this._reading ||
+          (this._front
+            ? "Fatto. Se in etichetta mancava qualcosa, aggiungi il retro."
+            : "Fotografa il fronte dell'etichetta; il retro è facoltativo.")}</div>
+        <button class="btn small" style="margin-top:8px" ?disabled=${!!this._reading} @click=${this._fill}>Oppure completa dal nome</button>
       </div>
       ${this._reading ? html`<div class="reading"></div>` : nothing}
     </div>`;

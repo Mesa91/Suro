@@ -35,7 +35,8 @@ FIELDS_DOC = """\
 
 def label_prompt(today: date | None = None) -> str:
     year = (today or date.today()).year
-    return f"""Sei un sommelier esperto. Guarda la foto dell'etichetta di questo vino e
+    return f"""Sei un sommelier esperto. Guarda la foto dell'etichetta di questo vino (se
+le foto sono due, la prima è il fronte e la seconda il retro: usale entrambe) e
 restituisci SOLO un oggetto JSON con questi campi:
 {FIELDS_DOC}
 Regole: quello che leggi in etichetta ha la precedenza; quello che non si legge

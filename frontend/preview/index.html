@@ -64,7 +64,7 @@
       "taponbon/update_settings": (m) => { if ("auto_labels" in m) db.settings.auto_labels = m.auto_labels; if ("alert_days" in m) db.settings.alert_days = m.alert_days; changed(); return {}; },
       "taponbon/get_label": () => ({ code: "k7m2xq9p", png_base64: window.LABEL_PNG || "" }),
       "taponbon/request_label": () => ({}),
-      "taponbon/ai_recognize": () => ({ wine: { name: "Rosé di Morgante", producer: "Morgante", vintage: 2023, type: "rose",
+      "taponbon/ai_recognize": (m) => (window.AI_CALLS = (window.AI_CALLS || []).concat([{ back: !!m.back_image }]), { wine: { name: "Rosé di Morgante", producer: "Morgante", vintage: 2023, type: "rose",
         region: "Sicilia DOC", country: "Italia", grape: "Nero d'Avola", alcohol: "12,5%", drink_from: 2024, drink_until: 2026,
         description: "Rosato tenue e floreale, con note di fragolina e agrumi. Fresco e sapido.", food_pairings: "crudi di pesce, couscous, pizza bianca" } }),
       "taponbon/ai_fill": (m) => ({ wine: { producer: "Brezza", region: "Barolo DOCG", country: "Italia", grape: "Nebbiolo", drink_from: 2024, drink_until: 2036 } }),
