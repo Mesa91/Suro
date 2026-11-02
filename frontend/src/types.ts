@@ -3,7 +3,17 @@ export interface Rack {
   name: string;
   rows: number;
   cols: number;
+  /** Bottles per shelf, top to bottom. */
+  shelves: number[];
   order: number;
+}
+
+export function shelvesOf(rack: Rack): number[] {
+  return rack.shelves?.length ? rack.shelves : Array(rack.rows).fill(rack.cols);
+}
+
+export function capacityOf(rack: Rack): number {
+  return shelvesOf(rack).reduce((a, b) => a + b, 0);
 }
 
 export interface Bottle {
@@ -69,7 +79,7 @@ export function wineTitle(b: { name?: string; vintage?: number | null }): string
 export function locationText(b: Bottle, racks: Rack[]): string {
   const rack = racks.find((r) => r.id === b.rack_id);
   if (!rack || b.row == null || b.col == null) return "Da sistemare";
-  return `${rack.name} · fila ${b.row + 1}, posto ${b.col + 1}`;
+  return `${rack.name} · mensola ${b.row + 1}, posto ${b.col + 1}`;
 }
 
 export function windowText(b: Bottle): string {

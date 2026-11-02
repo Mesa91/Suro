@@ -22,7 +22,7 @@
       dessert: { label: "Dolce", color: "#d9a03a" } };
     const reasons = { drank: "Bevuta", gifted: "Regalata", broken: "Rotta", spoiled: "Andata a male", deleted: "Eliminata", other: "Altro" };
     let n = 0; const id = (p) => p + (++n);
-    const db = { racks: [{ id: "rack-a", name: "Scaffale", rows: 7, cols: 10, order: 0 }], bottles: [], history: [],
+    const db = { racks: [{ id: "rack-a", name: "Scaffale", rows: 7, cols: 10, shelves: [10, 10, 10, 10, 10, 10, 10], order: 0 }], bottles: [], history: [],
       settings: { auto_labels: true, alert_days: 180 } };
     const seed = [["Barolo Cannubi", "Brezza", 2016, "red", 2022, 2034, 3], ["Brunello di Montalcino", "Mastrojanni", 2015, "red", 2020, 2026, 2],
       ["Soave Classico", "Pieropan", 2019, "white", 2020, 2024, 1], ["Franciacorta Satèn", "Ca' del Bosco", null, "sparkling", null, 2027, 4],
@@ -38,7 +38,7 @@
     const subs = [];
     const changed = () => subs.forEach((cb) => cb(snap()));
     const free = (rack) => { const t = new Set(db.bottles.filter((b) => b.rack_id === rack.id).map((b) => b.row + ":" + b.col));
-      const out = []; for (let r = 0; r < rack.rows; r++) for (let c = 0; c < rack.cols; c++) if (!t.has(r + ":" + c)) out.push([r, c]); return out; };
+      const out = []; rack.shelves.forEach((n, r) => { for (let c = 0; c < n; c++) if (!t.has(r + ":" + c)) out.push([r, c]); }); return out; };
     const handlers = {
       "taponbon/add_bottles": (m) => { const rack = db.racks.find((r) => r.id === m.rack_id) || db.racks[0]; let slots = rack ? free(rack) : [];
         if (m.row != null) slots = slots.filter(([r, c]) => r > m.row || (r === m.row && c >= m.col)).concat(slots.filter(([r, c]) => r < m.row || (r === m.row && c < m.col)));
@@ -57,7 +57,8 @@
       "taponbon/restore": (m) => { const i = db.history.findIndex((h) => h.history_id === m.history_id); const [h] = db.history.splice(i, 1);
         db.bottles.push(h); changed(); return { bottle: h }; },
       "taponbon/save_rack": (m) => { let r = db.racks.find((x) => x.id === m.rack.id);
-        if (!r) { r = { id: id("rack-"), order: db.racks.length }; db.racks.push(r); } Object.assign(r, { name: m.rack.name, rows: m.rack.rows, cols: m.rack.cols }); changed(); return { rack: r, displaced: 0 }; },
+        if (!r) { r = { id: id("rack-"), order: db.racks.length }; db.racks.push(r); } const sh = m.rack.shelves || Array(m.rack.rows || 5).fill(m.rack.cols || 8);
+        Object.assign(r, { name: m.rack.name, shelves: sh, rows: sh.length, cols: Math.max(...sh) }); changed(); return { rack: r, displaced: 0 }; },
       "taponbon/delete_rack": (m) => { db.racks = db.racks.filter((r) => r.id !== m.rack_id);
         db.bottles.forEach((b) => { if (b.rack_id === m.rack_id) Object.assign(b, { rack_id: null, row: null, col: null }); }); changed(); return { displaced: 0 }; },
       "taponbon/update_settings": (m) => { if ("auto_labels" in m) db.settings.auto_labels = m.auto_labels; if ("alert_days" in m) db.settings.alert_days = m.alert_days; changed(); return {}; },

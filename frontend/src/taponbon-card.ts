@@ -1,6 +1,6 @@
 import { LitElement, html, css, nothing, PropertyValues } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
-import { Bottle, CardConfig, HistoryEntry, Rack, Snapshot, matches, wineTitle } from "./types";
+import { Bottle, CardConfig, HistoryEntry, Rack, Snapshot, capacityOf, matches, shelvesOf, wineTitle } from "./types";
 import { sharedStyles } from "./styles";
 import { BOTTLE_DEFS, EMPTY_SVG, bottleSvg } from "./bottle";
 import "./bottle-dialog";
@@ -135,7 +135,7 @@ export class TaponBonCard extends LitElement {
 
   private _renderBody(d: Snapshot) {
     const total = d.bottles.length;
-    const capacity = d.racks.reduce((s, r) => s + r.rows * r.cols, 0);
+    const capacity = d.racks.reduce((s, r) => s + capacityOf(r), 0);
     const closing = d.bottles.filter((b) => b.alert === "closing").length;
     const past = d.bottles.filter((b) => b.alert === "past").length;
     const unplaced = d.bottles.filter((b) => !b.rack_id);
@@ -219,23 +219,25 @@ export class TaponBonCard extends LitElement {
   private _renderRack(d: Snapshot, rack: Rack) {
     const inRack = this._inRack(d, rack);
     const at = new Map(inRack.map((b) => [`${b.row}:${b.col}`, b]));
-    const cells = [];
-    for (let r = 0; r < rack.rows; r++) {
-      for (let c = 0; c < rack.cols; c++) {
-        const b = at.get(`${r}:${c}`);
-        const color = b ? d.types[b.type]?.color || "#888" : "";
-        cells.push(html`<button
-          class="cell ${b ? "full" : "free"} ${b && this._dims(b) ? "dim" : ""} ${b?.alert || ""} ${this._moving?.id === b?.id && b ? "moving" : ""}"
-          style=${b ? `--bottle:${color}` : ""}
-          title=${b ? `${wineTitle(b)}${b.producer ? ` · ${b.producer}` : ""}` : `Fila ${r + 1}, posto ${c + 1}: libero`}
-          @click=${() => this._onCell(rack, r, c, b)}
-        >${b ? bottleSvg(b.type, b.alert) : EMPTY_SVG}</button>`);
-      }
-    }
+    const shelves = shelvesOf(rack);
     return html`
       <div class="rack">
-        <div class="rack-head"><span>${rack.name}</span><span class="muted">${inRack.length}/${rack.rows * rack.cols}</span></div>
-        <div class="grid" style="grid-template-columns: repeat(${rack.cols}, minmax(0, 34px))">${cells}</div>
+        <div class="rack-head"><span>${rack.name}</span><span class="muted">${inRack.length}/${capacityOf(rack)}</span></div>
+        <div class="shelves">
+          ${shelves.map((n, r) => html`<div class="shelf">
+            <div class="grid" style="grid-template-columns: repeat(${n}, minmax(0, 34px))">
+              ${Array.from({ length: n }, (_, c) => {
+                const b = at.get(`${r}:${c}`);
+                return html`<button
+                  class="cell ${b ? "full" : "free"} ${b && this._dims(b) ? "dim" : ""} ${b && this._moving?.id === b.id ? "moving" : ""}"
+                  title=${b ? `${wineTitle(b)}${b.producer ? ` · ${b.producer}` : ""}` : `Mensola ${r + 1}, posto ${c + 1}: libero`}
+                  @click=${() => this._onCell(rack, r, c, b)}
+                >${b ? bottleSvg(b.type, b.alert) : EMPTY_SVG}</button>`;
+              })}
+            </div>
+            <div class="board"></div>
+          </div>`)}
+        </div>
       </div>
     `;
   }
@@ -367,9 +369,24 @@ export class TaponBonCard extends LitElement {
         color: #9b928a;
         font-variant-numeric: tabular-nums;
       }
+      .shelves {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+      .shelf {
+        position: relative;
+      }
+      .board {
+        height: 5px;
+        margin: 2px -6px 0;
+        border-radius: 2px;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.04) 60%, rgba(0, 0, 0, 0.4));
+        box-shadow: 0 6px 10px rgba(0, 0, 0, 0.35);
+      }
       .grid {
         display: grid;
-        gap: 14px 7px;
+        gap: 7px;
         justify-content: center;
       }
       .cell {
@@ -380,17 +397,6 @@ export class TaponBonCard extends LitElement {
         cursor: pointer;
         position: relative;
         transition: transform 0.18s ease, opacity 0.2s, filter 0.2s;
-      }
-      .cell::before {
-        /* the shelf the bottle stands on */
-        content: "";
-        position: absolute;
-        left: -4px;
-        right: -4px;
-        bottom: -7px;
-        height: 3px;
-        border-radius: 2px;
-        background: linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.04));
       }
       .cell svg {
         width: 100%;
@@ -464,10 +470,13 @@ export class TaponBonCard extends LitElement {
         left: 50%;
         bottom: 14px;
         transform: translateX(-50%);
-        background: rgba(0, 0, 0, 0.85);
-        color: #fff;
-        padding: 8px 14px;
-        border-radius: 18px;
+        background: rgba(20, 16, 17, 0.92);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(8px);
+        color: #f2ebe3;
+        padding: 10px 18px;
+        border-radius: 999px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
         font-size: 0.9em;
         z-index: 2;
       }

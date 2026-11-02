@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import Store
 
 from .const import DEFAULT_RACK, MAX_RACK_SIDE, STORAGE_KEY, STORAGE_VERSION, WINE_TYPES
-from .logic import new_code, new_id, occupied, plan_positions
+from .logic import new_code, new_id, occupied, plan_positions, rack_capacity, shelves_of, slot_exists
 
 # Wine fields a bottle carries; anything else sent by a client is ignored.
 WINE_FIELDS = {
@@ -60,7 +60,8 @@ class TaponBonStore:
         data = await self._store.async_load()
         if data is None:
             data = {
-                "racks": [{"id": "rack-a", "order": 0, **DEFAULT_RACK}],
+                "racks": [{"id": "rack-a", "order": 0, **DEFAULT_RACK,
+                           "shelves": [DEFAULT_RACK["cols"]] * DEFAULT_RACK["rows"]}],
                 "bottles": [],
                 "history": [],
                 "settings": {},
@@ -71,6 +72,9 @@ class TaponBonStore:
         self.data = data
         for key, default in (("racks", []), ("bottles", []), ("history", []), ("settings", {})):
             self.data.setdefault(key, default)
+        for rack in self.racks:
+            if not rack.get("shelves"):
+                rack["shelves"] = shelves_of(rack)
         if self._ensure_codes():
             # A code that only lived in memory would change at the next
             # restart, and its printed label would stop working.
@@ -191,7 +195,7 @@ class TaponBonStore:
             bottle.update(rack_id=None, row=None, col=None)
             return True
         rack = self.get_rack(rack_id)
-        if rack is None or row is None or col is None or not (0 <= row < rack["rows"] and 0 <= col < rack["cols"]):
+        if rack is None or not slot_exists(rack, row, col):
             return False
         other = self.bottle_at(rack_id, row, col)
         if other is not None and other is not bottle:
@@ -218,8 +222,7 @@ class TaponBonStore:
         bottle = {k: v for k, v in entry.items() if k not in ("history_id", "removed_at", "reason")}
         rack = self.get_rack(bottle.get("rack_id"))
         slot_ok = (
-            rack is not None and bottle.get("row") is not None and bottle.get("col") is not None
-            and bottle["row"] < rack["rows"] and bottle["col"] < rack["cols"]
+            rack is not None and slot_exists(rack, bottle.get("row"), bottle.get("col"))
             and self.bottle_at(rack["id"], bottle["row"], bottle["col"]) is None
         )
         if not slot_ok:
@@ -233,17 +236,21 @@ class TaponBonStore:
 
     def save_rack(self, rack: dict[str, Any]) -> tuple[dict[str, Any], int]:
         """Create or update a rack. Returns (rack, bottles moved to unplaced)."""
-        rows = max(1, min(MAX_RACK_SIDE, int(rack.get("rows") or 1)))
-        cols = max(1, min(MAX_RACK_SIDE, int(rack.get("cols") or 1)))
+        if isinstance(rack.get("shelves"), list) and rack["shelves"]:
+            shelves = [max(1, min(MAX_RACK_SIDE, int(n or 1))) for n in rack["shelves"][:MAX_RACK_SIDE]]
+        else:
+            shelves = [max(1, min(MAX_RACK_SIDE, int(rack.get("cols") or 1)))] * max(
+                1, min(MAX_RACK_SIDE, int(rack.get("rows") or 1))
+            )
         name = str(rack.get("name") or "Scaffale").strip()[:40] or "Scaffale"
         existing = self.get_rack(rack.get("id"))
         if existing is None:
             existing = {"id": new_id("rack-"), "order": len(self.racks)}
             self.racks.append(existing)
-        existing.update(name=name, rows=rows, cols=cols)
+        existing.update(name=name, shelves=shelves, rows=len(shelves), cols=max(shelves))
         displaced = 0
         for b in self.bottles:
-            if b.get("rack_id") == existing["id"] and (b["row"] >= rows or b["col"] >= cols):
+            if b.get("rack_id") == existing["id"] and not slot_exists(existing, b.get("row"), b.get("col")):
                 b.update(rack_id=None, row=None, col=None)
                 displaced += 1
         return existing, displaced
@@ -264,7 +271,7 @@ class TaponBonStore:
         return moved
 
     def capacity(self) -> int:
-        return sum(r["rows"] * r["cols"] for r in self.racks)
+        return sum(rack_capacity(r) for r in self.racks)
 
     def free_count(self) -> int:
-        return sum(r["rows"] * r["cols"] - len(occupied(self.bottles, r["id"])) for r in self.racks)
+        return sum(rack_capacity(r) - len(occupied(self.bottles, r["id"])) for r in self.racks)

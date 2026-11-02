@@ -2,6 +2,7 @@ import { LitElement, html, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { Bottle, Snapshot, WINE_FIELDS } from "./types";
 import { sharedStyles } from "./styles";
+import { BOTTLE_DEFS, bottleSvg } from "./bottle";
 
 /** Form for a wine: used to add bottles and to edit one. */
 export function renderWineForm(
@@ -90,13 +91,20 @@ export class AddDialog extends LitElement {
     const rack = this.data.racks.find((r) => r.id === this.rackId);
     const where =
       rack && this.row != null && this.col != null
-        ? `${rack.name}, fila ${this.row + 1}, posto ${this.col + 1}`
+        ? `${rack.name}, mensola ${this.row + 1}, posto ${this.col + 1}`
         : "nel primo posto libero";
     return html`
+      ${BOTTLE_DEFS}
       <div class="overlay" @click=${this._close}>
         <div class="dialog" @click=${(e: Event) => e.stopPropagation()}>
           <div class="dialog-head">
-            <div class="dialog-title">Aggiungi vino</div>
+            <div style="display:flex;gap:16px;align-items:flex-end">
+              <div style="width:34px;flex:none;filter:drop-shadow(0 8px 10px rgba(0,0,0,.55))">${bottleSvg(this._values.type || "red")}</div>
+              <div>
+                <div class="eyebrow">Nuovo in cantina</div>
+                <div class="dialog-title">${String(this._values.name || "").trim() || "Aggiungi vino"}</div>
+              </div>
+            </div>
             <button class="close" @click=${this._close}>✕</button>
           </div>
           <div class="dialog-body">
@@ -107,7 +115,7 @@ export class AddDialog extends LitElement {
                 <input type="number" min="1" max="100" .value=${String(this._quantity)}
                   @input=${(e: Event) => (this._quantity = Math.max(1, Math.min(100, Number((e.target as HTMLInputElement).value) || 1)))} />
               </label>
-              <div class="field">Dove<span style="color:var(--primary-text-color)">${where}${this._quantity > 1 ? " e i successivi" : ""}</span></div>
+              <div class="field">Dove<span style="color:var(--tb-ink);text-transform:none;letter-spacing:normal;font-size:1.3em">${where}${this._quantity > 1 ? " e i successivi" : ""}</span></div>
             </div>
             ${this.data.settings.auto_labels
               ? html`<p class="note">Per ogni bottiglia verrà richiesta la stampa dell'etichetta QR.</p>`

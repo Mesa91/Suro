@@ -1,25 +1,53 @@
-import { LitElement, html, css } from "lit";
+import { LitElement, html, css, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
-import { Rack, Snapshot } from "./types";
+import { Rack, Snapshot, capacityOf, shelvesOf } from "./types";
 import { sharedStyles } from "./styles";
 
-/** Racks (name and size) plus the few settings. */
+const MAX = 30;
+
+interface Draft {
+  name: string;
+  shelves: number[];
+}
+
+/** Racks (name, shelves, bottles per shelf) plus the few settings. */
 @customElement("tb-racks-dialog")
 export class RacksDialog extends LitElement {
   @property({ attribute: false }) card: any;
   @property({ attribute: false }) data!: Snapshot;
-  @state() private _drafts: Record<string, Partial<Rack>> = {};
+  @state() private _drafts: Record<string, Draft> = {};
+  @state() private _open: string | null = null;
 
   private _close() {
     this.dispatchEvent(new CustomEvent("close"));
   }
 
-  private _draft(rack: Rack): Rack {
-    return { ...rack, ...this._drafts[rack.id] } as Rack;
+  private _draft(rack: Rack): Draft {
+    return this._drafts[rack.id] || { name: rack.name, shelves: [...shelvesOf(rack)] };
   }
 
-  private _set(id: string, key: keyof Rack, value: any) {
-    this._drafts = { ...this._drafts, [id]: { ...this._drafts[id], [key]: value } };
+  private _edit(rack: Rack, change: (d: Draft) => void) {
+    const d = this._draft(rack);
+    const copy = { name: d.name, shelves: [...d.shelves] };
+    change(copy);
+    this._drafts = { ...this._drafts, [rack.id]: copy };
+  }
+
+  private _setShelfCount(rack: Rack, count: number) {
+    this._edit(rack, (d) => {
+      count = Math.max(1, Math.min(MAX, count));
+      const last = d.shelves[d.shelves.length - 1] || 6;
+      while (d.shelves.length < count) d.shelves.push(last);
+      d.shelves.length = count;
+    });
+  }
+
+  private _setShelf(rack: Rack, index: number, value: number) {
+    this._edit(rack, (d) => (d.shelves[index] = Math.max(1, Math.min(MAX, value))));
+  }
+
+  private _setAll(rack: Rack, value: number) {
+    this._edit(rack, (d) => (d.shelves = d.shelves.map(() => Math.max(1, Math.min(MAX, value)))));
   }
 
   private _count(rackId: string) {
@@ -27,8 +55,8 @@ export class RacksDialog extends LitElement {
   }
 
   private async _save(rack: Rack) {
-    const draft = this._draft(rack);
-    const res = await this.card.ws({ type: "taponbon/save_rack", rack: draft });
+    const d = this._draft(rack);
+    const res = await this.card.ws({ type: "taponbon/save_rack", rack: { id: rack.id, name: d.name, shelves: d.shelves } });
     const copy = { ...this._drafts };
     delete copy[rack.id];
     this._drafts = copy;
@@ -43,62 +71,115 @@ export class RacksDialog extends LitElement {
   }
 
   private async _add() {
-    await this.card.ws({ type: "taponbon/save_rack", rack: { name: `Scaffale ${this.data.racks.length + 1}`, rows: 7, cols: 10 } });
+    const res = await this.card.ws({
+      type: "taponbon/save_rack",
+      rack: { name: `Scaffale ${this.data.racks.length + 1}`, shelves: [8, 8, 8, 8, 8] },
+    });
+    this._open = res.rack.id;
   }
 
   private async _setting(key: string, value: unknown) {
     await this.card.ws({ type: "taponbon/update_settings", [key]: value });
   }
 
+  private _stepper(value: number, set: (v: number) => void) {
+    return html`<span class="stepper">
+      <button @click=${() => set(value - 1)} aria-label="meno">−</button>
+      <span>${value}</span>
+      <button @click=${() => set(value + 1)} aria-label="più">+</button>
+    </span>`;
+  }
+
+  private _preview(shelves: number[]) {
+    const widest = Math.max(...shelves);
+    return html`<div class="preview">
+      ${shelves.map((n) => html`<div class="pv-shelf">
+        <div class="pv-row" style="grid-template-columns: repeat(${n}, 1fr); width: ${(n / widest) * 100}%">
+          ${Array.from({ length: n }, () => html`<i></i>`)}
+        </div>
+        <div class="pv-board"></div>
+      </div>`)}
+    </div>`;
+  }
+
+  private _renderRack(rack: Rack) {
+    const d = this._draft(rack);
+    const dirty = !!this._drafts[rack.id];
+    const open = this._open === rack.id || dirty;
+    const uniform = d.shelves.every((n) => n === d.shelves[0]);
+    const capacity = d.shelves.reduce((a, b) => a + b, 0);
+    return html`<div class="rack ${open ? "open" : ""}">
+      <button class="rack-sum" @click=${() => (this._open = open && !dirty ? null : rack.id)}>
+        <span class="rack-name">${d.name}</span>
+        <span class="note">${d.shelves.length} mensole · ${capacity} posti · ${this._count(rack.id)} bottiglie</span>
+        <span class="chev">${open ? "▴" : "▾"}</span>
+      </button>
+      ${open
+        ? html`<div class="rack-edit">
+            <div class="cols">
+              <div class="controls">
+                <label class="field">Nome
+                  <input .value=${d.name} @input=${(e: Event) => this._edit(rack, (x) => (x.name = (e.target as HTMLInputElement).value))} />
+                </label>
+                <div class="line"><span>Mensole</span>${this._stepper(d.shelves.length, (v) => this._setShelfCount(rack, v))}</div>
+                <div class="line">
+                  <span>Bottiglie per mensola${uniform ? "" : html` <em class="note">(diverse)</em>`}</span>
+                  ${this._stepper(uniform ? d.shelves[0] : Math.max(...d.shelves), (v) => this._setAll(rack, v))}
+                </div>
+                <details ?open=${!uniform}>
+                  <summary>Personalizza ogni mensola</summary>
+                  ${d.shelves.map((n, i) => html`<div class="line small">
+                    <span>Mensola ${i + 1}${i === 0 ? " (in alto)" : i === d.shelves.length - 1 ? " (in basso)" : ""}</span>
+                    ${this._stepper(n, (v) => this._setShelf(rack, i, v))}
+                  </div>`)}
+                </details>
+              </div>
+              ${this._preview(d.shelves)}
+            </div>
+            <div class="rack-foot">
+              <button class="btn small danger" @click=${() => this._delete(rack)}>Elimina scaffale</button>
+              <span>
+                ${dirty ? html`<button class="btn small" @click=${() => { const c = { ...this._drafts }; delete c[rack.id]; this._drafts = c; }}>Annulla</button>` : nothing}
+                <button class="btn small primary" ?disabled=${!dirty} @click=${() => this._save(rack)}>Salva</button>
+              </span>
+            </div>
+          </div>`
+        : nothing}
+    </div>`;
+  }
+
   render() {
     const s = this.data.settings;
+    const total = this.data.racks.reduce((a, r) => a + capacityOf(r), 0);
     return html`
       <div class="overlay" @click=${this._close}>
         <div class="dialog" @click=${(e: Event) => e.stopPropagation()}>
           <div class="dialog-head">
-            <div class="dialog-title">Scaffali e impostazioni</div>
+            <div>
+              <div class="eyebrow">La tua cantina</div>
+              <div class="dialog-title">Scaffali e impostazioni</div>
+            </div>
             <button class="close" @click=${this._close}>✕</button>
           </div>
           <div class="dialog-body">
-            ${this.data.racks.map((rack) => {
-              const d = this._draft(rack);
-              const dirty = !!this._drafts[rack.id];
-              return html`<div class="rack">
-                <label class="field name">Nome
-                  <input .value=${d.name} @input=${(e: Event) => this._set(rack.id, "name", (e.target as HTMLInputElement).value)} />
-                </label>
-                <label class="field">File
-                  <input type="number" min="1" max="30" .value=${String(d.rows)}
-                    @input=${(e: Event) => this._set(rack.id, "rows", Number((e.target as HTMLInputElement).value))} />
-                </label>
-                <label class="field">Posti per fila
-                  <input type="number" min="1" max="30" .value=${String(d.cols)}
-                    @input=${(e: Event) => this._set(rack.id, "cols", Number((e.target as HTMLInputElement).value))} />
-                </label>
-                <div class="rack-foot">
-                  <span class="note">${this._count(rack.id)} bottiglie · ${d.rows * d.cols} posti</span>
-                  <span>
-                    <button class="btn small danger" @click=${() => this._delete(rack)}>Elimina</button>
-                    <button class="btn small primary" ?disabled=${!dirty} @click=${() => this._save(rack)}>Salva</button>
-                  </span>
-                </div>
-              </div>`;
-            })}
+            <div class="section" style="margin-top:4px">Scaffali · ${total} posti</div>
+            ${this.data.racks.map((r) => this._renderRack(r))}
             <button class="btn" @click=${this._add}>＋ Nuovo scaffale</button>
 
-            <h3>Impostazioni</h3>
+            <div class="section">Etichette</div>
             <label class="check">
               <input type="checkbox" .checked=${s.auto_labels}
                 @change=${(e: Event) => this._setting("auto_labels", (e.target as HTMLInputElement).checked)} />
               Stampa l'etichetta QR quando aggiungo una bottiglia
             </label>
-            <div class="field">Avvisami prima che la finestra di beva si chiuda
-              <div class="types">
-                ${[[90, "3 mesi"], [180, "6 mesi"], [365, "1 anno"]].map(
-                  ([days, label]) => html`<button class="chip ${s.alert_days === days ? "active" : ""}"
-                    @click=${() => this._setting("alert_days", days)}>${label}</button>`,
-                )}
-              </div>
+
+            <div class="section">Finestra di beva</div>
+            <div class="note" style="margin-bottom:8px">Avvisami prima che si chiuda:</div>
+            <div class="types">
+              ${[[90, "3 mesi"], [180, "6 mesi"], [365, "1 anno"]].map(
+                ([days, label]) => html`<button class="chip ${s.alert_days === days ? "active" : ""}"
+                  @click=${() => this._setting("alert_days", days)}>${label}</button>`,
+              )}
             </div>
           </div>
           <div class="dialog-foot"><button class="btn" @click=${this._close}>Chiudi</button></div>
@@ -111,38 +192,117 @@ export class RacksDialog extends LitElement {
     sharedStyles,
     css`
       .rack {
-        display: grid;
-        grid-template-columns: 2fr 1fr 1fr;
-        gap: 8px;
-        padding: 12px;
-        border-radius: 12px;
-        background: rgba(127, 127, 127, 0.08);
+        border: 1px solid var(--tb-line);
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.025);
         margin-bottom: 10px;
+        overflow: hidden;
+      }
+      .rack.open {
+        background: rgba(255, 255, 255, 0.04);
+      }
+      .rack-sum {
+        width: 100%;
+        display: flex;
+        align-items: baseline;
+        gap: 10px;
+        padding: 14px 16px;
+        background: none;
+        border: none;
+        color: var(--tb-ink);
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
+      }
+      .rack-name {
+        font-family: var(--tb-serif);
+        font-size: 1.15em;
+        font-weight: 600;
+      }
+      .chev {
+        margin-left: auto;
+        color: var(--tb-ink-2);
+      }
+      .rack-edit {
+        padding: 0 16px 14px;
+      }
+      .cols {
+        display: grid;
+        grid-template-columns: 1fr 160px;
+        gap: 18px;
+        align-items: start;
+      }
+      .controls {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .line {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        font-size: 0.92em;
+      }
+      .line.small {
+        font-size: 0.85em;
+        margin-top: 8px;
+        color: var(--tb-ink-2);
+      }
+      details summary {
+        cursor: pointer;
+        color: var(--tb-gold);
+        font-size: 0.85em;
+      }
+      .preview {
+        padding: 12px 10px 10px;
+        border-radius: 12px;
+        background: linear-gradient(180deg, #1d1a1a, #110f10);
+        border: 1px solid var(--tb-line);
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+        align-items: center;
+      }
+      .pv-shelf {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .pv-row {
+        display: grid;
+        gap: 2px;
+      }
+      .pv-row i {
+        display: block;
+        height: 12px;
+        border-radius: 2px 2px 1px 1px;
+        background: linear-gradient(180deg, rgba(216, 180, 106, 0.25), rgba(155, 44, 63, 0.55));
+      }
+      .pv-board {
+        width: 100%;
+        height: 2px;
+        margin-top: 2px;
+        background: rgba(255, 255, 255, 0.18);
+        border-radius: 1px;
       }
       .rack-foot {
-        grid-column: 1 / -1;
         display: flex;
         justify-content: space-between;
         align-items: center;
         gap: 6px;
         flex-wrap: wrap;
-      }
-      h3 {
-        margin: 20px 0 8px;
-        font-size: 1em;
+        margin-top: 14px;
       }
       .check {
         display: flex;
-        gap: 8px;
+        gap: 10px;
         align-items: center;
-        margin-bottom: 12px;
       }
       @media (max-width: 480px) {
-        .rack {
-          grid-template-columns: 1fr 1fr;
-        }
-        .name {
-          grid-column: 1 / -1;
+        .cols {
+          grid-template-columns: 1fr;
         }
       }
     `,

@@ -53,3 +53,15 @@ def test_codes_are_assigned_once_and_persisted():
     assert len(set(codes)) == 3 and codes[1] == "abc" and FakeStore.saves == 1
     st2 = load(FakeStore.disk)
     assert [b["code"] for b in st2.bottles] == codes and FakeStore.saves == 0
+
+
+def test_shelves_with_different_sizes():
+    st = load(None)
+    rack, _ = st.save_rack({"id": st.racks[0]["id"], "name": "Mobile", "shelves": [3, 5]})
+    assert st.capacity() == 8 and rack["rows"] == 2 and rack["cols"] == 5
+    added = st.add_bottles({"name": "A"}, 4, rack["id"])
+    assert [(b["row"], b["col"]) for b in added] == [(0, 0), (0, 1), (0, 2), (1, 0)]
+    assert not st.move_bottle(added[0]["id"], rack["id"], 0, 4)  # shelf 0 has 3 places
+    assert st.move_bottle(added[0]["id"], rack["id"], 1, 4)
+    _, displaced = st.save_rack({"id": rack["id"], "name": "Mobile", "shelves": [3, 2]})
+    assert displaced == 1 and st.free_count() == 2

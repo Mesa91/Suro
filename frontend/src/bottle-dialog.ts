@@ -3,6 +3,7 @@ import { customElement, property, state } from "lit/decorators.js";
 import { Bottle, Snapshot, WINE_FIELDS, locationText, windowText, wineTitle } from "./types";
 import { sharedStyles } from "./styles";
 import { renderWineForm } from "./add-dialog";
+import { BOTTLE_DEFS, bottleSvg } from "./bottle";
 
 interface Label {
   code: string;
@@ -103,12 +104,16 @@ export class BottleDialog extends LitElement {
     const b = this.bottle;
     const t = this.data.types[b.type];
     return html`
+      ${BOTTLE_DEFS}
       <div class="overlay" @click=${this._close}>
         <div class="dialog" @click=${(e: Event) => e.stopPropagation()}>
-          <div class="dialog-head">
-            <div>
-              <div class="dialog-title">${wineTitle(b)}</div>
-              <div class="note">${b.producer || ""}</div>
+          <div class="hero">
+            <div class="hero-bottle">${bottleSvg(b.type, b.alert)}</div>
+            <div class="hero-text">
+              <div class="eyebrow">${t?.label || ""}${b.region ? ` · ${b.region}` : ""}</div>
+              <div class="dialog-title">${b.name || "Vino"}</div>
+              ${b.producer ? html`<div class="producer">${b.producer}</div>` : nothing}
+              <div class="vintage">${b.vintage || "s.a."}</div>
             </div>
             <button class="close" @click=${this._close}>✕</button>
           </div>
@@ -125,7 +130,6 @@ export class BottleDialog extends LitElement {
     const win = windowText(b);
     return html`
       <div class="badges">
-        <span class="badge" style="background:${t?.color}">${t?.label || b.type}</span>
         ${b.alert === "closing" ? html`<span class="badge warn">Da bere presto</span>` : nothing}
         ${b.alert === "past" ? html`<span class="badge bad">Oltre la finestra</span>` : nothing}
         <span class="where">📍 ${locationText(b, this.data.racks)}</span>
@@ -194,6 +198,47 @@ export class BottleDialog extends LitElement {
   static styles = [
     sharedStyles,
     css`
+      .hero {
+        display: flex;
+        gap: 18px;
+        align-items: flex-end;
+        padding: 26px 24px 18px;
+        background:
+          radial-gradient(90% 120% at 15% 100%, rgba(155, 44, 63, 0.25), transparent 60%),
+          radial-gradient(60% 80% at 100% 0%, rgba(216, 180, 106, 0.08), transparent 60%);
+        border-bottom: 1px solid var(--tb-line);
+        position: relative;
+      }
+      .hero .close {
+        position: absolute;
+        top: 16px;
+        right: 16px;
+      }
+      .hero-bottle {
+        width: 62px;
+        flex: none;
+        filter: drop-shadow(0 12px 14px rgba(0, 0, 0, 0.6));
+      }
+      .hero-bottle svg {
+        width: 100%;
+        display: block;
+        overflow: visible;
+      }
+      .hero-text {
+        min-width: 0;
+        padding-bottom: 6px;
+      }
+      .producer {
+        color: var(--tb-ink-2);
+        margin-top: 4px;
+      }
+      .vintage {
+        font-family: var(--tb-serif);
+        font-size: 2.1em;
+        color: var(--tb-gold);
+        line-height: 1;
+        margin-top: 10px;
+      }
       .badges {
         display: flex;
         gap: 6px;
@@ -217,7 +262,7 @@ export class BottleDialog extends LitElement {
       }
       .where {
         font-size: 0.85em;
-        color: var(--secondary-text-color);
+        color: var(--tb-ink-2);
       }
       .facts {
         display: grid;
@@ -227,7 +272,9 @@ export class BottleDialog extends LitElement {
         font-size: 0.92em;
       }
       dt {
-        color: var(--secondary-text-color);
+        color: var(--tb-ink-2);
+        font-size: 0.85em;
+        letter-spacing: 0.04em;
       }
       dd {
         margin: 0;
@@ -238,9 +285,10 @@ export class BottleDialog extends LitElement {
         flex-direction: column;
         align-items: center;
         gap: 8px;
-        padding: 12px;
-        border-radius: 12px;
-        background: rgba(127, 127, 127, 0.08);
+        padding: 16px;
+        border-radius: 16px;
+        border: 1px solid var(--tb-line);
+        background: rgba(255, 255, 255, 0.025);
         text-align: center;
       }
       .label {

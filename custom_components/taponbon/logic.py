@@ -102,11 +102,28 @@ def occupied(bottles: Iterable[dict[str, Any]], rack_id: str) -> set[tuple[int, 
     }
 
 
+def shelves_of(rack: dict[str, Any]) -> list[int]:
+    """Bottles per shelf, top to bottom (older racks: a plain rows × cols grid)."""
+    shelves = rack.get("shelves")
+    if isinstance(shelves, list) and shelves:
+        return [max(1, int(n)) for n in shelves]
+    return [int(rack.get("cols") or 1)] * int(rack.get("rows") or 1)
+
+
+def slot_exists(rack: dict[str, Any], row: int | None, col: int | None) -> bool:
+    shelves = shelves_of(rack)
+    return row is not None and col is not None and 0 <= row < len(shelves) and 0 <= col < shelves[row]
+
+
+def rack_capacity(rack: dict[str, Any]) -> int:
+    return sum(shelves_of(rack))
+
+
 def free_slots(rack: dict[str, Any], bottles: Iterable[dict[str, Any]]) -> list[tuple[int, int]]:
-    """Free slots of a rack, row by row from the top left."""
+    """Free slots of a rack, shelf by shelf from the top left."""
     taken = occupied(bottles, rack["id"])
     return [
-        (r, c) for r in range(rack["rows"]) for c in range(rack["cols"]) if (r, c) not in taken
+        (r, c) for r, n in enumerate(shelves_of(rack)) for c in range(n) if (r, c) not in taken
     ]
 
 
@@ -148,7 +165,7 @@ def location_text(bottle: dict[str, Any], racks: list[dict[str, Any]]) -> str:
     rack = next((r for r in racks if r["id"] == bottle.get("rack_id")), None)
     if not rack or bottle.get("row") is None or bottle.get("col") is None:
         return "Da sistemare"
-    return f"{rack['name']} · fila {bottle['row'] + 1}, posto {bottle['col'] + 1}"
+    return f"{rack['name']} · mensola {bottle['row'] + 1}, posto {bottle['col'] + 1}"
 
 
 # ── Drinking window ───────────────────────────────────────────────────────────

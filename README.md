@@ -6,7 +6,7 @@ quando un vino va bevuto.
 
 ## Cosa fa
 
-- **Scaffali** su misura (file × posti), con le bottiglie colorate per tipo:
+- **Scaffali** su misura: quante mensole e quante bottiglie su ciascuna, con le bottiglie colorate per tipo:
   rosso, bianco, rosato, bollicine, dolce.
 - **Aggiungi** un vino toccando un posto libero (o dal pulsante): con più
   bottiglie riempie i posti successivi.

@@ -1,123 +1,194 @@
-function t(t,e,i,s){var o,a=arguments.length,r=a<3?e:null===s?s=Object.getOwnPropertyDescriptor(e,i):s;if("object"==typeof Reflect&&"function"==typeof Reflect.decorate)r=Reflect.decorate(t,e,i,s);else for(var n=t.length-1;n>=0;n--)(o=t[n])&&(r=(a<3?o(r):a>3?o(e,i,r):o(e,i))||r);return a>3&&r&&Object.defineProperty(e,i,r),r}"function"==typeof SuppressedError&&SuppressedError;const e=globalThis,i=e.ShadowRoot&&(void 0===e.ShadyCSS||e.ShadyCSS.nativeShadow)&&"adoptedStyleSheets"in Document.prototype&&"replace"in CSSStyleSheet.prototype,s=Symbol(),o=new WeakMap;let a=class{constructor(t,e,i){if(this._$cssResult$=!0,i!==s)throw Error("CSSResult is not constructable. Use `unsafeCSS` or `css` instead.");this.cssText=t,this.t=e}get styleSheet(){let t=this.o;const e=this.t;if(i&&void 0===t){const i=void 0!==e&&1===e.length;i&&(t=o.get(e)),void 0===t&&((this.o=t=new CSSStyleSheet).replaceSync(this.cssText),i&&o.set(e,t))}return t}toString(){return this.cssText}};const r=(t,...e)=>{const i=1===t.length?t[0]:e.reduce((e,i,s)=>e+(t=>{if(!0===t._$cssResult$)return t.cssText;if("number"==typeof t)return t;throw Error("Value passed to 'css' function must be a 'css' function result: "+t+". Use 'unsafeCSS' to pass non-literal values, but take care to ensure page security.")})(i)+t[s+1],t[0]);return new a(i,t,s)},n=i?t=>t:t=>t instanceof CSSStyleSheet?(t=>{let e="";for(const i of t.cssRules)e+=i.cssText;return(t=>new a("string"==typeof t?t:t+"",void 0,s))(e)})(t):t,{is:l,defineProperty:d,getOwnPropertyDescriptor:c,getOwnPropertyNames:p,getOwnPropertySymbols:h,getPrototypeOf:u}=Object,b=globalThis,g=b.trustedTypes,f=g?g.emptyScript:"",$=b.reactiveElementPolyfillSupport,y=(t,e)=>t,m={toAttribute(t,e){switch(e){case Boolean:t=t?f:null;break;case Object:case Array:t=null==t?t:JSON.stringify(t)}return t},fromAttribute(t,e){let i=t;switch(e){case Boolean:i=null!==t;break;case Number:i=null===t?null:Number(t);break;case Object:case Array:try{i=JSON.parse(t)}catch(t){i=null}}return i}},_=(t,e)=>!l(t,e),v={attribute:!0,type:String,converter:m,reflect:!1,useDefault:!1,hasChanged:_};Symbol.metadata??=Symbol("metadata"),b.litPropertyMetadata??=new WeakMap;let x=class extends HTMLElement{static addInitializer(t){this._$Ei(),(this.l??=[]).push(t)}static get observedAttributes(){return this.finalize(),this._$Eh&&[...this._$Eh.keys()]}static createProperty(t,e=v){if(e.state&&(e.attribute=!1),this._$Ei(),this.prototype.hasOwnProperty(t)&&((e=Object.create(e)).wrapped=!0),this.elementProperties.set(t,e),!e.noAccessor){const i=Symbol(),s=this.getPropertyDescriptor(t,i,e);void 0!==s&&d(this.prototype,t,s)}}static getPropertyDescriptor(t,e,i){const{get:s,set:o}=c(this.prototype,t)??{get(){return this[e]},set(t){this[e]=t}};return{get:s,set(e){const a=s?.call(this);o?.call(this,e),this.requestUpdate(t,a,i)},configurable:!0,enumerable:!0}}static getPropertyOptions(t){return this.elementProperties.get(t)??v}static _$Ei(){if(this.hasOwnProperty(y("elementProperties")))return;const t=u(this);t.finalize(),void 0!==t.l&&(this.l=[...t.l]),this.elementProperties=new Map(t.elementProperties)}static finalize(){if(this.hasOwnProperty(y("finalized")))return;if(this.finalized=!0,this._$Ei(),this.hasOwnProperty(y("properties"))){const t=this.properties,e=[...p(t),...h(t)];for(const i of e)this.createProperty(i,t[i])}const t=this[Symbol.metadata];if(null!==t){const e=litPropertyMetadata.get(t);if(void 0!==e)for(const[t,i]of e)this.elementProperties.set(t,i)}this._$Eh=new Map;for(const[t,e]of this.elementProperties){const i=this._$Eu(t,e);void 0!==i&&this._$Eh.set(i,t)}this.elementStyles=this.finalizeStyles(this.styles)}static finalizeStyles(t){const e=[];if(Array.isArray(t)){const i=new Set(t.flat(1/0).reverse());for(const t of i)e.unshift(n(t))}else void 0!==t&&e.push(n(t));return e}static _$Eu(t,e){const i=e.attribute;return!1===i?void 0:"string"==typeof i?i:"string"==typeof t?t.toLowerCase():void 0}constructor(){super(),this._$Ep=void 0,this.isUpdatePending=!1,this.hasUpdated=!1,this._$Em=null,this._$Ev()}_$Ev(){this._$ES=new Promise(t=>this.enableUpdating=t),this._$AL=new Map,this._$E_(),this.requestUpdate(),this.constructor.l?.forEach(t=>t(this))}addController(t){(this._$EO??=new Set).add(t),void 0!==this.renderRoot&&this.isConnected&&t.hostConnected?.()}removeController(t){this._$EO?.delete(t)}_$E_(){const t=new Map,e=this.constructor.elementProperties;for(const i of e.keys())this.hasOwnProperty(i)&&(t.set(i,this[i]),delete this[i]);t.size>0&&(this._$Ep=t)}createRenderRoot(){const t=this.shadowRoot??this.attachShadow(this.constructor.shadowRootOptions);return((t,s)=>{if(i)t.adoptedStyleSheets=s.map(t=>t instanceof CSSStyleSheet?t:t.styleSheet);else for(const i of s){const s=document.createElement("style"),o=e.litNonce;void 0!==o&&s.setAttribute("nonce",o),s.textContent=i.cssText,t.appendChild(s)}})(t,this.constructor.elementStyles),t}connectedCallback(){this.renderRoot??=this.createRenderRoot(),this.enableUpdating(!0),this._$EO?.forEach(t=>t.hostConnected?.())}enableUpdating(t){}disconnectedCallback(){this._$EO?.forEach(t=>t.hostDisconnected?.())}attributeChangedCallback(t,e,i){this._$AK(t,i)}_$ET(t,e){const i=this.constructor.elementProperties.get(t),s=this.constructor._$Eu(t,i);if(void 0!==s&&!0===i.reflect){const o=(void 0!==i.converter?.toAttribute?i.converter:m).toAttribute(e,i.type);this._$Em=t,null==o?this.removeAttribute(s):this.setAttribute(s,o),this._$Em=null}}_$AK(t,e){const i=this.constructor,s=i._$Eh.get(t);if(void 0!==s&&this._$Em!==s){const t=i.getPropertyOptions(s),o="function"==typeof t.converter?{fromAttribute:t.converter}:void 0!==t.converter?.fromAttribute?t.converter:m;this._$Em=s;const a=o.fromAttribute(e,t.type);this[s]=a??this._$Ej?.get(s)??a,this._$Em=null}}requestUpdate(t,e,i,s=!1,o){if(void 0!==t){const a=this.constructor;if(!1===s&&(o=this[t]),i??=a.getPropertyOptions(t),!((i.hasChanged??_)(o,e)||i.useDefault&&i.reflect&&o===this._$Ej?.get(t)&&!this.hasAttribute(a._$Eu(t,i))))return;this.C(t,e,i)}!1===this.isUpdatePending&&(this._$ES=this._$EP())}C(t,e,{useDefault:i,reflect:s,wrapped:o},a){i&&!(this._$Ej??=new Map).has(t)&&(this._$Ej.set(t,a??e??this[t]),!0!==o||void 0!==a)||(this._$AL.has(t)||(this.hasUpdated||i||(e=void 0),this._$AL.set(t,e)),!0===s&&this._$Em!==t&&(this._$Eq??=new Set).add(t))}async _$EP(){this.isUpdatePending=!0;try{await this._$ES}catch(t){Promise.reject(t)}const t=this.scheduleUpdate();return null!=t&&await t,!this.isUpdatePending}scheduleUpdate(){return this.performUpdate()}performUpdate(){if(!this.isUpdatePending)return;if(!this.hasUpdated){if(this.renderRoot??=this.createRenderRoot(),this._$Ep){for(const[t,e]of this._$Ep)this[t]=e;this._$Ep=void 0}const t=this.constructor.elementProperties;if(t.size>0)for(const[e,i]of t){const{wrapped:t}=i,s=this[e];!0!==t||this._$AL.has(e)||void 0===s||this.C(e,void 0,i,s)}}let t=!1;const e=this._$AL;try{t=this.shouldUpdate(e),t?(this.willUpdate(e),this._$EO?.forEach(t=>t.hostUpdate?.()),this.update(e)):this._$EM()}catch(e){throw t=!1,this._$EM(),e}t&&this._$AE(e)}willUpdate(t){}_$AE(t){this._$EO?.forEach(t=>t.hostUpdated?.()),this.hasUpdated||(this.hasUpdated=!0,this.firstUpdated(t)),this.updated(t)}_$EM(){this._$AL=new Map,this.isUpdatePending=!1}get updateComplete(){return this.getUpdateComplete()}getUpdateComplete(){return this._$ES}shouldUpdate(t){return!0}update(t){this._$Eq&&=this._$Eq.forEach(t=>this._$ET(t,this[t])),this._$EM()}updated(t){}firstUpdated(t){}};x.elementStyles=[],x.shadowRootOptions={mode:"open"},x[y("elementProperties")]=new Map,x[y("finalized")]=new Map,$?.({ReactiveElement:x}),(b.reactiveElementVersions??=[]).push("2.1.2");const w=globalThis,k=t=>t,A=w.trustedTypes,E=A?A.createPolicy("lit-html",{createHTML:t=>t}):void 0,S="$lit$",C=`lit$${Math.random().toFixed(9).slice(2)}$`,P="?"+C,M=`<${P}>`,z=document,O=()=>z.createComment(""),R=t=>null===t||"object"!=typeof t&&"function"!=typeof t,T=Array.isArray,U="[ \t\n\f\r]",H=/<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g,N=/-->/g,j=/>/g,D=RegExp(`>|${U}(?:([^\\s"'>=/]+)(${U}*=${U}*(?:[^ \t\n\f\r"'\`<>=]|("|')|))|$)`,"g"),I=/'/g,B=/"/g,q=/^(?:script|style|textarea|title)$/i,L=t=>(e,...i)=>({_$litType$:t,strings:e,values:i}),V=L(1),F=L(2),G=Symbol.for("lit-noChange"),W=Symbol.for("lit-nothing"),Y=new WeakMap,Q=z.createTreeWalker(z,129);function J(t,e){if(!T(t)||!t.hasOwnProperty("raw"))throw Error("invalid template strings array");return void 0!==E?E.createHTML(e):e}const K=(t,e)=>{const i=t.length-1,s=[];let o,a=2===e?"<svg>":3===e?"<math>":"",r=H;for(let e=0;e<i;e++){const i=t[e];let n,l,d=-1,c=0;for(;c<i.length&&(r.lastIndex=c,l=r.exec(i),null!==l);)c=r.lastIndex,r===H?"!--"===l[1]?r=N:void 0!==l[1]?r=j:void 0!==l[2]?(q.test(l[2])&&(o=RegExp("</"+l[2],"g")),r=D):void 0!==l[3]&&(r=D):r===D?">"===l[0]?(r=o??H,d=-1):void 0===l[1]?d=-2:(d=r.lastIndex-l[2].length,n=l[1],r=void 0===l[3]?D:'"'===l[3]?B:I):r===B||r===I?r=D:r===N||r===j?r=H:(r=D,o=void 0);const p=r===D&&t[e+1].startsWith("/>")?" ":"";a+=r===H?i+M:d>=0?(s.push(n),i.slice(0,d)+S+i.slice(d)+C+p):i+C+(-2===d?e:p)}return[J(t,a+(t[i]||"<?>")+(2===e?"</svg>":3===e?"</math>":"")),s]};class Z{constructor({strings:t,_$litType$:e},i){let s;this.parts=[];let o=0,a=0;const r=t.length-1,n=this.parts,[l,d]=K(t,e);if(this.el=Z.createElement(l,i),Q.currentNode=this.el.content,2===e||3===e){const t=this.el.content.firstChild;t.replaceWith(...t.childNodes)}for(;null!==(s=Q.nextNode())&&n.length<r;){if(1===s.nodeType){if(s.hasAttributes())for(const t of s.getAttributeNames())if(t.endsWith(S)){const e=d[a++],i=s.getAttribute(t).split(C),r=/([.?@])?(.*)/.exec(e);n.push({type:1,index:o,name:r[2],strings:i,ctor:"."===r[1]?st:"?"===r[1]?ot:"@"===r[1]?at:it}),s.removeAttribute(t)}else t.startsWith(C)&&(n.push({type:6,index:o}),s.removeAttribute(t));if(q.test(s.tagName)){const t=s.textContent.split(C),e=t.length-1;if(e>0){s.textContent=A?A.emptyScript:"";for(let i=0;i<e;i++)s.append(t[i],O()),Q.nextNode(),n.push({type:2,index:++o});s.append(t[e],O())}}}else if(8===s.nodeType)if(s.data===P)n.push({type:2,index:o});else{let t=-1;for(;-1!==(t=s.data.indexOf(C,t+1));)n.push({type:7,index:o}),t+=C.length-1}o++}}static createElement(t,e){const i=z.createElement("template");return i.innerHTML=t,i}}function X(t,e,i=t,s){if(e===G)return e;let o=void 0!==s?i._$Co?.[s]:i._$Cl;const a=R(e)?void 0:e._$litDirective$;return o?.constructor!==a&&(o?._$AO?.(!1),void 0===a?o=void 0:(o=new a(t),o._$AT(t,i,s)),void 0!==s?(i._$Co??=[])[s]=o:i._$Cl=o),void 0!==o&&(e=X(t,o._$AS(t,e.values),o,s)),e}class tt{constructor(t,e){this._$AV=[],this._$AN=void 0,this._$AD=t,this._$AM=e}get parentNode(){return this._$AM.parentNode}get _$AU(){return this._$AM._$AU}u(t){const{el:{content:e},parts:i}=this._$AD,s=(t?.creationScope??z).importNode(e,!0);Q.currentNode=s;let o=Q.nextNode(),a=0,r=0,n=i[0];for(;void 0!==n;){if(a===n.index){let e;2===n.type?e=new et(o,o.nextSibling,this,t):1===n.type?e=new n.ctor(o,n.name,n.strings,this,t):6===n.type&&(e=new rt(o,this,t)),this._$AV.push(e),n=i[++r]}a!==n?.index&&(o=Q.nextNode(),a++)}return Q.currentNode=z,s}p(t){let e=0;for(const i of this._$AV)void 0!==i&&(void 0!==i.strings?(i._$AI(t,i,e),e+=i.strings.length-2):i._$AI(t[e])),e++}}class et{get _$AU(){return this._$AM?._$AU??this._$Cv}constructor(t,e,i,s){this.type=2,this._$AH=W,this._$AN=void 0,this._$AA=t,this._$AB=e,this._$AM=i,this.options=s,this._$Cv=s?.isConnected??!0}get parentNode(){let t=this._$AA.parentNode;const e=this._$AM;return void 0!==e&&11===t?.nodeType&&(t=e.parentNode),t}get startNode(){return this._$AA}get endNode(){return this._$AB}_$AI(t,e=this){t=X(this,t,e),R(t)?t===W||null==t||""===t?(this._$AH!==W&&this._$AR(),this._$AH=W):t!==this._$AH&&t!==G&&this._(t):void 0!==t._$litType$?this.$(t):void 0!==t.nodeType?this.T(t):(t=>T(t)||"function"==typeof t?.[Symbol.iterator])(t)?this.k(t):this._(t)}O(t){return this._$AA.parentNode.insertBefore(t,this._$AB)}T(t){this._$AH!==t&&(this._$AR(),this._$AH=this.O(t))}_(t){this._$AH!==W&&R(this._$AH)?this._$AA.nextSibling.data=t:this.T(z.createTextNode(t)),this._$AH=t}$(t){const{values:e,_$litType$:i}=t,s="number"==typeof i?this._$AC(t):(void 0===i.el&&(i.el=Z.createElement(J(i.h,i.h[0]),this.options)),i);if(this._$AH?._$AD===s)this._$AH.p(e);else{const t=new tt(s,this),i=t.u(this.options);t.p(e),this.T(i),this._$AH=t}}_$AC(t){let e=Y.get(t.strings);return void 0===e&&Y.set(t.strings,e=new Z(t)),e}k(t){T(this._$AH)||(this._$AH=[],this._$AR());const e=this._$AH;let i,s=0;for(const o of t)s===e.length?e.push(i=new et(this.O(O()),this.O(O()),this,this.options)):i=e[s],i._$AI(o),s++;s<e.length&&(this._$AR(i&&i._$AB.nextSibling,s),e.length=s)}_$AR(t=this._$AA.nextSibling,e){for(this._$AP?.(!1,!0,e);t!==this._$AB;){const e=k(t).nextSibling;k(t).remove(),t=e}}setConnected(t){void 0===this._$AM&&(this._$Cv=t,this._$AP?.(t))}}class it{get tagName(){return this.element.tagName}get _$AU(){return this._$AM._$AU}constructor(t,e,i,s,o){this.type=1,this._$AH=W,this._$AN=void 0,this.element=t,this.name=e,this._$AM=s,this.options=o,i.length>2||""!==i[0]||""!==i[1]?(this._$AH=Array(i.length-1).fill(new String),this.strings=i):this._$AH=W}_$AI(t,e=this,i,s){const o=this.strings;let a=!1;if(void 0===o)t=X(this,t,e,0),a=!R(t)||t!==this._$AH&&t!==G,a&&(this._$AH=t);else{const s=t;let r,n;for(t=o[0],r=0;r<o.length-1;r++)n=X(this,s[i+r],e,r),n===G&&(n=this._$AH[r]),a||=!R(n)||n!==this._$AH[r],n===W?t=W:t!==W&&(t+=(n??"")+o[r+1]),this._$AH[r]=n}a&&!s&&this.j(t)}j(t){t===W?this.element.removeAttribute(this.name):this.element.setAttribute(this.name,t??"")}}class st extends it{constructor(){super(...arguments),this.type=3}j(t){this.element[this.name]=t===W?void 0:t}}class ot extends it{constructor(){super(...arguments),this.type=4}j(t){this.element.toggleAttribute(this.name,!!t&&t!==W)}}class at extends it{constructor(t,e,i,s,o){super(t,e,i,s,o),this.type=5}_$AI(t,e=this){if((t=X(this,t,e,0)??W)===G)return;const i=this._$AH,s=t===W&&i!==W||t.capture!==i.capture||t.once!==i.once||t.passive!==i.passive,o=t!==W&&(i===W||s);s&&this.element.removeEventListener(this.name,this,i),o&&this.element.addEventListener(this.name,this,t),this._$AH=t}handleEvent(t){"function"==typeof this._$AH?this._$AH.call(this.options?.host??this.element,t):this._$AH.handleEvent(t)}}class rt{constructor(t,e,i){this.element=t,this.type=6,this._$AN=void 0,this._$AM=e,this.options=i}get _$AU(){return this._$AM._$AU}_$AI(t){X(this,t)}}const nt=w.litHtmlPolyfillSupport;nt?.(Z,et),(w.litHtmlVersions??=[]).push("3.3.3");const lt=globalThis;class dt extends x{constructor(){super(...arguments),this.renderOptions={host:this},this._$Do=void 0}createRenderRoot(){const t=super.createRenderRoot();return this.renderOptions.renderBefore??=t.firstChild,t}update(t){const e=this.render();this.hasUpdated||(this.renderOptions.isConnected=this.isConnected),super.update(t),this._$Do=((t,e,i)=>{const s=i?.renderBefore??e;let o=s._$litPart$;if(void 0===o){const t=i?.renderBefore??null;s._$litPart$=o=new et(e.insertBefore(O(),t),t,void 0,i??{})}return o._$AI(t),o})(e,this.renderRoot,this.renderOptions)}connectedCallback(){super.connectedCallback(),this._$Do?.setConnected(!0)}disconnectedCallback(){super.disconnectedCallback(),this._$Do?.setConnected(!1)}render(){return G}}dt._$litElement$=!0,dt.finalized=!0,lt.litElementHydrateSupport?.({LitElement:dt});const ct=lt.litElementPolyfillSupport;ct?.({LitElement:dt}),(lt.litElementVersions??=[]).push("4.2.2");const pt=t=>(e,i)=>{void 0!==i?i.addInitializer(()=>{customElements.define(t,e)}):customElements.define(t,e)},ht={attribute:!0,type:String,converter:m,reflect:!1,hasChanged:_},ut=(t=ht,e,i)=>{const{kind:s,metadata:o}=i;let a=globalThis.litPropertyMetadata.get(o);if(void 0===a&&globalThis.litPropertyMetadata.set(o,a=new Map),"setter"===s&&((t=Object.create(t)).wrapped=!0),a.set(i.name,t),"accessor"===s){const{name:s}=i;return{set(i){const o=e.get.call(this);e.set.call(this,i),this.requestUpdate(s,o,t,!0,i)},init(e){return void 0!==e&&this.C(s,void 0,t,e),e}}}if("setter"===s){const{name:s}=i;return function(i){const o=this[s];e.call(this,i),this.requestUpdate(s,o,t,!0,i)}}throw Error("Unsupported decorator location: "+s)};function bt(t){return(e,i)=>"object"==typeof i?ut(t,e,i):((t,e,i)=>{const s=e.hasOwnProperty(i);return e.constructor.createProperty(i,t),s?Object.getOwnPropertyDescriptor(e,i):void 0})(t,e,i)}function gt(t){return bt({...t,state:!0,attribute:!1})}const ft=[{key:"name",label:"Nome del vino",kind:"text"},{key:"producer",label:"Produttore",kind:"text"},{key:"vintage",label:"Annata",kind:"year"},{key:"region",label:"Regione / denominazione",kind:"text"},{key:"country",label:"Paese",kind:"text"},{key:"grape",label:"Vitigno",kind:"text"},{key:"drink_from",label:"Da bere dal",kind:"year"},{key:"drink_until",label:"Da bere entro il",kind:"year"},{key:"price",label:"Prezzo (€)",kind:"number"},{key:"notes",label:"Note",kind:"area"}];function $t(t){return`${t.name||"Vino"}${t.vintage?` ${t.vintage}`:""}`}function yt(t){return t.normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase()}const mt=r`
+var p=function(t,e,i,s){var a=arguments.length,o=a<3?e:s===null?s=Object.getOwnPropertyDescriptor(e,i):s,r;if(typeof Reflect==="object"&&typeof Reflect.decorate==="function")o=Reflect.decorate(t,e,i,s);else for(var n=t.length-1;n>=0;n--)if(r=t[n])o=(a<3?r(o):a>3?r(e,i,o):r(e,i))||o;return a>3&&o&&Object.defineProperty(e,i,o),o};var W=globalThis,Y=W.ShadowRoot&&(W.ShadyCSS===void 0||W.ShadyCSS.nativeShadow)&&"adoptedStyleSheets"in Document.prototype&&"replace"in CSSStyleSheet.prototype,Z=Symbol(),ut=new WeakMap;class Q{constructor(t,e,i){if(this._$cssResult$=!0,i!==Z)throw Error("CSSResult is not constructable. Use `unsafeCSS` or `css` instead.");this.cssText=t,this.t=e}get styleSheet(){let t=this.o,e=this.t;if(Y&&t===void 0){let i=e!==void 0&&e.length===1;i&&(t=ut.get(e)),t===void 0&&((this.o=t=new CSSStyleSheet).replaceSync(this.cssText),i&&ut.set(e,t))}return t}toString(){return this.cssText}}var bt=(t)=>new Q(typeof t=="string"?t:t+"",void 0,Z),y=(t,...e)=>{let i=t.length===1?t[0]:e.reduce((s,a,o)=>s+((r)=>{if(r._$cssResult$===!0)return r.cssText;if(typeof r=="number")return r;throw Error("Value passed to 'css' function must be a 'css' function result: "+r+". Use 'unsafeCSS' to pass non-literal values, but take care to ensure page security.")})(a)+t[o+1],t[0]);return new Q(i,t,Z)},gt=(t,e)=>{if(Y)t.adoptedStyleSheets=e.map((i)=>i instanceof CSSStyleSheet?i:i.styleSheet);else for(let i of e){let s=document.createElement("style"),a=W.litNonce;a!==void 0&&s.setAttribute("nonce",a),s.textContent=i.cssText,t.appendChild(s)}},tt=Y?(t)=>t:(t)=>t instanceof CSSStyleSheet?((e)=>{let i="";for(let s of e.cssRules)i+=s.cssText;return bt(i)})(t):t;var{is:It,defineProperty:Dt,getOwnPropertyDescriptor:jt,getOwnPropertyNames:Vt,getOwnPropertySymbols:Ft,getPrototypeOf:qt}=Object,K=globalThis,ft=K.trustedTypes,Gt=ft?ft.emptyScript:"",Wt=K.reactiveElementPolyfillSupport,H=(t,e)=>t,B={toAttribute(t,e){switch(e){case Boolean:t=t?Gt:null;break;case Object:case Array:t=t==null?t:JSON.stringify(t)}return t},fromAttribute(t,e){let i=t;switch(e){case Boolean:i=t!==null;break;case Number:i=t===null?null:Number(t);break;case Object:case Array:try{i=JSON.parse(t)}catch(s){i=null}}return i}},J=(t,e)=>!It(t,e),mt={attribute:!0,type:String,converter:B,reflect:!1,useDefault:!1,hasChanged:J};Symbol.metadata??=Symbol("metadata"),K.litPropertyMetadata??=new WeakMap;class E extends HTMLElement{static addInitializer(t){this._$Ei(),(this.l??=[]).push(t)}static get observedAttributes(){return this.finalize(),this._$Eh&&[...this._$Eh.keys()]}static createProperty(t,e=mt){if(e.state&&(e.attribute=!1),this._$Ei(),this.prototype.hasOwnProperty(t)&&((e=Object.create(e)).wrapped=!0),this.elementProperties.set(t,e),!e.noAccessor){let i=Symbol(),s=this.getPropertyDescriptor(t,i,e);s!==void 0&&Dt(this.prototype,t,s)}}static getPropertyDescriptor(t,e,i){let{get:s,set:a}=jt(this.prototype,t)??{get(){return this[e]},set(o){this[e]=o}};return{get:s,set(o){let r=s?.call(this);a?.call(this,o),this.requestUpdate(t,r,i)},configurable:!0,enumerable:!0}}static getPropertyOptions(t){return this.elementProperties.get(t)??mt}static _$Ei(){if(this.hasOwnProperty(H("elementProperties")))return;let t=qt(this);t.finalize(),t.l!==void 0&&(this.l=[...t.l]),this.elementProperties=new Map(t.elementProperties)}static finalize(){if(this.hasOwnProperty(H("finalized")))return;if(this.finalized=!0,this._$Ei(),this.hasOwnProperty(H("properties"))){let e=this.properties,i=[...Vt(e),...Ft(e)];for(let s of i)this.createProperty(s,e[s])}let t=this[Symbol.metadata];if(t!==null){let e=litPropertyMetadata.get(t);if(e!==void 0)for(let[i,s]of e)this.elementProperties.set(i,s)}this._$Eh=new Map;for(let[e,i]of this.elementProperties){let s=this._$Eu(e,i);s!==void 0&&this._$Eh.set(s,e)}this.elementStyles=this.finalizeStyles(this.styles)}static finalizeStyles(t){let e=[];if(Array.isArray(t)){let i=new Set(t.flat(1/0).reverse());for(let s of i)e.unshift(tt(s))}else t!==void 0&&e.push(tt(t));return e}static _$Eu(t,e){let i=e.attribute;return i===!1?void 0:typeof i=="string"?i:typeof t=="string"?t.toLowerCase():void 0}constructor(){super(),this._$Ep=void 0,this.isUpdatePending=!1,this.hasUpdated=!1,this._$Em=null,this._$Ev()}_$Ev(){this._$ES=new Promise((t)=>this.enableUpdating=t),this._$AL=new Map,this._$E_(),this.requestUpdate(),this.constructor.l?.forEach((t)=>t(this))}addController(t){(this._$EO??=new Set).add(t),this.renderRoot!==void 0&&this.isConnected&&t.hostConnected?.()}removeController(t){this._$EO?.delete(t)}_$E_(){let t=new Map,e=this.constructor.elementProperties;for(let i of e.keys())this.hasOwnProperty(i)&&(t.set(i,this[i]),delete this[i]);t.size>0&&(this._$Ep=t)}createRenderRoot(){let t=this.shadowRoot??this.attachShadow(this.constructor.shadowRootOptions);return gt(t,this.constructor.elementStyles),t}connectedCallback(){this.renderRoot??=this.createRenderRoot(),this.enableUpdating(!0),this._$EO?.forEach((t)=>t.hostConnected?.())}enableUpdating(t){}disconnectedCallback(){this._$EO?.forEach((t)=>t.hostDisconnected?.())}attributeChangedCallback(t,e,i){this._$AK(t,i)}_$ET(t,e){let i=this.constructor.elementProperties.get(t),s=this.constructor._$Eu(t,i);if(s!==void 0&&i.reflect===!0){let a=(i.converter?.toAttribute!==void 0?i.converter:B).toAttribute(e,i.type);this._$Em=t,a==null?this.removeAttribute(s):this.setAttribute(s,a),this._$Em=null}}_$AK(t,e){let i=this.constructor,s=i._$Eh.get(t);if(s!==void 0&&this._$Em!==s){let a=i.getPropertyOptions(s),o=typeof a.converter=="function"?{fromAttribute:a.converter}:a.converter?.fromAttribute!==void 0?a.converter:B;this._$Em=s;let r=o.fromAttribute(e,a.type);this[s]=r??this._$Ej?.get(s)??r,this._$Em=null}}requestUpdate(t,e,i,s=!1,a){if(t!==void 0){let o=this.constructor;if(s===!1&&(a=this[t]),i??=o.getPropertyOptions(t),!((i.hasChanged??J)(a,e)||i.useDefault&&i.reflect&&a===this._$Ej?.get(t)&&!this.hasAttribute(o._$Eu(t,i))))return;this.C(t,e,i)}this.isUpdatePending===!1&&(this._$ES=this._$EP())}C(t,e,{useDefault:i,reflect:s,wrapped:a},o){i&&!(this._$Ej??=new Map).has(t)&&(this._$Ej.set(t,o??e??this[t]),a!==!0||o!==void 0)||(this._$AL.has(t)||(this.hasUpdated||i||(e=void 0),this._$AL.set(t,e)),s===!0&&this._$Em!==t&&(this._$Eq??=new Set).add(t))}async _$EP(){this.isUpdatePending=!0;try{await this._$ES}catch(e){Promise.reject(e)}let t=this.scheduleUpdate();return t!=null&&await t,!this.isUpdatePending}scheduleUpdate(){return this.performUpdate()}performUpdate(){if(!this.isUpdatePending)return;if(!this.hasUpdated){if(this.renderRoot??=this.createRenderRoot(),this._$Ep){for(let[s,a]of this._$Ep)this[s]=a;this._$Ep=void 0}let i=this.constructor.elementProperties;if(i.size>0)for(let[s,a]of i){let{wrapped:o}=a,r=this[s];o!==!0||this._$AL.has(s)||r===void 0||this.C(s,void 0,a,r)}}let t=!1,e=this._$AL;try{t=this.shouldUpdate(e),t?(this.willUpdate(e),this._$EO?.forEach((i)=>i.hostUpdate?.()),this.update(e)):this._$EM()}catch(i){throw t=!1,this._$EM(),i}t&&this._$AE(e)}willUpdate(t){}_$AE(t){this._$EO?.forEach((e)=>e.hostUpdated?.()),this.hasUpdated||(this.hasUpdated=!0,this.firstUpdated(t)),this.updated(t)}_$EM(){this._$AL=new Map,this.isUpdatePending=!1}get updateComplete(){return this.getUpdateComplete()}getUpdateComplete(){return this._$ES}shouldUpdate(t){return!0}update(t){this._$Eq&&=this._$Eq.forEach((e)=>this._$ET(e,this[e])),this._$EM()}updated(t){}firstUpdated(t){}}E.elementStyles=[],E.shadowRootOptions={mode:"open"},E[H("elementProperties")]=new Map,E[H("finalized")]=new Map,Wt?.({ReactiveElement:E}),(K.reactiveElementVersions??=[]).push("2.1.2");var et=globalThis,vt=(t)=>t,X=et.trustedTypes,$t=X?X.createPolicy("lit-html",{createHTML:(t)=>t}):void 0;var S=`lit$${Math.random().toFixed(9).slice(2)}$`,Et="?"+S,Yt=`<${Et}>`,z=document,U=()=>z.createComment(""),I=(t)=>t===null||typeof t!="object"&&typeof t!="function",it=Array.isArray,Qt=(t)=>it(t)||typeof t?.[Symbol.iterator]=="function";var N=/<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g,yt=/-->/g,_t=/>/g,R=RegExp(`>|[ 	
+\f\r](?:([^\\s"'>=/]+)([ 	
+\f\r]*=[ 	
+\f\r]*(?:[^ 	
+\f\r"'\`<>=]|("|')|))|$)`,"g"),xt=/'/g,wt=/"/g,St=/^(?:script|style|textarea|title)$/i,st=(t)=>(e,...i)=>({_$litType$:t,strings:e,values:i}),l=st(1),v=st(2),le=st(3),O=Symbol.for("lit-noChange"),d=Symbol.for("lit-nothing"),kt=new WeakMap,T=z.createTreeWalker(z,129);function At(t,e){if(!it(t)||!t.hasOwnProperty("raw"))throw Error("invalid template strings array");return $t!==void 0?$t.createHTML(e):e}var Kt=(t,e)=>{let i=t.length-1,s=[],a,o=e===2?"<svg>":e===3?"<math>":"",r=N;for(let n=0;n<i;n++){let h=t[n],c,u,m=-1,k=0;for(;k<h.length&&(r.lastIndex=k,u=r.exec(h),u!==null);)k=r.lastIndex,r===N?u[1]==="!--"?r=yt:u[1]!==void 0?r=_t:u[2]!==void 0?(St.test(u[2])&&(a=RegExp("</"+u[2],"g")),r=R):u[3]!==void 0&&(r=R):r===R?u[0]===">"?(r=a??N,m=-1):u[1]===void 0?m=-2:(m=r.lastIndex-u[2].length,c=u[1],r=u[3]===void 0?R:u[3]==='"'?wt:xt):r===wt||r===xt?r=R:r===yt||r===_t?r=N:(r=R,a=void 0);let M=r===R&&t[n+1].startsWith("/>")?" ":"";o+=r===N?h+Yt:m>=0?(s.push(c),h.slice(0,m)+"$lit$"+h.slice(m)+S+M):h+S+(m===-2?n:M)}return[At(t,o+(t[i]||"<?>")+(e===2?"</svg>":e===3?"</math>":"")),s]};class D{constructor({strings:t,_$litType$:e},i){let s;this.parts=[];let a=0,o=0,r=t.length-1,n=this.parts,[h,c]=Kt(t,e);if(this.el=D.createElement(h,i),T.currentNode=this.el.content,e===2||e===3){let u=this.el.content.firstChild;u.replaceWith(...u.childNodes)}for(;(s=T.nextNode())!==null&&n.length<r;){if(s.nodeType===1){if(s.hasAttributes())for(let u of s.getAttributeNames())if(u.endsWith("$lit$")){let m=c[o++],k=s.getAttribute(u).split(S),M=/([.?@])?(.*)/.exec(m);n.push({type:1,index:a,name:M[2],strings:k,ctor:M[1]==="."?Pt:M[1]==="?"?Mt:M[1]==="@"?Rt:V}),s.removeAttribute(u)}else u.startsWith(S)&&(n.push({type:6,index:a}),s.removeAttribute(u));if(St.test(s.tagName)){let u=s.textContent.split(S),m=u.length-1;if(m>0){s.textContent=X?X.emptyScript:"";for(let k=0;k<m;k++)s.append(u[k],U()),T.nextNode(),n.push({type:2,index:++a});s.append(u[m],U())}}}else if(s.nodeType===8)if(s.data===Et)n.push({type:2,index:a});else{let u=-1;for(;(u=s.data.indexOf(S,u+1))!==-1;)n.push({type:7,index:a}),u+=S.length-1}a++}}static createElement(t,e){let i=z.createElement("template");return i.innerHTML=t,i}}function L(t,e,i=t,s){if(e===O)return e;let a=s!==void 0?i._$Co?.[s]:i._$Cl,o=I(e)?void 0:e._$litDirective$;return a?.constructor!==o&&(a?._$AO?.(!1),o===void 0?a=void 0:(a=new o(t),a._$AT(t,i,s)),s!==void 0?(i._$Co??=[])[s]=a:i._$Cl=a),a!==void 0&&(e=L(t,a._$AS(t,e.values),a,s)),e}class Ct{constructor(t,e){this._$AV=[],this._$AN=void 0,this._$AD=t,this._$AM=e}get parentNode(){return this._$AM.parentNode}get _$AU(){return this._$AM._$AU}u(t){let{el:{content:e},parts:i}=this._$AD,s=(t?.creationScope??z).importNode(e,!0);T.currentNode=s;let a=T.nextNode(),o=0,r=0,n=i[0];for(;n!==void 0;){if(o===n.index){let h;n.type===2?h=new j(a,a.nextSibling,this,t):n.type===1?h=new n.ctor(a,n.name,n.strings,this,t):n.type===6&&(h=new Tt(a,this,t)),this._$AV.push(h),n=i[++r]}o!==n?.index&&(a=T.nextNode(),o++)}return T.currentNode=z,s}p(t){let e=0;for(let i of this._$AV)i!==void 0&&(i.strings!==void 0?(i._$AI(t,i,e),e+=i.strings.length-2):i._$AI(t[e])),e++}}class j{get _$AU(){return this._$AM?._$AU??this._$Cv}constructor(t,e,i,s){this.type=2,this._$AH=d,this._$AN=void 0,this._$AA=t,this._$AB=e,this._$AM=i,this.options=s,this._$Cv=s?.isConnected??!0}get parentNode(){let t=this._$AA.parentNode,e=this._$AM;return e!==void 0&&t?.nodeType===11&&(t=e.parentNode),t}get startNode(){return this._$AA}get endNode(){return this._$AB}_$AI(t,e=this){t=L(this,t,e),I(t)?t===d||t==null||t===""?(this._$AH!==d&&this._$AR(),this._$AH=d):t!==this._$AH&&t!==O&&this._(t):t._$litType$!==void 0?this.$(t):t.nodeType!==void 0?this.T(t):Qt(t)?this.k(t):this._(t)}O(t){return this._$AA.parentNode.insertBefore(t,this._$AB)}T(t){this._$AH!==t&&(this._$AR(),this._$AH=this.O(t))}_(t){this._$AH!==d&&I(this._$AH)?this._$AA.nextSibling.data=t:this.T(z.createTextNode(t)),this._$AH=t}$(t){let{values:e,_$litType$:i}=t,s=typeof i=="number"?this._$AC(t):(i.el===void 0&&(i.el=D.createElement(At(i.h,i.h[0]),this.options)),i);if(this._$AH?._$AD===s)this._$AH.p(e);else{let a=new Ct(s,this),o=a.u(this.options);a.p(e),this.T(o),this._$AH=a}}_$AC(t){let e=kt.get(t.strings);return e===void 0&&kt.set(t.strings,e=new D(t)),e}k(t){it(this._$AH)||(this._$AH=[],this._$AR());let e=this._$AH,i,s=0;for(let a of t)s===e.length?e.push(i=new j(this.O(U()),this.O(U()),this,this.options)):i=e[s],i._$AI(a),s++;s<e.length&&(this._$AR(i&&i._$AB.nextSibling,s),e.length=s)}_$AR(t=this._$AA.nextSibling,e){for(this._$AP?.(!1,!0,e);t!==this._$AB;){let i=vt(t).nextSibling;vt(t).remove(),t=i}}setConnected(t){this._$AM===void 0&&(this._$Cv=t,this._$AP?.(t))}}class V{get tagName(){return this.element.tagName}get _$AU(){return this._$AM._$AU}constructor(t,e,i,s,a){this.type=1,this._$AH=d,this._$AN=void 0,this.element=t,this.name=e,this._$AM=s,this.options=a,i.length>2||i[0]!==""||i[1]!==""?(this._$AH=Array(i.length-1).fill(new String),this.strings=i):this._$AH=d}_$AI(t,e=this,i,s){let a=this.strings,o=!1;if(a===void 0)t=L(this,t,e,0),o=!I(t)||t!==this._$AH&&t!==O,o&&(this._$AH=t);else{let r=t,n,h;for(t=a[0],n=0;n<a.length-1;n++)h=L(this,r[i+n],e,n),h===O&&(h=this._$AH[n]),o||=!I(h)||h!==this._$AH[n],h===d?t=d:t!==d&&(t+=(h??"")+a[n+1]),this._$AH[n]=h}o&&!s&&this.j(t)}j(t){t===d?this.element.removeAttribute(this.name):this.element.setAttribute(this.name,t??"")}}class Pt extends V{constructor(){super(...arguments),this.type=3}j(t){this.element[this.name]=t===d?void 0:t}}class Mt extends V{constructor(){super(...arguments),this.type=4}j(t){this.element.toggleAttribute(this.name,!!t&&t!==d)}}class Rt extends V{constructor(t,e,i,s,a){super(t,e,i,s,a),this.type=5}_$AI(t,e=this){if((t=L(this,t,e,0)??d)===O)return;let i=this._$AH,s=t===d&&i!==d||t.capture!==i.capture||t.once!==i.once||t.passive!==i.passive,a=t!==d&&(i===d||s);s&&this.element.removeEventListener(this.name,this,i),a&&this.element.addEventListener(this.name,this,t),this._$AH=t}handleEvent(t){typeof this._$AH=="function"?this._$AH.call(this.options?.host??this.element,t):this._$AH.handleEvent(t)}}class Tt{constructor(t,e,i){this.element=t,this.type=6,this._$AN=void 0,this._$AM=e,this.options=i}get _$AU(){return this._$AM._$AU}_$AI(t){L(this,t)}}var Jt=et.litHtmlPolyfillSupport;Jt?.(D,j),(et.litHtmlVersions??=[]).push("3.3.2");var zt=(t,e,i)=>{let s=i?.renderBefore??e,a=s._$litPart$;if(a===void 0){let o=i?.renderBefore??null;s._$litPart$=a=new j(e.insertBefore(U(),o),o,void 0,i??{})}return a._$AI(t),a};var at=globalThis;class f extends E{constructor(){super(...arguments),this.renderOptions={host:this},this._$Do=void 0}createRenderRoot(){let t=super.createRenderRoot();return this.renderOptions.renderBefore??=t.firstChild,t}update(t){let e=this.render();this.hasUpdated||(this.renderOptions.isConnected=this.isConnected),super.update(t),this._$Do=zt(e,this.renderRoot,this.renderOptions)}connectedCallback(){super.connectedCallback(),this._$Do?.setConnected(!0)}disconnectedCallback(){super.disconnectedCallback(),this._$Do?.setConnected(!1)}render(){return O}}f._$litElement$=!0,f.finalized=!0,at.litElementHydrateSupport?.({LitElement:f});var Xt=at.litElementPolyfillSupport;Xt?.({LitElement:f});(at.litElementVersions??=[]).push("4.2.2");var _=(t)=>(e,i)=>{i!==void 0?i.addInitializer(()=>{customElements.define(t,e)}):customElements.define(t,e)};var Zt={attribute:!0,type:String,converter:B,reflect:!1,hasChanged:J},te=(t=Zt,e,i)=>{let{kind:s,metadata:a}=i,o=globalThis.litPropertyMetadata.get(a);if(o===void 0&&globalThis.litPropertyMetadata.set(a,o=new Map),s==="setter"&&((t=Object.create(t)).wrapped=!0),o.set(i.name,t),s==="accessor"){let{name:r}=i;return{set(n){let h=e.get.call(this);e.set.call(this,n),this.requestUpdate(r,h,t,!0,n)},init(n){return n!==void 0&&this.C(r,void 0,t,n),n}}}if(s==="setter"){let{name:r}=i;return function(n){let h=this[r];e.call(this,n),this.requestUpdate(r,h,t,!0,n)}}throw Error("Unsupported decorator location: "+s)};function g(t){return(e,i)=>typeof i=="object"?te(t,e,i):((s,a,o)=>{let r=a.hasOwnProperty(o);return a.constructor.createProperty(o,s),r?Object.getOwnPropertyDescriptor(a,o):void 0})(t,e,i)}function b(t){return g({...t,state:!0,attribute:!1})}function F(t){return t.shelves?.length?t.shelves:Array(t.rows).fill(t.cols)}function q(t){return F(t).reduce((e,i)=>e+i,0)}var G=[{key:"name",label:"Nome del vino",kind:"text"},{key:"producer",label:"Produttore",kind:"text"},{key:"vintage",label:"Annata",kind:"year"},{key:"region",label:"Regione / denominazione",kind:"text"},{key:"country",label:"Paese",kind:"text"},{key:"grape",label:"Vitigno",kind:"text"},{key:"drink_from",label:"Da bere dal",kind:"year"},{key:"drink_until",label:"Da bere entro il",kind:"year"},{key:"price",label:"Prezzo (€)",kind:"number"},{key:"notes",label:"Note",kind:"area"}];function A(t){return`${t.name||"Vino"}${t.vintage?` ${t.vintage}`:""}`}function Lt(t,e){let i=e.find((s)=>s.id===t.rack_id);if(!i||t.row==null||t.col==null)return"Da sistemare";return`${i.name} · mensola ${t.row+1}, posto ${t.col+1}`}function Ht(t){if(t.drink_from&&t.drink_until)return`${t.drink_from}–${t.drink_until}`;if(t.drink_until)return`entro il ${t.drink_until}`;if(t.drink_from)return`dal ${t.drink_from}`;return""}function Ot(t){return t.normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase()}function Bt(t,e){if(!e)return!0;let i=Ot([t.name,t.producer,t.vintage,t.region,t.country,t.grape,t.notes,t.code].filter(Boolean).join(" "));return Ot(e).split(/\s+/).every((s)=>i.includes(s))}var x=y`
   :host {
-    --tb-accent: #8e2437;
+    --tb-accent: #9b2c3f;
+    --tb-accent-2: #6b1424;
+    --tb-gold: #d8b46a;
+    --tb-ink: #f2ebe3;
+    --tb-ink-2: #a89d93;
+    --tb-line: rgba(255, 255, 255, 0.08);
+    --tb-panel: linear-gradient(180deg, #211c1d 0%, #151213 100%);
+    --tb-field: rgba(255, 255, 255, 0.045);
+    --tb-serif: "Playfair Display", "Cormorant Garamond", Georgia, "Times New Roman", serif;
+  }
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
   }
   .btn {
-    border: 1px solid var(--divider-color);
-    background: var(--card-background-color, #222);
-    color: var(--primary-text-color);
-    border-radius: 18px;
-    padding: 7px 14px;
+    border: 1px solid var(--tb-line);
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--tb-ink, var(--primary-text-color));
+    border-radius: 999px;
+    padding: 8px 16px;
     font: inherit;
     font-size: 0.9em;
+    letter-spacing: 0.01em;
     cursor: pointer;
     white-space: nowrap;
+    transition: background 0.15s, border-color 0.15s, transform 0.1s;
   }
   .btn:hover {
-    filter: brightness(1.15);
+    background: rgba(255, 255, 255, 0.09);
+    border-color: rgba(255, 255, 255, 0.16);
+  }
+  .btn:active {
+    transform: scale(0.98);
   }
   .btn:disabled {
-    opacity: 0.5;
+    opacity: 0.45;
     cursor: default;
   }
   .btn.primary {
-    background: var(--tb-accent);
-    border-color: var(--tb-accent);
+    background: linear-gradient(180deg, var(--tb-accent), var(--tb-accent-2));
+    border-color: rgba(255, 255, 255, 0.12);
     color: #fff;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 6px 16px rgba(155, 44, 63, 0.35);
+  }
+  .btn.primary:hover {
+    filter: brightness(1.1);
   }
   .btn.danger {
-    color: #e57373;
+    color: #ff8a80;
   }
   .btn.small {
-    padding: 4px 10px;
-    font-size: 0.8em;
+    padding: 5px 12px;
+    font-size: 0.82em;
+  }
+  .btn.icon {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
   .chip {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    border: 1px solid var(--divider-color);
-    background: none;
-    color: var(--primary-text-color);
-    border-radius: 16px;
-    padding: 5px 11px;
+    gap: 7px;
+    border: 1px solid var(--tb-line);
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--tb-ink, var(--primary-text-color));
+    border-radius: 999px;
+    padding: 6px 13px;
     font: inherit;
     font-size: 0.85em;
     cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .chip:hover {
+    border-color: rgba(255, 255, 255, 0.2);
   }
   .chip.active {
-    background: var(--tb-accent);
-    border-color: var(--tb-accent);
+    background: rgba(155, 44, 63, 0.28);
+    border-color: rgba(216, 120, 136, 0.55);
     color: #fff;
   }
   .dot {
-    width: 10px;
-    height: 10px;
+    width: 9px;
+    height: 9px;
     border-radius: 50%;
     display: inline-block;
     flex: none;
-    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.15);
   }
 
   /* dialogs */
   .overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.55);
+    background: rgba(6, 4, 5, 0.62);
+    backdrop-filter: blur(10px) saturate(120%);
+    -webkit-backdrop-filter: blur(10px) saturate(120%);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 999;
-    padding: 12px;
+    padding: 14px;
+    animation: tb-fade 0.18s ease-out;
   }
   .dialog {
-    background: var(--card-background-color, #1e1e1e);
-    color: var(--primary-text-color);
-    border-radius: 16px;
-    width: min(560px, 100%);
+    background: var(--tb-panel);
+    color: var(--tb-ink);
+    border: 1px solid var(--tb-line);
+    border-radius: 24px;
+    width: min(580px, 100%);
     max-height: 92vh;
     overflow: auto;
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    animation: tb-rise 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
+    scrollbar-width: thin;
+  }
+  @keyframes tb-fade {
+    from { opacity: 0; }
+  }
+  @keyframes tb-rise {
+    from { opacity: 0; transform: translateY(14px) scale(0.98); }
   }
   .dialog-head {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    padding: 16px 18px 6px;
-    gap: 10px;
+    align-items: flex-start;
+    padding: 22px 24px 8px;
+    gap: 12px;
+  }
+  .eyebrow {
+    font-size: 0.7em;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--tb-gold);
+    margin-bottom: 4px;
   }
   .dialog-title {
-    font-size: 1.15em;
+    font-family: var(--tb-serif);
+    font-size: 1.55em;
     font-weight: 600;
+    line-height: 1.15;
   }
   .dialog-body {
-    padding: 8px 18px 14px;
+    padding: 10px 24px 16px;
   }
   .dialog-foot {
     display: flex;
     gap: 8px;
     justify-content: flex-end;
     flex-wrap: wrap;
-    padding: 8px 18px 18px;
+    padding: 14px 24px 22px;
+    border-top: 1px solid var(--tb-line);
   }
   .close {
-    background: none;
-    border: none;
-    color: var(--secondary-text-color);
-    font-size: 1.4em;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--tb-line);
+    color: var(--tb-ink-2);
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    font-size: 1em;
     cursor: pointer;
+    flex: none;
+  }
+  .close:hover {
+    color: var(--tb-ink);
+    background: rgba(255, 255, 255, 0.1);
   }
   .form {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 10px 12px;
+    gap: 12px 14px;
   }
   .field {
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    font-size: 0.85em;
-    color: var(--secondary-text-color);
+    gap: 6px;
+    font-size: 0.74em;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--tb-ink-2);
   }
   .field.wide {
     grid-column: 1 / -1;
@@ -126,74 +197,127 @@ function t(t,e,i,s){var o,a=arguments.length,r=a<3?e:null===s?s=Object.getOwnPro
   .field textarea,
   .field select {
     font: inherit;
-    font-size: 1.05em;
-    color: var(--primary-text-color);
-    background: var(--secondary-background-color, rgba(127, 127, 127, 0.1));
-    border: 1px solid var(--divider-color);
-    border-radius: 8px;
-    padding: 8px 10px;
+    font-size: 1.32em;
+    letter-spacing: normal;
+    text-transform: none;
+    color: var(--tb-ink);
+    background: var(--tb-field);
+    border: 1px solid var(--tb-line);
+    border-radius: 12px;
+    padding: 10px 12px;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .field input:focus,
+  .field textarea:focus {
+    border-color: rgba(216, 120, 136, 0.6);
+    box-shadow: 0 0 0 3px rgba(155, 44, 63, 0.25);
   }
   .types {
     display: flex;
     gap: 6px;
     flex-wrap: wrap;
+    text-transform: none;
+    letter-spacing: normal;
+  }
+  .field .types {
+    font-size: 1.3em;
   }
   .note {
     font-size: 0.85em;
-    color: var(--secondary-text-color);
+    color: var(--tb-ink-2);
+  }
+  .section {
+    font-size: 0.72em;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--tb-gold);
+    margin: 22px 0 10px;
+  }
+  .stepper {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid var(--tb-line);
+    border-radius: 999px;
+    background: var(--tb-field);
+    overflow: hidden;
+  }
+  .stepper button {
+    width: 34px;
+    height: 32px;
+    border: none;
+    background: none;
+    color: var(--tb-ink);
+    font-size: 1.1em;
+    cursor: pointer;
+  }
+  .stepper button:hover {
+    background: rgba(255, 255, 255, 0.08);
+  }
+  .stepper span {
+    min-width: 30px;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
   }
   @media (max-width: 480px) {
     .form {
       grid-template-columns: 1fr;
     }
+    .dialog-head,
+    .dialog-body,
+    .dialog-foot {
+      padding-left: 16px;
+      padding-right: 16px;
+    }
   }
-`,_t={red:{shape:"bordeaux",glass:"tb-glass-red",clear:!1,foil:"tb-foil-wine"},white:{shape:"burgundy",glass:"tb-wine-white",clear:!0,foil:"tb-foil-silver"},rose:{shape:"bordeaux",glass:"tb-wine-rose",clear:!0,foil:"tb-foil-rose"},sparkling:{shape:"champagne",glass:"tb-glass-green",clear:!1,foil:"tb-foil-gold"},dessert:{shape:"bordeaux",glass:"tb-glass-amber",clear:!1,foil:"tb-foil-gold"}},vt={bordeaux:{body:"M9.7 1h4.6v16.5c0 3.4 6.7 4.8 6.7 11.5v31.2c0 1.5-1.2 2.8-2.8 2.8H5.8C4.2 63 3 61.7 3 60.2V29c0-6.7 6.7-8.1 6.7-11.5z",foil:"M9.5 1.4c0-.8.5-1.4 1.3-1.4h2.4c.8 0 1.3.6 1.3 1.4V13H9.5z",label:[4.4,35,15.2,16.5],neckY:15,fillY:22},burgundy:{body:"M9.8 1h4.4v13c0 5 7 9 7 18v28.2c0 1.5-1.2 2.8-2.8 2.8H5.6c-1.6 0-2.8-1.3-2.8-2.8V32c0-9 7-13 7-18z",foil:"M9.6 1.4c0-.8.5-1.4 1.3-1.4h2.2c.8 0 1.3.6 1.3 1.4V12H9.6z",label:[4.2,36,15.6,16],neckY:13.5,fillY:19},champagne:{body:"M9.4 1h5.2v11c0 6 7.6 9.5 7.6 19v29.4c0 1.4-1.2 2.6-2.6 2.6H4.4C3 63 1.8 61.8 1.8 60.4V31c0-9.5 7.6-13 7.6-19z",foil:"M9 1.6C9 .7 9.7 0 10.6 0h2.8c.9 0 1.6.7 1.6 1.6V12c0 2.4 2.6 4.4 4.3 6.6l-14.6.1C6.4 16.4 9 14.4 9 12z",label:[3.6,37,16.8,13],neckY:20,fillY:20},half:{body:"M10 20h4v9c0 2.6 5.2 3.6 5.2 8.8v22.6c0 1.4-1.1 2.6-2.5 2.6H7.3c-1.4 0-2.5-1.2-2.5-2.6V37.8c0-5.2 5.2-6.2 5.2-8.8z",foil:"M9.8 20.9c0-.5.4-.9.9-.9h2.6c.5 0 .9.4.9.9V28H9.8z",label:[6,44,12,11],neckY:30,fillY:33}};function xt(t,e){const i=_t[t]||_t.red,s=vt[i.shape],[o,a,r,n]=s.label,l=o+r/2;return F`<svg viewBox="0 0 24 64" aria-hidden="true">
+`;var Nt={red:{shape:"bordeaux",glass:"tb-glass-red",clear:!1,foil:"tb-foil-wine"},white:{shape:"burgundy",glass:"tb-wine-white",clear:!0,foil:"tb-foil-silver"},rose:{shape:"bordeaux",glass:"tb-wine-rose",clear:!0,foil:"tb-foil-rose"},sparkling:{shape:"champagne",glass:"tb-glass-green",clear:!1,foil:"tb-foil-gold"},dessert:{shape:"bordeaux",glass:"tb-glass-amber",clear:!1,foil:"tb-foil-gold"}},rt={bordeaux:{body:"M9.7 1h4.6v16.5c0 3.4 6.7 4.8 6.7 11.5v31.2c0 1.5-1.2 2.8-2.8 2.8H5.8C4.2 63 3 61.7 3 60.2V29c0-6.7 6.7-8.1 6.7-11.5z",foil:"M9.5 1.4c0-.8.5-1.4 1.3-1.4h2.4c.8 0 1.3.6 1.3 1.4V13H9.5z",label:[4.4,35,15.2,16.5],neckY:15,fillY:22},burgundy:{body:"M9.8 1h4.4v13c0 5 7 9 7 18v28.2c0 1.5-1.2 2.8-2.8 2.8H5.6c-1.6 0-2.8-1.3-2.8-2.8V32c0-9 7-13 7-18z",foil:"M9.6 1.4c0-.8.5-1.4 1.3-1.4h2.2c.8 0 1.3.6 1.3 1.4V12H9.6z",label:[4.2,36,15.6,16],neckY:13.5,fillY:19},champagne:{body:"M9.4 1h5.2v11c0 6 7.6 9.5 7.6 19v29.4c0 1.4-1.2 2.6-2.6 2.6H4.4C3 63 1.8 61.8 1.8 60.4V31c0-9.5 7.6-13 7.6-19z",foil:"M9 1.6C9 .7 9.7 0 10.6 0h2.8c.9 0 1.6.7 1.6 1.6V12c0 2.4 2.6 4.4 4.3 6.6l-14.6.1C6.4 16.4 9 14.4 9 12z",label:[3.6,37,16.8,13],neckY:20,fillY:20},half:{body:"M10 20h4v9c0 2.6 5.2 3.6 5.2 8.8v22.6c0 1.4-1.1 2.6-2.5 2.6H7.3c-1.4 0-2.5-1.2-2.5-2.6V37.8c0-5.2 5.2-6.2 5.2-8.8z",foil:"M9.8 20.9c0-.5.4-.9.9-.9h2.6c.5 0 .9.4.9.9V28H9.8z",label:[6,44,12,11],neckY:30,fillY:33}};function C(t,e){let i=Nt[t]||Nt.red,s=rt[i.shape],[a,o,r,n]=s.label,h=a+r/2;return v`<svg viewBox="0 0 24 64" aria-hidden="true">
     <ellipse cx="12" cy="63.2" rx="9.5" ry="1" fill="rgba(0,0,0,.55)" filter="url(#tb-soft)"/>
-    ${i.clear?F`<path d=${s.body} fill="url(#tb-glass-clear)"/>
+    ${i.clear?v`<path d=${s.body} fill="url(#tb-glass-clear)"/>
             <path d=${s.body} fill=${`url(#${i.glass})`} clip-path=${`url(#tb-fill-${i.shape})`}/>
-            <rect x="0" y=${s.fillY} width="24" height=".5" fill="rgba(255,255,255,.35)" clip-path=${`url(#tb-in-${i.shape})`}/>`:F`<path d=${s.body} fill=${`url(#${i.glass})`}/>`}
+            <rect x="0" y=${s.fillY} width="24" height=".5" fill="rgba(255,255,255,.35)" clip-path=${`url(#tb-in-${i.shape})`}/>`:v`<path d=${s.body} fill=${`url(#${i.glass})`}/>`}
     <path d=${s.body} fill="url(#tb-cylinder)"/>
     <path d=${s.body} fill="none" stroke="rgba(255,255,255,.18)" stroke-width=".35"/>
     <ellipse cx="12" cy="61.4" rx="6.5" ry="1.3" fill="rgba(0,0,0,.35)" clip-path=${`url(#tb-in-${i.shape})`}/>
     <g class="label-group">
-      <rect x=${o} y=${a} width=${r} height=${n} rx=".5" fill="url(#tb-paper)"/>
-      <rect x=${o} y=${a} width=${r} height=${n} rx=".5" fill="url(#tb-label-curve)"/>
-      <rect x=${o+.9} y=${a+.9} width=${r-1.8} height=${n-1.8} rx=".3" fill="none" stroke="rgba(120,90,50,.55)" stroke-width=".25"/>
-      <circle cx=${l} cy=${a+.3*n} r=${.12*Math.min(r,n)} fill="none" stroke="rgba(120,80,30,.8)" stroke-width=".3"/>
-      <rect x=${l-.3*r} y=${a+.55*n} width=${.6*r} height=".9" rx=".45" fill="rgba(40,20,15,.75)"/>
-      <rect x=${l-.22*r} y=${a+.7*n} width=${.44*r} height=".5" rx=".25" fill="rgba(40,20,15,.45)"/>
-      <rect x=${l-.15*r} y=${a+.8*n} width=${.3*r} height=".5" rx=".25" fill="rgba(40,20,15,.35)"/>
+      <rect x=${a} y=${o} width=${r} height=${n} rx=".5" fill="url(#tb-paper)"/>
+      <rect x=${a} y=${o} width=${r} height=${n} rx=".5" fill="url(#tb-label-curve)"/>
+      <rect x=${a+0.9} y=${o+0.9} width=${r-1.8} height=${n-1.8} rx=".3" fill="none" stroke="rgba(120,90,50,.55)" stroke-width=".25"/>
+      <circle cx=${h} cy=${o+n*0.3} r=${Math.min(r,n)*0.12} fill="none" stroke="rgba(120,80,30,.8)" stroke-width=".3"/>
+      <rect x=${h-r*0.3} y=${o+n*0.55} width=${r*0.6} height=".9" rx=".45" fill="rgba(40,20,15,.75)"/>
+      <rect x=${h-r*0.22} y=${o+n*0.7} width=${r*0.44} height=".5" rx=".25" fill="rgba(40,20,15,.45)"/>
+      <rect x=${h-r*0.15} y=${o+n*0.8} width=${r*0.3} height=".5" rx=".25" fill="rgba(40,20,15,.35)"/>
     </g>
     <path d=${s.foil} fill=${`url(#${i.foil})`}/>
     <path d=${s.foil} fill="url(#tb-cylinder)" opacity=".6"/>
     <path d="M5.4 30c.6-3.8 2.6-5.6 3.6-6.8V59.5H5.4z" fill="url(#tb-spec)" clip-path=${`url(#tb-in-${i.shape})`} opacity=".9"/>
     <rect x="17.6" y="31" width=".9" height="27" rx=".45" fill="rgba(255,255,255,.18)" clip-path=${`url(#tb-in-${i.shape})`}/>
-    ${e?function(t,e){const i="past"===e?"url(#tb-tag-past)":"url(#tb-tag-soon)";return F`<g class="tag">
+    ${e?ee(s.neckY,e):d}
+  </svg>`}function ee(t,e){let i=e==="past"?"url(#tb-tag-past)":"url(#tb-tag-soon)";return v`<g class="tag">
     <path d=${`M12 ${t}c3 .2 4.6 1 5.4 2.6`} fill="none" stroke="rgba(240,230,210,.85)" stroke-width=".35"/>
     <g transform=${`translate(16.4 ${t+2}) rotate(14)`}>
       <rect x="0" y="0" width="6.4" height="8.6" rx="1.1" fill=${i} stroke="rgba(0,0,0,.35)" stroke-width=".25"/>
       <circle cx="3.2" cy="1.4" r=".55" fill="rgba(0,0,0,.45)"/>
-      ${"past"===e?F`<path d="M3.2 3.3v2.6M3.2 7v.1" stroke="#fff" stroke-width=".8" stroke-linecap="round"/>`:F`<circle cx="3.2" cy="5.4" r="1.9" fill="none" stroke="#3b2200" stroke-width=".45"/>
+      ${e==="past"?v`<path d="M3.2 3.3v2.6M3.2 7v.1" stroke="#fff" stroke-width=".8" stroke-linecap="round"/>`:v`<circle cx="3.2" cy="5.4" r="1.9" fill="none" stroke="#3b2200" stroke-width=".45"/>
               <path d="M3.2 4.3v1.2l.8.6" fill="none" stroke="#3b2200" stroke-width=".45" stroke-linecap="round"/>`}
     </g>
-  </g>`}(s.neckY,e):W}
-  </svg>`}const wt=F`<svg viewBox="0 0 24 64" aria-hidden="true">
-  <path d=${vt.bordeaux.body} fill="rgba(255,255,255,.03)" stroke="rgba(255,255,255,.16)" stroke-width=".45" stroke-dasharray="1.4 1.2"/>
-</svg>`,kt=(t,e)=>F`<linearGradient id=${t} x1="0" x2="1" y1="0" y2="0">
-  ${e.map(([t,e])=>F`<stop offset=${t} stop-color=${e}/>`)}
-</linearGradient>`,At=F`<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
-  <filter id="tb-soft" x="-20%" y="-200%" width="140%" height="500%"><feGaussianBlur stdDeviation=".6"/></filter>
-  ${["bordeaux","burgundy","champagne","half"].map(t=>{const e=vt[t];return F`
+  </g>`}var Ut=v`<svg viewBox="0 0 24 64" aria-hidden="true">
+  <path d=${rt.bordeaux.body} fill="rgba(255,255,255,.03)" stroke="rgba(255,255,255,.16)" stroke-width=".45" stroke-dasharray="1.4 1.2"/>
+</svg>`,ie=(t)=>{let e=rt[t];return v`
     <clipPath id=${`tb-in-${t}`}><path d=${e.body}/></clipPath>
-    <clipPath id=${`tb-fill-${t}`}><rect x="0" y=${e.fillY} width="24" height="64"/></clipPath>`})}
+    <clipPath id=${`tb-fill-${t}`}><rect x="0" y=${e.fillY} width="24" height="64"/></clipPath>`},w=(t,e)=>v`<linearGradient id=${t} x1="0" x2="1" y1="0" y2="0">
+  ${e.map(([i,s])=>v`<stop offset=${i} stop-color=${s}/>`)}
+</linearGradient>`,P=v`<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <filter id="tb-soft" x="-20%" y="-200%" width="140%" height="500%"><feGaussianBlur stdDeviation=".6"/></filter>
+  ${["bordeaux","burgundy","champagne","half"].map(ie)}
 
   <!-- glass and wine -->
-  ${kt("tb-glass-red",[[0,"#060404"],[.18,"#1c0a0d"],[.42,"#3b0f18"],[.6,"#2a0a11"],[1,"#050303"]])}
-  ${kt("tb-glass-green",[[0,"#030603"],[.2,"#0e2412"],[.42,"#1d4223"],[.62,"#12301a"],[1,"#020402"]])}
-  ${kt("tb-glass-amber",[[0,"#160902"],[.2,"#5a2c08"],[.42,"#9c5714"],[.62,"#6e3a0c"],[1,"#120701"]])}
-  ${kt("tb-wine-white",[[0,"#5a4a12"],[.2,"#b9a043"],[.42,"#ecd98e"],[.62,"#cdb158"],[1,"#4d3e0e"]])}
-  ${kt("tb-wine-rose",[[0,"#b87a6d"],[.2,"#d9917c"],[.42,"#f0b3a0"],[.62,"#e39a83"],[1,"#c48a7c"]])}
-  ${kt("tb-glass-clear",[[0,"rgba(190,215,200,.30)"],[.3,"rgba(230,245,235,.10)"],[.7,"rgba(230,245,235,.08)"],[1,"rgba(160,190,175,.35)"]])}
+  ${w("tb-glass-red",[[0,"#060404"],[0.18,"#1c0a0d"],[0.42,"#3b0f18"],[0.6,"#2a0a11"],[1,"#050303"]])}
+  ${w("tb-glass-green",[[0,"#030603"],[0.2,"#0e2412"],[0.42,"#1d4223"],[0.62,"#12301a"],[1,"#020402"]])}
+  ${w("tb-glass-amber",[[0,"#160902"],[0.2,"#5a2c08"],[0.42,"#9c5714"],[0.62,"#6e3a0c"],[1,"#120701"]])}
+  ${w("tb-wine-white",[[0,"#5a4a12"],[0.2,"#b9a043"],[0.42,"#ecd98e"],[0.62,"#cdb158"],[1,"#4d3e0e"]])}
+  ${w("tb-wine-rose",[[0,"#b87a6d"],[0.2,"#d9917c"],[0.42,"#f0b3a0"],[0.62,"#e39a83"],[1,"#c48a7c"]])}
+  ${w("tb-glass-clear",[[0,"rgba(190,215,200,.30)"],[0.3,"rgba(230,245,235,.10)"],[0.7,"rgba(230,245,235,.08)"],[1,"rgba(160,190,175,.35)"]])}
 
   <!-- light on a cylinder -->
   <linearGradient id="tb-cylinder" x1="0" x2="1">
@@ -212,10 +336,10 @@ function t(t,e,i,s){var o,a=arguments.length,r=a<3?e:null===s?s=Object.getOwnPro
   </linearGradient>
 
   <!-- capsules -->
-  ${kt("tb-foil-wine",[[0,"#1d0508"],[.3,"#7a1d2b"],[.45,"#c4515f"],[.6,"#6a1523"],[1,"#150305"]])}
-  ${kt("tb-foil-gold",[[0,"#5a3a08"],[.3,"#c9962e"],[.45,"#ffe7a1"],[.6,"#b88421"],[1,"#4a2f05"]])}
-  ${kt("tb-foil-silver",[[0,"#3c3c3c"],[.3,"#a9a9a9"],[.45,"#f2f2f2"],[.6,"#9a9a9a"],[1,"#2e2e2e"]])}
-  ${kt("tb-foil-rose",[[0,"#5e2d24"],[.3,"#c47e6c"],[.45,"#f6cdbd"],[.6,"#b46e5d"],[1,"#4d241c"]])}
+  ${w("tb-foil-wine",[[0,"#1d0508"],[0.3,"#7a1d2b"],[0.45,"#c4515f"],[0.6,"#6a1523"],[1,"#150305"]])}
+  ${w("tb-foil-gold",[[0,"#5a3a08"],[0.3,"#c9962e"],[0.45,"#ffe7a1"],[0.6,"#b88421"],[1,"#4a2f05"]])}
+  ${w("tb-foil-silver",[[0,"#3c3c3c"],[0.3,"#a9a9a9"],[0.45,"#f2f2f2"],[0.6,"#9a9a9a"],[1,"#2e2e2e"]])}
+  ${w("tb-foil-rose",[[0,"#5e2d24"],[0.3,"#c47e6c"],[0.45,"#f6cdbd"],[0.6,"#b46e5d"],[1,"#4d241c"]])}
 
   <!-- label paper -->
   <linearGradient id="tb-paper" x1="0" x2="0" y1="0" y2="1">
@@ -237,60 +361,74 @@ function t(t,e,i,s){var o,a=arguments.length,r=a<3?e:null===s?s=Object.getOwnPro
   <linearGradient id="tb-tag-past" x1="0" x2="1" y1="0" y2="1">
     <stop offset="0" stop-color="#ff7a6e"/><stop offset="1" stop-color="#b3201f"/>
   </linearGradient>
-</defs></svg>`;function Et(t,e,i){return V`
+</defs></svg>`;function nt(t,e,i){return l`
     <div class="form">
       <label class="field wide">
         Tipo
         <div class="types">
-          ${Object.entries(t.types).map(([t,s])=>V`<button type="button" class="chip ${e.type===t?"active":""}"
-              @click=${()=>i("type",t)}><span class="dot" style="background:${s.color}"></span>${s.label}</button>`)}
+          ${Object.entries(t.types).map(([s,a])=>l`<button type="button" class="chip ${e.type===s?"active":""}"
+              @click=${()=>i("type",s)}><span class="dot" style="background:${a.color}"></span>${a.label}</button>`)}
         </div>
       </label>
-      ${ft.map(t=>{const s="name"===t.key||"area"===t.kind,o=e[t.key]??"",a=e=>i(t.key,e.target.value);return V`<label class="field ${s?"wide":""}">
-          ${t.label}
-          ${"area"===t.kind?V`<textarea rows="2" .value=${o} @input=${a}></textarea>`:V`<input
-                type=${"text"===t.kind?"text":"number"}
-                inputmode=${"text"===t.kind?"text":"numeric"}
-                step=${"number"===t.kind?"0.01":"1"}
+      ${G.map((s)=>{let a=s.key==="name"||s.kind==="area",o=e[s.key]??"",r=(n)=>i(s.key,n.target.value);return l`<label class="field ${a?"wide":""}">
+          ${s.label}
+          ${s.kind==="area"?l`<textarea rows="2" .value=${o} @input=${r}></textarea>`:l`<input
+                type=${s.kind==="text"?"text":"number"}
+                inputmode=${s.kind==="text"?"text":"numeric"}
+                step=${s.kind==="number"?"0.01":"1"}
                 .value=${String(o)}
-                @input=${a}
+                @input=${r}
               />`}
         </label>`})}
     </div>
-  `}let St=class extends dt{constructor(){super(...arguments),this.rackId=null,this.row=null,this.col=null,this._values={type:"red"},this._quantity=1,this._busy=!1}_close(){this.dispatchEvent(new CustomEvent("close"))}async _save(){if(String(this._values.name||"").trim()){this._busy=!0;try{const t=(await this.card.ws({type:"taponbon/add_bottles",wine:this._values,quantity:this._quantity,rack_id:this.rackId,row:this.row,col:this.col})).bottles,e=t.filter(t=>!t.rack_id).length;this.card.toast(e?`Aggiunte ${t.length} bottiglie, ${e} da sistemare: scaffale pieno`:t.length>1?`Aggiunte ${t.length} bottiglie`:"Bottiglia aggiunta"),this._close()}finally{this._busy=!1}}else this.card.toast("Scrivi almeno il nome del vino")}render(){const t=this.data.racks.find(t=>t.id===this.rackId),e=t&&null!=this.row&&null!=this.col?`${t.name}, fila ${this.row+1}, posto ${this.col+1}`:"nel primo posto libero";return V`
+  `}class ot extends f{constructor(){super(...arguments);this.rackId=null;this.row=null;this.col=null;this._values={type:"red"};this._quantity=1;this._busy=!1}static styles=x;_close(){this.dispatchEvent(new CustomEvent("close"))}async _save(){if(!String(this._values.name||"").trim()){this.card.toast("Scrivi almeno il nome del vino");return}this._busy=!0;try{let e=(await this.card.ws({type:"taponbon/add_bottles",wine:this._values,quantity:this._quantity,rack_id:this.rackId,row:this.row,col:this.col})).bottles,i=e.filter((s)=>!s.rack_id).length;this.card.toast(i?`Aggiunte ${e.length} bottiglie, ${i} da sistemare: scaffale pieno`:e.length>1?`Aggiunte ${e.length} bottiglie`:"Bottiglia aggiunta"),this._close()}finally{this._busy=!1}}render(){let t=this.data.racks.find((i)=>i.id===this.rackId),e=t&&this.row!=null&&this.col!=null?`${t.name}, mensola ${this.row+1}, posto ${this.col+1}`:"nel primo posto libero";return l`
+      ${P}
       <div class="overlay" @click=${this._close}>
-        <div class="dialog" @click=${t=>t.stopPropagation()}>
+        <div class="dialog" @click=${(i)=>i.stopPropagation()}>
           <div class="dialog-head">
-            <div class="dialog-title">Aggiungi vino</div>
+            <div style="display:flex;gap:16px;align-items:flex-end">
+              <div style="width:34px;flex:none;filter:drop-shadow(0 8px 10px rgba(0,0,0,.55))">${C(this._values.type||"red")}</div>
+              <div>
+                <div class="eyebrow">Nuovo in cantina</div>
+                <div class="dialog-title">${String(this._values.name||"").trim()||"Aggiungi vino"}</div>
+              </div>
+            </div>
             <button class="close" @click=${this._close}>✕</button>
           </div>
           <div class="dialog-body">
-            ${Et(this.data,this._values,(t,e)=>this._values={...this._values,[t]:e})}
+            ${nt(this.data,this._values,(i,s)=>this._values={...this._values,[i]:s})}
             <div class="form" style="margin-top:10px">
               <label class="field">
                 Quante bottiglie
                 <input type="number" min="1" max="100" .value=${String(this._quantity)}
-                  @input=${t=>this._quantity=Math.max(1,Math.min(100,Number(t.target.value)||1))} />
+                  @input=${(i)=>this._quantity=Math.max(1,Math.min(100,Number(i.target.value)||1))} />
               </label>
-              <div class="field">Dove<span style="color:var(--primary-text-color)">${e}${this._quantity>1?" e i successivi":""}</span></div>
+              <div class="field">Dove<span style="color:var(--tb-ink);text-transform:none;letter-spacing:normal;font-size:1.3em">${e}${this._quantity>1?" e i successivi":""}</span></div>
             </div>
-            ${this.data.settings.auto_labels?V`<p class="note">Per ogni bottiglia verrà richiesta la stampa dell'etichetta QR.</p>`:W}
+            ${this.data.settings.auto_labels?l`<p class="note">Per ogni bottiglia verrà richiesta la stampa dell'etichetta QR.</p>`:d}
           </div>
           <div class="dialog-foot">
             <button class="btn" @click=${this._close}>Annulla</button>
             <button class="btn primary" ?disabled=${this._busy} @click=${this._save}>
-              ${this._busy?"Salvo…":"Aggiungi "+(this._quantity>1?`${this._quantity} bottiglie`:"bottiglia")}
+              ${this._busy?"Salvo…":`Aggiungi ${this._quantity>1?`${this._quantity} bottiglie`:"bottiglia"}`}
             </button>
           </div>
         </div>
       </div>
-    `}};St.styles=mt,t([bt({attribute:!1})],St.prototype,"card",void 0),t([bt({attribute:!1})],St.prototype,"data",void 0),t([bt({attribute:!1})],St.prototype,"rackId",void 0),t([bt({attribute:!1})],St.prototype,"row",void 0),t([bt({attribute:!1})],St.prototype,"col",void 0),t([gt()],St.prototype,"_values",void 0),t([gt()],St.prototype,"_quantity",void 0),t([gt()],St.prototype,"_busy",void 0),St=t([pt("tb-add-dialog")],St);let Ct=class extends dt{constructor(){super(...arguments),this._label=null,this._editing=!1,this._values={},this._sameWine=!0,this._otherReason=!1,this._busy=!1}willUpdate(t){if(t.has("bottle")){const e=t.get("bottle");e?.id!==this.bottle.id&&(this._label=null,this._editing=!1,this._loadLabel())}}async _loadLabel(){const t=this.bottle.id;try{const e=await this.card.hass.callWS({type:"taponbon/get_label",bottle_id:t});this.bottle.id===t&&(this._label=e)}catch{}}_close(){this.dispatchEvent(new CustomEvent("close"))}_sameWineCount(){const t=t=>`${(t.name||"").trim().toLowerCase()}|${(t.producer||"").trim().toLowerCase()}|${t.vintage||""}`;return this.data.bottles.filter(e=>t(e)===t(this.bottle)).length}async _remove(t){this._busy=!0;try{await this.card.ws({type:"taponbon/remove_bottle",bottle_id:this.bottle.id,reason:t}),this.card.toast(`${$t(this.bottle)}: ${this.data.reasons[t]?.toLowerCase()||"tolta"}. La trovi nello storico.`),this._close()}finally{this._busy=!1}}async _saveEdit(){this._busy=!0;try{const t=await this.card.ws({type:"taponbon/update_bottle",bottle_id:this.bottle.id,changes:this._values,same_wine:this._sameWine});this.card.toast(t.updated>1?`Aggiornate ${t.updated} bottiglie`:"Bottiglia aggiornata"),this._editing=!1,this._label=null,this._loadLabel()}finally{this._busy=!1}}async _printOnPrinter(){await this.card.ws({type:"taponbon/request_label",bottle_id:this.bottle.id}),this.card.toast("Etichetta inviata alla stampante")}_printInBrowser(){if(!this._label)return;const t=window.open("","_blank","width=480,height=360");t?(t.document.write(`<!doctype html><html><head><title>Etichetta ${this._label.code}</title>\n      <style>@page{size:50mm 30mm;margin:0}html,body{margin:0}img{width:50mm;height:30mm;display:block}</style></head>\n      <body><img src="data:image/png;base64,${this._label.png_base64}"\n      onload="setTimeout(function(){window.print();window.close();},150)"></body></html>`),t.document.close()):this.card.toast("Il browser ha bloccato la finestra di stampa")}render(){const t=this.bottle,e=this.data.types[t.type];return V`
+    `}}p([g({attribute:!1})],ot.prototype,"card",void 0),p([g({attribute:!1})],ot.prototype,"data",void 0),p([g({attribute:!1})],ot.prototype,"rackId",void 0),p([g({attribute:!1})],ot.prototype,"row",void 0),p([g({attribute:!1})],ot.prototype,"col",void 0),p([b()],ot.prototype,"_values",void 0),p([b()],ot.prototype,"_quantity",void 0),p([b()],ot.prototype,"_busy",void 0),ot=p([_("tb-add-dialog")],ot);class lt extends f{constructor(){super(...arguments);this._label=null;this._editing=!1;this._values={};this._sameWine=!0;this._otherReason=!1;this._busy=!1}willUpdate(t){if(t.has("bottle")){if(t.get("bottle")?.id!==this.bottle.id)this._label=null,this._editing=!1,this._loadLabel()}}async _loadLabel(){let t=this.bottle.id;try{let e=await this.card.hass.callWS({type:"taponbon/get_label",bottle_id:t});if(this.bottle.id===t)this._label=e}catch{}}_close(){this.dispatchEvent(new CustomEvent("close"))}_sameWineCount(){let t=(e)=>`${(e.name||"").trim().toLowerCase()}|${(e.producer||"").trim().toLowerCase()}|${e.vintage||""}`;return this.data.bottles.filter((e)=>t(e)===t(this.bottle)).length}async _remove(t){this._busy=!0;try{await this.card.ws({type:"taponbon/remove_bottle",bottle_id:this.bottle.id,reason:t}),this.card.toast(`${A(this.bottle)}: ${this.data.reasons[t]?.toLowerCase()||"tolta"}. La trovi nello storico.`),this._close()}finally{this._busy=!1}}async _saveEdit(){this._busy=!0;try{let t=await this.card.ws({type:"taponbon/update_bottle",bottle_id:this.bottle.id,changes:this._values,same_wine:this._sameWine});this.card.toast(t.updated>1?`Aggiornate ${t.updated} bottiglie`:"Bottiglia aggiornata"),this._editing=!1,this._label=null,this._loadLabel()}finally{this._busy=!1}}async _printOnPrinter(){await this.card.ws({type:"taponbon/request_label",bottle_id:this.bottle.id}),this.card.toast("Etichetta inviata alla stampante")}_printInBrowser(){if(!this._label)return;let t=window.open("","_blank","width=480,height=360");if(!t){this.card.toast("Il browser ha bloccato la finestra di stampa");return}t.document.write(`<!doctype html><html><head><title>Etichetta ${this._label.code}</title>
+      <style>@page{size:50mm 30mm;margin:0}html,body{margin:0}img{width:50mm;height:30mm;display:block}</style></head>
+      <body><img src="data:image/png;base64,${this._label.png_base64}"
+      onload="setTimeout(function(){window.print();window.close();},150)"></body></html>`),t.document.close()}render(){let t=this.bottle,e=this.data.types[t.type];return l`
+      ${P}
       <div class="overlay" @click=${this._close}>
-        <div class="dialog" @click=${t=>t.stopPropagation()}>
-          <div class="dialog-head">
-            <div>
-              <div class="dialog-title">${$t(t)}</div>
-              <div class="note">${t.producer||""}</div>
+        <div class="dialog" @click=${(i)=>i.stopPropagation()}>
+          <div class="hero">
+            <div class="hero-bottle">${C(t.type,t.alert)}</div>
+            <div class="hero-text">
+              <div class="eyebrow">${e?.label||""}${t.region?` · ${t.region}`:""}</div>
+              <div class="dialog-title">${t.name||"Vino"}</div>
+              ${t.producer?l`<div class="producer">${t.producer}</div>`:d}
+              <div class="vintage">${t.vintage||"s.a."}</div>
             </div>
             <button class="close" @click=${this._close}>✕</button>
           </div>
@@ -300,43 +438,83 @@ function t(t,e,i,s){var o,a=arguments.length,r=a<3?e:null===s?s=Object.getOwnPro
           ${this._editing?this._renderEditFoot():this._renderViewFoot()}
         </div>
       </div>
-    `}_renderView(t,e){const i=function(t){return t.drink_from&&t.drink_until?`${t.drink_from}–${t.drink_until}`:t.drink_until?`entro il ${t.drink_until}`:t.drink_from?`dal ${t.drink_from}`:""}(t);return V`
+    `}_renderView(t,e){let i=Ht(t);return l`
       <div class="badges">
-        <span class="badge" style="background:${e?.color}">${e?.label||t.type}</span>
-        ${"closing"===t.alert?V`<span class="badge warn">Da bere presto</span>`:W}
-        ${"past"===t.alert?V`<span class="badge bad">Oltre la finestra</span>`:W}
-        <span class="where">📍 ${function(t,e){const i=e.find(e=>e.id===t.rack_id);return i&&null!=t.row&&null!=t.col?`${i.name} · fila ${t.row+1}, posto ${t.col+1}`:"Da sistemare"}(t,this.data.racks)}</span>
+        ${t.alert==="closing"?l`<span class="badge warn">Da bere presto</span>`:d}
+        ${t.alert==="past"?l`<span class="badge bad">Oltre la finestra</span>`:d}
+        <span class="where">📍 ${Lt(t,this.data.racks)}</span>
       </div>
       <dl class="facts">
-        ${ft.filter(t=>!["name","producer","vintage","drink_from","drink_until"].includes(t.key)).map(e=>{const i=t[e.key];return null==i||""===i?W:V`<dt>${e.label}</dt><dd>${"price"===e.key?`${Number(i).toFixed(2)} €`:i}</dd>`})}
-        ${i?V`<dt>Finestra di beva</dt><dd>${i}</dd>`:W}
+        ${G.filter((s)=>!["name","producer","vintage","drink_from","drink_until"].includes(s.key)).map((s)=>{let a=t[s.key];if(a==null||a==="")return d;return l`<dt>${s.label}</dt><dd>${s.key==="price"?`${Number(a).toFixed(2)} €`:a}</dd>`})}
+        ${i?l`<dt>Finestra di beva</dt><dd>${i}</dd>`:d}
       </dl>
       <div class="label-box">
-        ${this._label?V`<img class="label" alt="Etichetta QR" src="data:image/png;base64,${this._label.png_base64}" />`:V`<div class="note">Preparo l'etichetta…</div>`}
+        ${this._label?l`<img class="label" alt="Etichetta QR" src="data:image/png;base64,${this._label.png_base64}" />`:l`<div class="note">Preparo l'etichetta…</div>`}
         <div class="note">Inquadra il QR con l'app Home Assistant quando prendi la bottiglia: verrà tolta dalla cantina.</div>
         <div class="row">
           <button class="btn small" @click=${this._printOnPrinter}>🖨️ Stampante etichette</button>
           <button class="btn small" ?disabled=${!this._label} @click=${this._printInBrowser}>Stampa dal browser</button>
         </div>
       </div>
-      ${this._otherReason?V`<div class="reasons">
-            ${Object.entries(this.data.reasons).filter(([t])=>"drank"!==t).map(([t,e])=>V`<button class="btn small ${"deleted"===t?"danger":""}" ?disabled=${this._busy}
-                @click=${()=>this._remove(t)}>${e}</button>`)}
-          </div>`:W}
-    `}_renderViewFoot(){return V`<div class="dialog-foot">
+      ${this._otherReason?l`<div class="reasons">
+            ${Object.entries(this.data.reasons).filter(([s])=>s!=="drank").map(([s,a])=>l`<button class="btn small ${s==="deleted"?"danger":""}" ?disabled=${this._busy}
+                @click=${()=>this._remove(s)}>${a}</button>`)}
+          </div>`:d}
+    `}_renderViewFoot(){return l`<div class="dialog-foot">
       <button class="btn" @click=${()=>this.dispatchEvent(new CustomEvent("move",{detail:{bottle:this.bottle}}))}>↔ Sposta</button>
-      <button class="btn" @click=${()=>{this._values=Object.fromEntries(["type",...ft.map(t=>t.key)].map(t=>[t,this.bottle[t]??""])),this._sameWine=!0,this._editing=!0}}>✏️ Modifica</button>
+      <button class="btn" @click=${()=>{this._values=Object.fromEntries(["type",...G.map((t)=>t.key)].map((t)=>[t,this.bottle[t]??""])),this._sameWine=!0,this._editing=!0}}>✏️ Modifica</button>
       <button class="btn" @click=${()=>this._otherReason=!this._otherReason}>Altro…</button>
       <button class="btn primary" ?disabled=${this._busy} @click=${()=>this._remove("drank")}>🍷 Bevuta</button>
-    </div>`}_renderEdit(){const t=this._sameWineCount();return V`
-      ${Et(this.data,this._values,(t,e)=>this._values={...this._values,[t]:e})}
-      ${t>1?V`<label class="check"><input type="checkbox" .checked=${this._sameWine}
-            @change=${t=>this._sameWine=t.target.checked} />
-            Applica a tutte le ${t} bottiglie di questo vino</label>`:W}
-    `}_renderEditFoot(){return V`<div class="dialog-foot">
+    </div>`}_renderEdit(){let t=this._sameWineCount();return l`
+      ${nt(this.data,this._values,(e,i)=>this._values={...this._values,[e]:i})}
+      ${t>1?l`<label class="check"><input type="checkbox" .checked=${this._sameWine}
+            @change=${(e)=>this._sameWine=e.target.checked} />
+            Applica a tutte le ${t} bottiglie di questo vino</label>`:d}
+    `}_renderEditFoot(){return l`<div class="dialog-foot">
       <button class="btn" @click=${()=>this._editing=!1}>Annulla</button>
       <button class="btn primary" ?disabled=${this._busy} @click=${this._saveEdit}>Salva</button>
-    </div>`}};Ct.styles=[mt,r`
+    </div>`}static styles=[x,y`
+      .hero {
+        display: flex;
+        gap: 18px;
+        align-items: flex-end;
+        padding: 26px 24px 18px;
+        background:
+          radial-gradient(90% 120% at 15% 100%, rgba(155, 44, 63, 0.25), transparent 60%),
+          radial-gradient(60% 80% at 100% 0%, rgba(216, 180, 106, 0.08), transparent 60%);
+        border-bottom: 1px solid var(--tb-line);
+        position: relative;
+      }
+      .hero .close {
+        position: absolute;
+        top: 16px;
+        right: 16px;
+      }
+      .hero-bottle {
+        width: 62px;
+        flex: none;
+        filter: drop-shadow(0 12px 14px rgba(0, 0, 0, 0.6));
+      }
+      .hero-bottle svg {
+        width: 100%;
+        display: block;
+        overflow: visible;
+      }
+      .hero-text {
+        min-width: 0;
+        padding-bottom: 6px;
+      }
+      .producer {
+        color: var(--tb-ink-2);
+        margin-top: 4px;
+      }
+      .vintage {
+        font-family: var(--tb-serif);
+        font-size: 2.1em;
+        color: var(--tb-gold);
+        line-height: 1;
+        margin-top: 10px;
+      }
       .badges {
         display: flex;
         gap: 6px;
@@ -360,7 +538,7 @@ function t(t,e,i,s){var o,a=arguments.length,r=a<3?e:null===s?s=Object.getOwnPro
       }
       .where {
         font-size: 0.85em;
-        color: var(--secondary-text-color);
+        color: var(--tb-ink-2);
       }
       .facts {
         display: grid;
@@ -370,7 +548,9 @@ function t(t,e,i,s){var o,a=arguments.length,r=a<3?e:null===s?s=Object.getOwnPro
         font-size: 0.92em;
       }
       dt {
-        color: var(--secondary-text-color);
+        color: var(--tb-ink-2);
+        font-size: 0.85em;
+        letter-spacing: 0.04em;
       }
       dd {
         margin: 0;
@@ -381,9 +561,10 @@ function t(t,e,i,s){var o,a=arguments.length,r=a<3?e:null===s?s=Object.getOwnPro
         flex-direction: column;
         align-items: center;
         gap: 8px;
-        padding: 12px;
-        border-radius: 12px;
-        background: rgba(127, 127, 127, 0.08);
+        padding: 16px;
+        border-radius: 16px;
+        border: 1px solid var(--tb-line);
+        background: rgba(255, 255, 255, 0.025);
         text-align: center;
       }
       .label {
@@ -410,110 +591,222 @@ function t(t,e,i,s){var o,a=arguments.length,r=a<3?e:null===s?s=Object.getOwnPro
         margin-top: 12px;
         font-size: 0.9em;
       }
-    `],t([bt({attribute:!1})],Ct.prototype,"card",void 0),t([bt({attribute:!1})],Ct.prototype,"data",void 0),t([bt({attribute:!1})],Ct.prototype,"bottle",void 0),t([gt()],Ct.prototype,"_label",void 0),t([gt()],Ct.prototype,"_editing",void 0),t([gt()],Ct.prototype,"_values",void 0),t([gt()],Ct.prototype,"_sameWine",void 0),t([gt()],Ct.prototype,"_otherReason",void 0),t([gt()],Ct.prototype,"_busy",void 0),Ct=t([pt("tb-bottle-dialog")],Ct);let Pt=class extends dt{constructor(){super(...arguments),this._drafts={}}_close(){this.dispatchEvent(new CustomEvent("close"))}_draft(t){return{...t,...this._drafts[t.id]}}_set(t,e,i){this._drafts={...this._drafts,[t]:{...this._drafts[t],[e]:i}}}_count(t){return this.data.bottles.filter(e=>e.rack_id===t).length}async _save(t){const e=this._draft(t),i=await this.card.ws({type:"taponbon/save_rack",rack:e}),s={...this._drafts};delete s[t.id],this._drafts=s,this.card.toast(i.displaced?`Salvato. ${i.displaced} bottiglie sono finite in "Da sistemare".`:"Scaffale salvato")}async _delete(t){const e=this._count(t.id);confirm(`Eliminare "${t.name}"?${e?` Le sue ${e} bottiglie restano in cantina, in "Da sistemare".`:""}`)&&(await this.card.ws({type:"taponbon/delete_rack",rack_id:t.id}),this.card.toast("Scaffale eliminato"))}async _add(){await this.card.ws({type:"taponbon/save_rack",rack:{name:`Scaffale ${this.data.racks.length+1}`,rows:7,cols:10}})}async _setting(t,e){await this.card.ws({type:"taponbon/update_settings",[t]:e})}render(){const t=this.data.settings;return V`
+    `]}p([g({attribute:!1})],lt.prototype,"card",void 0),p([g({attribute:!1})],lt.prototype,"data",void 0),p([g({attribute:!1})],lt.prototype,"bottle",void 0),p([b()],lt.prototype,"_label",void 0),p([b()],lt.prototype,"_editing",void 0),p([b()],lt.prototype,"_values",void 0),p([b()],lt.prototype,"_sameWine",void 0),p([b()],lt.prototype,"_otherReason",void 0),p([b()],lt.prototype,"_busy",void 0),lt=p([_("tb-bottle-dialog")],lt);var dt=30;class ct extends f{constructor(){super(...arguments);this._drafts={};this._open=null}_close(){this.dispatchEvent(new CustomEvent("close"))}_draft(t){return this._drafts[t.id]||{name:t.name,shelves:[...F(t)]}}_edit(t,e){let i=this._draft(t),s={name:i.name,shelves:[...i.shelves]};e(s),this._drafts={...this._drafts,[t.id]:s}}_setShelfCount(t,e){this._edit(t,(i)=>{e=Math.max(1,Math.min(dt,e));let s=i.shelves[i.shelves.length-1]||6;while(i.shelves.length<e)i.shelves.push(s);i.shelves.length=e})}_setShelf(t,e,i){this._edit(t,(s)=>s.shelves[e]=Math.max(1,Math.min(dt,i)))}_setAll(t,e){this._edit(t,(i)=>i.shelves=i.shelves.map(()=>Math.max(1,Math.min(dt,e))))}_count(t){return this.data.bottles.filter((e)=>e.rack_id===t).length}async _save(t){let e=this._draft(t),i=await this.card.ws({type:"taponbon/save_rack",rack:{id:t.id,name:e.name,shelves:e.shelves}}),s={...this._drafts};delete s[t.id],this._drafts=s,this.card.toast(i.displaced?`Salvato. ${i.displaced} bottiglie sono finite in "Da sistemare".`:"Scaffale salvato")}async _delete(t){let e=this._count(t.id);if(!confirm(`Eliminare "${t.name}"?${e?` Le sue ${e} bottiglie restano in cantina, in "Da sistemare".`:""}`))return;await this.card.ws({type:"taponbon/delete_rack",rack_id:t.id}),this.card.toast("Scaffale eliminato")}async _add(){let t=await this.card.ws({type:"taponbon/save_rack",rack:{name:`Scaffale ${this.data.racks.length+1}`,shelves:[8,8,8,8,8]}});this._open=t.rack.id}async _setting(t,e){await this.card.ws({type:"taponbon/update_settings",[t]:e})}_stepper(t,e){return l`<span class="stepper">
+      <button @click=${()=>e(t-1)} aria-label="meno">−</button>
+      <span>${t}</span>
+      <button @click=${()=>e(t+1)} aria-label="più">+</button>
+    </span>`}_preview(t){let e=Math.max(...t);return l`<div class="preview">
+      ${t.map((i)=>l`<div class="pv-shelf">
+        <div class="pv-row" style="grid-template-columns: repeat(${i}, 1fr); width: ${i/e*100}%">
+          ${Array.from({length:i},()=>l`<i></i>`)}
+        </div>
+        <div class="pv-board"></div>
+      </div>`)}
+    </div>`}_renderRack(t){let e=this._draft(t),i=!!this._drafts[t.id],s=this._open===t.id||i,a=e.shelves.every((r)=>r===e.shelves[0]),o=e.shelves.reduce((r,n)=>r+n,0);return l`<div class="rack ${s?"open":""}">
+      <button class="rack-sum" @click=${()=>this._open=s&&!i?null:t.id}>
+        <span class="rack-name">${e.name}</span>
+        <span class="note">${e.shelves.length} mensole · ${o} posti · ${this._count(t.id)} bottiglie</span>
+        <span class="chev">${s?"▴":"▾"}</span>
+      </button>
+      ${s?l`<div class="rack-edit">
+            <div class="cols">
+              <div class="controls">
+                <label class="field">Nome
+                  <input .value=${e.name} @input=${(r)=>this._edit(t,(n)=>n.name=r.target.value)} />
+                </label>
+                <div class="line"><span>Mensole</span>${this._stepper(e.shelves.length,(r)=>this._setShelfCount(t,r))}</div>
+                <div class="line">
+                  <span>Bottiglie per mensola${a?"":l` <em class="note">(diverse)</em>`}</span>
+                  ${this._stepper(a?e.shelves[0]:Math.max(...e.shelves),(r)=>this._setAll(t,r))}
+                </div>
+                <details ?open=${!a}>
+                  <summary>Personalizza ogni mensola</summary>
+                  ${e.shelves.map((r,n)=>l`<div class="line small">
+                    <span>Mensola ${n+1}${n===0?" (in alto)":n===e.shelves.length-1?" (in basso)":""}</span>
+                    ${this._stepper(r,(h)=>this._setShelf(t,n,h))}
+                  </div>`)}
+                </details>
+              </div>
+              ${this._preview(e.shelves)}
+            </div>
+            <div class="rack-foot">
+              <button class="btn small danger" @click=${()=>this._delete(t)}>Elimina scaffale</button>
+              <span>
+                ${i?l`<button class="btn small" @click=${()=>{let r={...this._drafts};delete r[t.id],this._drafts=r}}>Annulla</button>`:d}
+                <button class="btn small primary" ?disabled=${!i} @click=${()=>this._save(t)}>Salva</button>
+              </span>
+            </div>
+          </div>`:d}
+    </div>`}render(){let t=this.data.settings,e=this.data.racks.reduce((i,s)=>i+q(s),0);return l`
       <div class="overlay" @click=${this._close}>
-        <div class="dialog" @click=${t=>t.stopPropagation()}>
+        <div class="dialog" @click=${(i)=>i.stopPropagation()}>
           <div class="dialog-head">
-            <div class="dialog-title">Scaffali e impostazioni</div>
+            <div>
+              <div class="eyebrow">La tua cantina</div>
+              <div class="dialog-title">Scaffali e impostazioni</div>
+            </div>
             <button class="close" @click=${this._close}>✕</button>
           </div>
           <div class="dialog-body">
-            ${this.data.racks.map(t=>{const e=this._draft(t),i=!!this._drafts[t.id];return V`<div class="rack">
-                <label class="field name">Nome
-                  <input .value=${e.name} @input=${e=>this._set(t.id,"name",e.target.value)} />
-                </label>
-                <label class="field">File
-                  <input type="number" min="1" max="30" .value=${String(e.rows)}
-                    @input=${e=>this._set(t.id,"rows",Number(e.target.value))} />
-                </label>
-                <label class="field">Posti per fila
-                  <input type="number" min="1" max="30" .value=${String(e.cols)}
-                    @input=${e=>this._set(t.id,"cols",Number(e.target.value))} />
-                </label>
-                <div class="rack-foot">
-                  <span class="note">${this._count(t.id)} bottiglie · ${e.rows*e.cols} posti</span>
-                  <span>
-                    <button class="btn small danger" @click=${()=>this._delete(t)}>Elimina</button>
-                    <button class="btn small primary" ?disabled=${!i} @click=${()=>this._save(t)}>Salva</button>
-                  </span>
-                </div>
-              </div>`})}
+            <div class="section" style="margin-top:4px">Scaffali · ${e} posti</div>
+            ${this.data.racks.map((i)=>this._renderRack(i))}
             <button class="btn" @click=${this._add}>＋ Nuovo scaffale</button>
 
-            <h3>Impostazioni</h3>
+            <div class="section">Etichette</div>
             <label class="check">
               <input type="checkbox" .checked=${t.auto_labels}
-                @change=${t=>this._setting("auto_labels",t.target.checked)} />
+                @change=${(i)=>this._setting("auto_labels",i.target.checked)} />
               Stampa l'etichetta QR quando aggiungo una bottiglia
             </label>
-            <div class="field">Avvisami prima che la finestra di beva si chiuda
-              <div class="types">
-                ${[[90,"3 mesi"],[180,"6 mesi"],[365,"1 anno"]].map(([e,i])=>V`<button class="chip ${t.alert_days===e?"active":""}"
-                    @click=${()=>this._setting("alert_days",e)}>${i}</button>`)}
-              </div>
+
+            <div class="section">Finestra di beva</div>
+            <div class="note" style="margin-bottom:8px">Avvisami prima che si chiuda:</div>
+            <div class="types">
+              ${[[90,"3 mesi"],[180,"6 mesi"],[365,"1 anno"]].map(([i,s])=>l`<button class="chip ${t.alert_days===i?"active":""}"
+                  @click=${()=>this._setting("alert_days",i)}>${s}</button>`)}
             </div>
           </div>
           <div class="dialog-foot"><button class="btn" @click=${this._close}>Chiudi</button></div>
         </div>
       </div>
-    `}};Pt.styles=[mt,r`
+    `}static styles=[x,y`
       .rack {
-        display: grid;
-        grid-template-columns: 2fr 1fr 1fr;
-        gap: 8px;
-        padding: 12px;
-        border-radius: 12px;
-        background: rgba(127, 127, 127, 0.08);
+        border: 1px solid var(--tb-line);
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.025);
         margin-bottom: 10px;
+        overflow: hidden;
+      }
+      .rack.open {
+        background: rgba(255, 255, 255, 0.04);
+      }
+      .rack-sum {
+        width: 100%;
+        display: flex;
+        align-items: baseline;
+        gap: 10px;
+        padding: 14px 16px;
+        background: none;
+        border: none;
+        color: var(--tb-ink);
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
+      }
+      .rack-name {
+        font-family: var(--tb-serif);
+        font-size: 1.15em;
+        font-weight: 600;
+      }
+      .chev {
+        margin-left: auto;
+        color: var(--tb-ink-2);
+      }
+      .rack-edit {
+        padding: 0 16px 14px;
+      }
+      .cols {
+        display: grid;
+        grid-template-columns: 1fr 160px;
+        gap: 18px;
+        align-items: start;
+      }
+      .controls {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .line {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        font-size: 0.92em;
+      }
+      .line.small {
+        font-size: 0.85em;
+        margin-top: 8px;
+        color: var(--tb-ink-2);
+      }
+      details summary {
+        cursor: pointer;
+        color: var(--tb-gold);
+        font-size: 0.85em;
+      }
+      .preview {
+        padding: 12px 10px 10px;
+        border-radius: 12px;
+        background: linear-gradient(180deg, #1d1a1a, #110f10);
+        border: 1px solid var(--tb-line);
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+        align-items: center;
+      }
+      .pv-shelf {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .pv-row {
+        display: grid;
+        gap: 2px;
+      }
+      .pv-row i {
+        display: block;
+        height: 12px;
+        border-radius: 2px 2px 1px 1px;
+        background: linear-gradient(180deg, rgba(216, 180, 106, 0.25), rgba(155, 44, 63, 0.55));
+      }
+      .pv-board {
+        width: 100%;
+        height: 2px;
+        margin-top: 2px;
+        background: rgba(255, 255, 255, 0.18);
+        border-radius: 1px;
       }
       .rack-foot {
-        grid-column: 1 / -1;
         display: flex;
         justify-content: space-between;
         align-items: center;
         gap: 6px;
         flex-wrap: wrap;
-      }
-      h3 {
-        margin: 20px 0 8px;
-        font-size: 1em;
+        margin-top: 14px;
       }
       .check {
         display: flex;
-        gap: 8px;
+        gap: 10px;
         align-items: center;
-        margin-bottom: 12px;
       }
       @media (max-width: 480px) {
-        .rack {
-          grid-template-columns: 1fr 1fr;
-        }
-        .name {
-          grid-column: 1 / -1;
+        .cols {
+          grid-template-columns: 1fr;
         }
       }
-    `],t([bt({attribute:!1})],Pt.prototype,"card",void 0),t([bt({attribute:!1})],Pt.prototype,"data",void 0),t([gt()],Pt.prototype,"_drafts",void 0),Pt=t([pt("tb-racks-dialog")],Pt);let Mt=class extends dt{constructor(){super(...arguments),this._items=null}connectedCallback(){super.connectedCallback(),this._load()}async _load(){const t=await this.card.ws({type:"taponbon/get_history"});this._items=t.history}_close(){this.dispatchEvent(new CustomEvent("close"))}async _restore(t){const e=await this.card.ws({type:"taponbon/restore",history_id:t.history_id});this.card.toast(e.bottle.rack_id?"Rimessa al suo posto":'Rimessa in cantina, in "Da sistemare"'),this._load()}render(){return V`
+    `]}p([g({attribute:!1})],ct.prototype,"card",void 0),p([g({attribute:!1})],ct.prototype,"data",void 0),p([b()],ct.prototype,"_drafts",void 0),p([b()],ct.prototype,"_open",void 0),ct=p([_("tb-racks-dialog")],ct);class pt extends f{constructor(){super(...arguments);this._items=null}connectedCallback(){super.connectedCallback(),this._load()}async _load(){let t=await this.card.ws({type:"taponbon/get_history"});this._items=t.history}_close(){this.dispatchEvent(new CustomEvent("close"))}async _restore(t){let e=await this.card.ws({type:"taponbon/restore",history_id:t.history_id});this.card.toast(e.bottle.rack_id?"Rimessa al suo posto":'Rimessa in cantina, in "Da sistemare"'),this._load()}render(){return l`
+      ${P}
       <div class="overlay" @click=${this._close}>
-        <div class="dialog" @click=${t=>t.stopPropagation()}>
+        <div class="dialog" @click=${(t)=>t.stopPropagation()}>
           <div class="dialog-head">
-            <div class="dialog-title">Storico</div>
+            <div><div class="eyebrow">Bottiglie stappate e non solo</div><div class="dialog-title">Storico</div></div>
             <button class="close" @click=${this._close}>✕</button>
           </div>
           <div class="dialog-body">
-            ${null===this._items?V`<div class="note">Carico…</div>`:this._items.length?this._items.map(t=>V`<div class="item">
-                    <span class="dot" style="background:${this.data.types[t.type]?.color}"></span>
+            ${this._items===null?l`<div class="note">Carico…</div>`:!this._items.length?l`<div class="note">Ancora nessuna bottiglia tolta dalla cantina.</div>`:this._items.map((t)=>l`<div class="item">
+                    <span class="mini">${C(t.type)}</span>
                     <div class="text">
-                      <div>${$t(t)}</div>
+                      <div>${A(t)}</div>
                       <div class="note">${this.data.reasons[t.reason]||t.reason} · ${new Date(t.removed_at).toLocaleDateString("it-IT")}
-                        ${t.producer?V` · ${t.producer}`:W}</div>
+                        ${t.producer?l` · ${t.producer}`:d}</div>
                     </div>
                     <button class="btn small" @click=${()=>this._restore(t)}>Rimetti</button>
-                  </div>`):V`<div class="note">Ancora nessuna bottiglia tolta dalla cantina.</div>`}
+                  </div>`)}
           </div>
           <div class="dialog-foot"><button class="btn" @click=${this._close}>Chiudi</button></div>
         </div>
       </div>
-    `}};Mt.styles=[mt,r`
+    `}static styles=[x,y`
       .item {
         display: flex;
         align-items: center;
@@ -524,20 +817,32 @@ function t(t,e,i,s){var o,a=arguments.length,r=a<3?e:null===s?s=Object.getOwnPro
       .text {
         flex: 1;
       }
-    `],t([bt({attribute:!1})],Mt.prototype,"card",void 0),t([bt({attribute:!1})],Mt.prototype,"data",void 0),t([gt()],Mt.prototype,"_items",void 0),Mt=t([pt("tb-history-dialog")],Mt);let zt=class extends dt{constructor(){super(...arguments),this._config={type:"custom:taponbon-card"},this._data=null,this._error="",this._typeFilter="",this._query="",this._dialog=null,this._moving=null,this._toast="",this._subscribing=!1,this._startMove=t=>{this._moving=t.detail.bottle,this._dialog=null}}setConfig(t){this._config={...t}}static getStubConfig(){return{type:"custom:taponbon-card"}}getCardSize(){return 8}getGridOptions(){return{columns:"full",min_columns:6}}connectedCallback(){super.connectedCallback(),this.hass&&this._subscribe()}disconnectedCallback(){super.disconnectedCallback(),this._unsub?.(),this._unsub=void 0}updated(t){t.has("hass")&&this.hass&&!this._unsub&&!this._subscribing&&this._subscribe()}async _subscribe(){if(!this._unsub&&!this._subscribing&&this.hass?.connection){this._subscribing=!0;try{this._unsub=await this.hass.connection.subscribeMessage(t=>{this._data=t,this._error=""},{type:"taponbon/subscribe"})}catch(t){this._error="unknown_command"===t?.code?"L'integrazione TaponBon non è installata: aggiungila da Impostazioni → Dispositivi e servizi.":`Impossibile caricare la cantina: ${t?.message||t}`}finally{this._subscribing=!1}}}async ws(t){try{return await this.hass.callWS(t)}catch(t){throw this.toast(t?.message||"Operazione non riuscita"),t}}toast(t){this._toast=t,clearTimeout(this._toastTimer),this._toastTimer=window.setTimeout(()=>this._toast="",3500)}_onCell(t,e,i,s){if(this._moving){const o=this._moving;if(this._moving=null,s?.id===o.id)return;return void this.ws({type:"taponbon/move_bottle",bottle_id:o.id,rack_id:t.id,row:e,col:i}).then(()=>this.toast(s?"Bottiglie scambiate di posto":"Bottiglia spostata"))}this._dialog=s?{kind:"bottle",bottleId:s.id}:{kind:"add",rackId:t.id,row:e,col:i}}render(){const t=this._data;return V`
+      .mini {
+        width: 14px;
+        flex: none;
+      }
+      .mini svg {
+        width: 100%;
+        display: block;
+        overflow: visible;
+      }
+      .item {
+        border-bottom-color: var(--tb-line) !important;
+      }
+    `]}p([g({attribute:!1})],pt.prototype,"card",void 0),p([g({attribute:!1})],pt.prototype,"data",void 0),p([b()],pt.prototype,"_items",void 0),pt=p([_("tb-history-dialog")],pt);class ht extends f{constructor(){super(...arguments);this._config={type:"custom:taponbon-card"};this._data=null;this._error="";this._typeFilter="";this._query="";this._dialog=null;this._moving=null;this._toast="";this._subscribing=!1;this._startMove=(t)=>{this._moving=t.detail.bottle,this._dialog=null}}setConfig(t){this._config={...t}}static getStubConfig(){return{type:"custom:taponbon-card"}}getCardSize(){return 8}getGridOptions(){return{columns:"full",min_columns:6}}connectedCallback(){if(super.connectedCallback(),this.hass)this._subscribe()}disconnectedCallback(){super.disconnectedCallback(),this._unsub?.(),this._unsub=void 0}updated(t){if(t.has("hass")&&this.hass&&!this._unsub&&!this._subscribing)this._subscribe()}async _subscribe(){if(this._unsub||this._subscribing||!this.hass?.connection)return;this._subscribing=!0;try{this._unsub=await this.hass.connection.subscribeMessage((t)=>{this._data=t,this._error=""},{type:"taponbon/subscribe"})}catch(t){this._error=t?.code==="unknown_command"?"L'integrazione TaponBon non è installata: aggiungila da Impostazioni → Dispositivi e servizi.":`Impossibile caricare la cantina: ${t?.message||t}`}finally{this._subscribing=!1}}async ws(t){try{return await this.hass.callWS(t)}catch(e){throw this.toast(e?.message||"Operazione non riuscita"),e}}toast(t){this._toast=t,clearTimeout(this._toastTimer),this._toastTimer=window.setTimeout(()=>this._toast="",3500)}_onCell(t,e,i,s){if(this._moving){let a=this._moving;if(this._moving=null,s?.id===a.id)return;this.ws({type:"taponbon/move_bottle",bottle_id:a.id,rack_id:t.id,row:e,col:i}).then(()=>this.toast(s?"Bottiglie scambiate di posto":"Bottiglia spostata"));return}this._dialog=s?{kind:"bottle",bottleId:s.id}:{kind:"add",rackId:t.id,row:e,col:i}}render(){let t=this._data;return l`
       <ha-card>
-        ${At}
-        ${this._error?V`<div class="empty">${this._error}</div>`:t?this._renderBody(t):V`<div class="empty">Carico la cantina…</div>`}
-        ${this._toast?V`<div class="toast">${this._toast}</div>`:W}
+        ${P}
+        ${this._error?l`<div class="empty">${this._error}</div>`:!t?l`<div class="empty">Carico la cantina…</div>`:this._renderBody(t)}
+        ${this._toast?l`<div class="toast">${this._toast}</div>`:d}
       </ha-card>
-      ${t?this._renderDialog(t):W}
-    `}_renderBody(t){const e=t.bottles.length,i=t.racks.reduce((t,e)=>t+e.rows*e.cols,0),s=t.bottles.filter(t=>"closing"===t.alert).length,o=t.bottles.filter(t=>"past"===t.alert).length,a=t.bottles.filter(t=>!t.rack_id),r=Object.fromEntries(Object.keys(t.types).map(e=>[e,t.bottles.filter(t=>t.type===e).length])),n=Math.round(Number(this._config.columns))||0,l=n?Math.max(1,Math.min(6,n,t.racks.length||1)):0;return V`
+      ${t?this._renderDialog(t):d}
+    `}_renderBody(t){let e=t.bottles.length,i=t.racks.reduce((c,u)=>c+q(u),0),s=t.bottles.filter((c)=>c.alert==="closing").length,a=t.bottles.filter((c)=>c.alert==="past").length,o=t.bottles.filter((c)=>!c.rack_id),r=Object.fromEntries(Object.keys(t.types).map((c)=>[c,t.bottles.filter((u)=>u.type===c).length])),n=Math.round(Number(this._config.columns))||0,h=n?Math.max(1,Math.min(6,n,t.racks.length||1)):0;return l`
       <div class="header">
         <div class="title">
           <span class="logo">🍷</span>
           <div>
             <div class="name">${this._config.title||"TaponBon"}</div>
-            <div class="sub">${e} bottiglie · ${i-t.racks.reduce((e,i)=>e+this._inRack(t,i).length,0)} posti liberi</div>
+            <div class="sub">${e} bottiglie · ${i-t.racks.reduce((c,u)=>c+this._inRack(t,u).length,0)} posti liberi</div>
           </div>
         </div>
         <div class="actions">
@@ -549,52 +854,58 @@ function t(t,e,i,s){var o,a=arguments.length,r=a<3?e:null===s?s=Object.getOwnPro
         </div>
       </div>
 
-      ${s||o?V`<div class="banner">
-            ${s?V`<span>🍷 <b>${s}</b> da bere presto</span>`:W}
-            ${o?V`<span>⚠️ <b>${o}</b> oltre la finestra di beva</span>`:W}
+      ${s||a?l`<div class="banner">
+            ${s?l`<span>🍷 <b>${s}</b> da bere presto</span>`:d}
+            ${a?l`<span>⚠️ <b>${a}</b> oltre la finestra di beva</span>`:d}
             <span class="hint">cartellino dorato: da bere presto · rosso: oltre la finestra</span>
-          </div>`:W}
+          </div>`:d}
 
-      ${this._moving?V`<div class="banner moving">
-            Tocca la nuova posizione per <b>${$t(this._moving)}</b>
+      ${this._moving?l`<div class="banner moving">
+            Tocca la nuova posizione per <b>${A(this._moving)}</b>
             <button class="btn small" @click=${()=>this._moving=null}>Annulla</button>
-          </div>`:W}
+          </div>`:d}
 
       <div class="filters">
         <button class="chip ${this._typeFilter?"":"active"}" @click=${()=>this._typeFilter=""}>Tutti ${e}</button>
-        ${Object.entries(t.types).map(([t,e])=>V`<button
-            class="chip ${this._typeFilter===t?"active":""}"
-            @click=${()=>this._typeFilter=this._typeFilter===t?"":t}
-          ><span class="dot" style="background:${e.color}"></span>${e.label} ${r[t]||0}</button>`)}
+        ${Object.entries(t.types).map(([c,u])=>l`<button
+            class="chip ${this._typeFilter===c?"active":""}"
+            @click=${()=>this._typeFilter=this._typeFilter===c?"":c}
+          ><span class="dot" style="background:${u.color}"></span>${u.label} ${r[c]||0}</button>`)}
         <input class="search" type="search" placeholder="Cerca vino, produttore, annata…"
-          .value=${this._query} @input=${t=>this._query=t.target.value} />
+          .value=${this._query} @input=${(c)=>this._query=c.target.value} />
       </div>
 
-      <div class="racks ${l?"fixed":""}" style=${l?`--tb-columns:${l}`:""}>
-        ${t.racks.map(e=>this._renderRack(t,e))}
+      <div class="racks ${h?"fixed":""}" style=${h?`--tb-columns:${h}`:""}>
+        ${t.racks.map((c)=>this._renderRack(t,c))}
       </div>
 
-      ${a.length?V`<div class="unplaced">
-            <div class="section-title">Da sistemare (${a.length})</div>
+      ${o.length?l`<div class="unplaced">
+            <div class="section-title">Da sistemare (${o.length})</div>
             <div class="list">
-              ${a.map(e=>V`<button class="list-item ${this._dims(e)?"dim":""}"
-                  @click=${()=>this._dialog={kind:"bottle",bottleId:e.id}}>
-                  <span class="dot" style="background:${t.types[e.type]?.color}"></span>${$t(e)}
+              ${o.map((c)=>l`<button class="list-item ${this._dims(c)?"dim":""}"
+                  @click=${()=>this._dialog={kind:"bottle",bottleId:c.id}}>
+                  <span class="dot" style="background:${t.types[c.type]?.color}"></span>${A(c)}
                 </button>`)}
             </div>
-          </div>`:W}
-      ${t.racks.length?W:V`<div class="empty">Nessuno scaffale: creane uno da ⚙︎.</div>`}
-    `}_inRack(t,e){return t.bottles.filter(t=>t.rack_id===e.id&&null!=t.row&&null!=t.col)}_dims(t){return this._typeFilter&&t.type!==this._typeFilter||!function(t,e){if(!e)return!0;const i=yt([t.name,t.producer,t.vintage,t.region,t.country,t.grape,t.notes,t.code].filter(Boolean).join(" "));return yt(e).split(/\s+/).every(t=>i.includes(t))}(t,this._query)}_renderRack(t,e){const i=this._inRack(t,e),s=new Map(i.map(t=>[`${t.row}:${t.col}`,t])),o=[];for(let i=0;i<e.rows;i++)for(let a=0;a<e.cols;a++){const r=s.get(`${i}:${a}`),n=r?t.types[r.type]?.color||"#888":"";o.push(V`<button
-          class="cell ${r?"full":"free"} ${r&&this._dims(r)?"dim":""} ${r?.alert||""} ${this._moving?.id===r?.id&&r?"moving":""}"
-          style=${r?`--bottle:${n}`:""}
-          title=${r?`${$t(r)}${r.producer?` · ${r.producer}`:""}`:`Fila ${i+1}, posto ${a+1}: libero`}
-          @click=${()=>this._onCell(e,i,a,r)}
-        >${r?xt(r.type,r.alert):wt}</button>`)}return V`
+          </div>`:d}
+      ${!t.racks.length?l`<div class="empty">Nessuno scaffale: creane uno da ⚙︎.</div>`:d}
+    `}_inRack(t,e){return t.bottles.filter((i)=>i.rack_id===e.id&&i.row!=null&&i.col!=null)}_dims(t){return this._typeFilter&&t.type!==this._typeFilter||!Bt(t,this._query)}_renderRack(t,e){let i=this._inRack(t,e),s=new Map(i.map((o)=>[`${o.row}:${o.col}`,o])),a=F(e);return l`
       <div class="rack">
-        <div class="rack-head"><span>${e.name}</span><span class="muted">${i.length}/${e.rows*e.cols}</span></div>
-        <div class="grid" style="grid-template-columns: repeat(${e.cols}, minmax(0, 34px))">${o}</div>
+        <div class="rack-head"><span>${e.name}</span><span class="muted">${i.length}/${q(e)}</span></div>
+        <div class="shelves">
+          ${a.map((o,r)=>l`<div class="shelf">
+            <div class="grid" style="grid-template-columns: repeat(${o}, minmax(0, 34px))">
+              ${Array.from({length:o},(n,h)=>{let c=s.get(`${r}:${h}`);return l`<button
+                  class="cell ${c?"full":"free"} ${c&&this._dims(c)?"dim":""} ${c&&this._moving?.id===c.id?"moving":""}"
+                  title=${c?`${A(c)}${c.producer?` · ${c.producer}`:""}`:`Mensola ${r+1}, posto ${h+1}: libero`}
+                  @click=${()=>this._onCell(e,r,h,c)}
+                >${c?C(c.type,c.alert):Ut}</button>`})}
+            </div>
+            <div class="board"></div>
+          </div>`)}
+        </div>
       </div>
-    `}_renderDialog(t){const e=this._dialog;if(!e)return W;const i=()=>this._dialog=null;switch(e.kind){case"add":return V`<tb-add-dialog .card=${this} .data=${t} .rackId=${e.rackId} .row=${e.row} .col=${e.col} @close=${i}></tb-add-dialog>`;case"bottle":{const s=t.bottles.find(t=>t.id===e.bottleId);return s?V`<tb-bottle-dialog .card=${this} .data=${t} .bottle=${s} @close=${i} @move=${this._startMove}></tb-bottle-dialog>`:W}case"racks":return V`<tb-racks-dialog .card=${this} .data=${t} @close=${i}></tb-racks-dialog>`;case"history":return V`<tb-history-dialog .card=${this} .data=${t} @close=${i}></tb-history-dialog>`}}};zt.styles=[mt,r`
+    `}_renderDialog(t){let e=this._dialog;if(!e)return d;let i=()=>this._dialog=null;switch(e.kind){case"add":return l`<tb-add-dialog .card=${this} .data=${t} .rackId=${e.rackId} .row=${e.row} .col=${e.col} @close=${i}></tb-add-dialog>`;case"bottle":{let s=t.bottles.find((a)=>a.id===e.bottleId);if(!s)return d;return l`<tb-bottle-dialog .card=${this} .data=${t} .bottle=${s} @close=${i} @move=${this._startMove}></tb-bottle-dialog>`}case"racks":return l`<tb-racks-dialog .card=${this} .data=${t} @close=${i}></tb-racks-dialog>`;case"history":return l`<tb-history-dialog .card=${this} .data=${t} @close=${i}></tb-history-dialog>`}}static styles=[x,y`
       ha-card {
         overflow: hidden;
         position: relative;
@@ -700,9 +1011,24 @@ function t(t,e,i,s){var o,a=arguments.length,r=a<3?e:null===s?s=Object.getOwnPro
         color: #9b928a;
         font-variant-numeric: tabular-nums;
       }
+      .shelves {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+      .shelf {
+        position: relative;
+      }
+      .board {
+        height: 5px;
+        margin: 2px -6px 0;
+        border-radius: 2px;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.04) 60%, rgba(0, 0, 0, 0.4));
+        box-shadow: 0 6px 10px rgba(0, 0, 0, 0.35);
+      }
       .grid {
         display: grid;
-        gap: 14px 7px;
+        gap: 7px;
         justify-content: center;
       }
       .cell {
@@ -713,17 +1039,6 @@ function t(t,e,i,s){var o,a=arguments.length,r=a<3?e:null===s?s=Object.getOwnPro
         cursor: pointer;
         position: relative;
         transition: transform 0.18s ease, opacity 0.2s, filter 0.2s;
-      }
-      .cell::before {
-        /* the shelf the bottle stands on */
-        content: "";
-        position: absolute;
-        left: -4px;
-        right: -4px;
-        bottom: -7px;
-        height: 3px;
-        border-radius: 2px;
-        background: linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.04));
       }
       .cell svg {
         width: 100%;
@@ -797,11 +1112,14 @@ function t(t,e,i,s){var o,a=arguments.length,r=a<3?e:null===s?s=Object.getOwnPro
         left: 50%;
         bottom: 14px;
         transform: translateX(-50%);
-        background: rgba(0, 0, 0, 0.85);
-        color: #fff;
-        padding: 8px 14px;
-        border-radius: 18px;
+        background: rgba(20, 16, 17, 0.92);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(8px);
+        color: #f2ebe3;
+        padding: 10px 18px;
+        border-radius: 999px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
         font-size: 0.9em;
         z-index: 2;
       }
-    `],t([bt({attribute:!1})],zt.prototype,"hass",void 0),t([gt()],zt.prototype,"_config",void 0),t([gt()],zt.prototype,"_data",void 0),t([gt()],zt.prototype,"_error",void 0),t([gt()],zt.prototype,"_typeFilter",void 0),t([gt()],zt.prototype,"_query",void 0),t([gt()],zt.prototype,"_dialog",void 0),t([gt()],zt.prototype,"_moving",void 0),t([gt()],zt.prototype,"_toast",void 0),zt=t([pt("taponbon-card")],zt),window.customCards=window.customCards||[],window.customCards.push({type:"taponbon-card",name:"TaponBon",description:"La tua cantina: scaffali, bottiglie, QR e finestre di beva",preview:!1});export{zt as TaponBonCard};
+    `]}p([g({attribute:!1})],ht.prototype,"hass",void 0),p([b()],ht.prototype,"_config",void 0),p([b()],ht.prototype,"_data",void 0),p([b()],ht.prototype,"_error",void 0),p([b()],ht.prototype,"_typeFilter",void 0),p([b()],ht.prototype,"_query",void 0),p([b()],ht.prototype,"_dialog",void 0),p([b()],ht.prototype,"_moving",void 0),p([b()],ht.prototype,"_toast",void 0),ht=p([_("taponbon-card")],ht);window.customCards=window.customCards||[];window.customCards.push({type:"taponbon-card",name:"TaponBon",description:"La tua cantina: scaffali, bottiglie, QR e finestre di beva",preview:!1});export{ht as TaponBonCard};
