@@ -14,13 +14,46 @@ type Dialog =
   | { kind: "history" }
   | null;
 
-// A standing wine bottle: capsule, neck, shoulders, body, with a highlight.
-const BOTTLE_SVG = svg`<svg viewBox="0 0 20 52" aria-hidden="true">
-  <path class="glass" d="M8 1h4v3h-.4v9c0 2.5 6.4 4.5 6.4 10.5V49a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V23.5C2 17.5 8.4 15.5 8.4 13V4H8z"/>
-  <rect class="capsule" x="7.6" y="1" width="4.8" height="7" rx="1"/>
-  <rect class="label" x="3.5" y="29" width="13" height="11" rx="1"/>
-  <path class="shine" d="M4.3 24c0-3 2-4.5 3.4-5.6V47H4.3z"/>
+// A standing Bordeaux bottle. Colour comes from --bottle; light and shade
+// are shared gradients (defined once in SHARED_DEFS), so every bottle gets
+// the same glass look whatever its colour.
+const BOTTLE_SVG = svg`<svg viewBox="0 0 24 64" aria-hidden="true">
+  <path class="glass" d="M9.6 6h4.8v12.5c0 3.2 6.6 4.6 6.6 11.5V60.5a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 60.5V30c0-6.9 6.6-8.3 6.6-11.5z"/>
+  <path class="shade" d="M9.6 6h4.8v12.5c0 3.2 6.6 4.6 6.6 11.5V60.5a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 60.5V30c0-6.9 6.6-8.3 6.6-11.5z"/>
+  <path class="capsule" d="M9.3 1.2c0-.7.5-1.2 1.2-1.2h3c.7 0 1.2.5 1.2 1.2v12.3H9.3z"/>
+  <rect class="capsule-ring" x="9.3" y="11.6" width="5.4" height="1.2"/>
+  <rect class="label" x="4.6" y="36" width="14.8" height="15" rx="0.8"/>
+  <rect class="label-ink" x="7.5" y="40" width="9" height="1.4" rx="0.7"/>
+  <rect class="label-ink thin" x="8.5" y="43.4" width="7" height="0.8" rx="0.4"/>
+  <rect class="label-ink thin" x="9.5" y="46" width="5" height="0.8" rx="0.4"/>
+  <path class="gloss" d="M5.6 31c.4-3.4 2.6-5 3.6-6v34.5H5.6z"/>
 </svg>`;
+
+const SHARED_DEFS = svg`<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <linearGradient id="tb-shade" x1="0" x2="1" y1="0" y2="0">
+    <stop offset="0" stop-color="#000" stop-opacity=".55"/>
+    <stop offset=".22" stop-color="#fff" stop-opacity=".18"/>
+    <stop offset=".42" stop-color="#000" stop-opacity="0"/>
+    <stop offset=".78" stop-color="#000" stop-opacity=".25"/>
+    <stop offset="1" stop-color="#000" stop-opacity=".6"/>
+  </linearGradient>
+  <linearGradient id="tb-capsule" x1="0" x2="1">
+    <stop offset="0" stop-color="#1b1412"/><stop offset=".35" stop-color="#5a4a42"/>
+    <stop offset=".55" stop-color="#2a201c"/><stop offset="1" stop-color="#120c0a"/>
+  </linearGradient>
+  <linearGradient id="tb-capsule-warn" x1="0" x2="1">
+    <stop offset="0" stop-color="#8a5300"/><stop offset=".35" stop-color="#ffcf6b"/>
+    <stop offset=".55" stop-color="#d98a00"/><stop offset="1" stop-color="#6b3f00"/>
+  </linearGradient>
+  <linearGradient id="tb-capsule-past" x1="0" x2="1">
+    <stop offset="0" stop-color="#6b0f12"/><stop offset=".35" stop-color="#ff7b72"/>
+    <stop offset=".55" stop-color="#c62828"/><stop offset="1" stop-color="#4a0a0c"/>
+  </linearGradient>
+  <linearGradient id="tb-label" x1="0" x2="1">
+    <stop offset="0" stop-color="#cfc2a8"/><stop offset=".3" stop-color="#f7f0e1"/>
+    <stop offset=".75" stop-color="#ece2cc"/><stop offset="1" stop-color="#b9ab90"/>
+  </linearGradient>
+</defs></svg>`;
 
 @customElement("taponbon-card")
 export class TaponBonCard extends LitElement {
@@ -132,6 +165,7 @@ export class TaponBonCard extends LitElement {
     const d = this._data;
     return html`
       <ha-card>
+        ${SHARED_DEFS}
         ${this._error ? html`<div class="empty">${this._error}</div>` : !d ? html`<div class="empty">Carico la cantina…</div>` : this._renderBody(d)}
         ${this._toast ? html`<div class="toast">${this._toast}</div>` : nothing}
       </ha-card>
@@ -170,7 +204,7 @@ export class TaponBonCard extends LitElement {
         ? html`<div class="banner">
             ${closing ? html`<span>🍷 <b>${closing}</b> da bere presto</span>` : nothing}
             ${past ? html`<span>⚠️ <b>${past}</b> oltre la finestra di beva</span>` : nothing}
-            <span class="hint">sono evidenziate sullo scaffale</span>
+            <span class="hint">capsula dorata: da bere presto · capsula rossa: oltre la finestra</span>
           </div>`
         : nothing}
 
@@ -239,7 +273,7 @@ export class TaponBonCard extends LitElement {
     return html`
       <div class="rack">
         <div class="rack-head"><span>${rack.name}</span><span class="muted">${inRack.length}/${rack.rows * rack.cols}</span></div>
-        <div class="grid" style="grid-template-columns: repeat(${rack.cols}, minmax(0, 34px))">${cells}</div>
+        <div class="grid" style="grid-template-columns: repeat(${rack.cols}, minmax(0, 30px))">${cells}</div>
       </div>
     `;
   }
@@ -348,34 +382,51 @@ export class TaponBonCard extends LitElement {
         }
       }
       .rack {
-        border-radius: 12px;
-        padding: 10px;
-        background: linear-gradient(180deg, #5b3a22, #3e2716);
-        box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.25);
+        border-radius: 18px;
+        padding: 14px 14px 18px;
+        background:
+          radial-gradient(120% 60% at 50% 0%, rgba(255, 255, 255, 0.06), transparent 60%),
+          linear-gradient(180deg, #1d1a1a, #121011);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 10px 30px rgba(0, 0, 0, 0.35);
       }
       .rack-head {
         display: flex;
         justify-content: space-between;
-        color: #f3e2c7;
+        align-items: baseline;
+        color: #f1e9df;
         font-weight: 600;
-        padding: 0 2px 8px;
+        letter-spacing: 0.02em;
+        padding: 0 2px 14px;
       }
       .rack-head .muted {
-        color: #d8c2a0;
+        color: #9b928a;
+        font-variant-numeric: tabular-nums;
       }
       .grid {
         display: grid;
-        gap: 8px 5px;
+        gap: 14px 7px;
         justify-content: center;
       }
       .cell {
-        aspect-ratio: 20 / 52;
+        aspect-ratio: 24 / 64;
         border: none;
         background: none;
         padding: 0;
         cursor: pointer;
         position: relative;
-        transition: transform 0.1s, opacity 0.2s;
+        transition: transform 0.18s ease, opacity 0.2s, filter 0.2s;
+      }
+      .cell::before {
+        /* the shelf the bottle stands on */
+        content: "";
+        position: absolute;
+        left: -4px;
+        right: -4px;
+        bottom: -7px;
+        height: 3px;
+        border-radius: 2px;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.04));
       }
       .cell svg {
         width: 100%;
@@ -383,54 +434,40 @@ export class TaponBonCard extends LitElement {
         display: block;
         overflow: visible;
       }
-      .cell.free .glass {
-        fill: rgba(0, 0, 0, 0.28);
-        stroke: rgba(255, 255, 255, 0.12);
-        stroke-width: 0.6;
-      }
-      .cell.free .capsule,
-      .cell.free .label,
-      .cell.free .shine {
-        display: none;
-      }
-      .cell.free:hover .glass {
-        fill: rgba(255, 255, 255, 0.15);
-      }
-      .cell.full .glass {
-        fill: var(--bottle);
-        stroke: rgba(0, 0, 0, 0.5);
-        stroke-width: 0.6;
-      }
-      .cell.full .capsule {
-        fill: #2a1a10;
-      }
-      .cell.full .label {
-        fill: #f4ead6;
-        opacity: 0.9;
-      }
-      .cell.full .shine {
-        fill: rgba(255, 255, 255, 0.28);
+      .cell .shade { fill: url(#tb-shade); }
+      .cell .capsule, .cell .capsule-ring { fill: url(#tb-capsule); }
+      .cell .capsule-ring { opacity: 0.6; }
+      .cell .label { fill: url(#tb-label); }
+      .cell .label-ink { fill: rgba(60, 30, 20, 0.55); }
+      .cell .label-ink.thin { fill: rgba(60, 30, 20, 0.35); }
+      .cell .gloss { fill: rgba(255, 255, 255, 0.22); }
+      .cell.full .glass { fill: var(--bottle); }
+      .cell.full {
+        filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.55));
       }
       .cell.full:hover {
-        transform: translateY(-3px);
+        transform: translateY(-4px);
+        filter: drop-shadow(0 8px 6px rgba(0, 0, 0, 0.6));
       }
+      .cell.free .glass {
+        fill: rgba(255, 255, 255, 0.035);
+        stroke: rgba(255, 255, 255, 0.14);
+        stroke-width: 0.5;
+        stroke-dasharray: 1.6 1.4;
+      }
+      .cell.free .shade, .cell.free .capsule, .cell.free .capsule-ring,
+      .cell.free .label, .cell.free .label-ink, .cell.free .gloss { display: none; }
+      .cell.free:hover .glass {
+        fill: rgba(255, 255, 255, 0.1);
+        stroke: rgba(255, 255, 255, 0.4);
+      }
+      .cell.closing .capsule, .cell.closing .capsule-ring { fill: url(#tb-capsule-warn); }
+      .cell.past .capsule, .cell.past .capsule-ring { fill: url(#tb-capsule-past); }
+      .cell.closing { filter: drop-shadow(0 0 5px rgba(255, 190, 70, 0.55)) drop-shadow(0 3px 3px rgba(0, 0, 0, 0.5)); }
+      .cell.past { filter: drop-shadow(0 0 5px rgba(255, 90, 80, 0.55)) drop-shadow(0 3px 3px rgba(0, 0, 0, 0.5)); }
       .cell.dim {
-        opacity: 0.18;
-      }
-      .cell.closing::after,
-      .cell.past::after {
-        content: "";
-        position: absolute;
-        top: -3px;
-        right: -4px;
-        width: 45%;
-        aspect-ratio: 1;
-        border-radius: 50%;
-        border: 1.5px solid #3e2716;
-        background: #ffa000;
-      }
-      .cell.past::after {
-        background: #e53935;
+        opacity: 0.15;
+        filter: grayscale(0.6);
       }
       .cell.moving {
         outline: 2px solid #2196f3;

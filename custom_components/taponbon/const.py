@@ -8,7 +8,7 @@ STORAGE_VERSION = 1
 
 # Card: served from the integration folder and loaded on every dashboard.
 CARD_URL = "/taponbon/taponbon-card.js"
-CARD_VERSION = "20261102b"  # bump with every frontend build to bust the cache
+CARD_VERSION = "20261102c"  # bump with every frontend build to bust the cache
 
 # Wine types: key -> (Italian label, colour used on the rack).
 WINE_TYPES: dict[str, tuple[str, str]] = {
