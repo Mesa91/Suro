@@ -70,7 +70,7 @@
           "gemini_model": "Modello Gemini"
         },
         "data_description": {
-          "gemini_model": "Lascia gemini-2.5-flash se non sai quale scegliere."
+          "gemini_model": "Lascia gemini-flash-latest: usa sempre il modello Flash più recente."
         }
       }
     },

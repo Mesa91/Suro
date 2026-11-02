@@ -36,3 +36,19 @@ def test_empty_answer_is_a_readable_error():
 def test_prompts_mention_fields():
     assert '"drink_until"' in ai.label_prompt()
     assert "Barolo" in ai.fill_prompt({"name": "Barolo", "notes": "x"})
+
+
+def test_choose_model_prefers_newest_stable_flash():
+    gen = ["generateContent"]
+    models = [
+        {"name": "models/gemini-2.5-flash", "supportedGenerationMethods": gen},
+        {"name": "models/gemini-3.6-flash", "supportedGenerationMethods": gen},
+        {"name": "models/gemini-3.8-flash-preview", "supportedGenerationMethods": gen},
+        {"name": "models/gemini-3.5-flash-lite", "supportedGenerationMethods": gen},
+        {"name": "models/gemini-3.8-flash-tts", "supportedGenerationMethods": gen},
+        {"name": "models/gemini-3.1-flash-image", "supportedGenerationMethods": gen},
+        {"name": "models/gemini-embedding-2", "supportedGenerationMethods": ["embedContent"]},
+        {"name": "models/gemini-flash-latest", "supportedGenerationMethods": gen},
+    ]
+    assert ai.choose_model(models) == "gemini-3.6-flash"
+    assert ai.choose_model([]) is None

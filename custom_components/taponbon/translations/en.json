@@ -70,7 +70,7 @@
           "gemini_model": "Gemini model"
         },
         "data_description": {
-          "gemini_model": "Keep gemini-2.5-flash if unsure."
+          "gemini_model": "Keep gemini-flash-latest: always the newest Flash model."
         }
       }
     },

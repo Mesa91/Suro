@@ -12,7 +12,9 @@ from datetime import date
 from typing import Any
 
 API = "https://generativelanguage.googleapis.com/v1beta/models"
-DEFAULT_MODEL = "gemini-2.5-flash"
+# An alias Google keeps pointing at its newest Flash model, so a model being
+# retired never breaks label reading.
+DEFAULT_MODEL = "gemini-flash-latest"
 TIMEOUT = 45
 
 TYPES = ("red", "white", "rose", "sparkling", "dessert")
@@ -115,6 +117,57 @@ class AIError(Exception):
     """Something the user should read (in Italian)."""
 
 
+class ModelNotFound(AIError):
+    """The configured model does not exist (any more) for this key."""
+
+
+_SKIP = ("image", "tts", "live", "audio", "embed", "robotics", "computer", "exp", "learnlm", "gemma", "nano")
+
+
+def choose_model(models: list[dict[str, Any]]) -> str | None:
+    """Best general-purpose Flash model from a models.list answer.
+
+    Stable before preview, full Flash before Flash-Lite, newest version first.
+    """
+    best: tuple | None = None
+    choice = None
+    for m in models:
+        name = str(m.get("name", "")).removeprefix("models/")
+        if not name.startswith("gemini-") or "flash" not in name:
+            continue
+        if "generateContent" not in (m.get("supportedGenerationMethods") or []):
+            continue
+        if any(token in name for token in _SKIP):
+            continue
+        version = re.search(r"gemini-(\d+(?:\.\d+)?)", name)
+        rank = (
+            "preview" not in name and "latest" not in name,
+            "lite" not in name,
+            float(version.group(1)) if version else 0.0,
+            -len(name),
+        )
+        if best is None or rank > best:
+            best, choice = rank, name
+    return choice
+
+
+async def async_pick_model(session, api_key: str) -> str | None:
+    """Ask Google which models this key can use and pick the best Flash."""
+    import aiohttp
+
+    try:
+        async with session.get(
+            f"{API}?pageSize=200", headers={"x-goog-api-key": api_key},
+            timeout=aiohttp.ClientTimeout(total=15),
+        ) as resp:
+            if resp.status != 200:
+                return None
+            payload = await resp.json(content_type=None)
+    except (TimeoutError, aiohttp.ClientError):
+        return None
+    return choose_model(payload.get("models") or [])
+
+
 def _strip_data_url(image: str) -> tuple[str, str]:
     if image.startswith("data:"):
         head, _, data = image.partition(",")
@@ -123,8 +176,23 @@ def _strip_data_url(image: str) -> tuple[str, str]:
     return "image/jpeg", image
 
 
+_resolved: dict[str, str] = {}
+
+
 async def async_generate(session, api_key: str, model: str, prompt: str, images: list[str] | None = None) -> dict[str, Any]:
-    """Call Gemini and return normalised wine fields."""
+    """Call Gemini; if the model is gone, switch to the best available Flash."""
+    model = _resolved.get(model or DEFAULT_MODEL, model or DEFAULT_MODEL)
+    try:
+        return await _async_call(session, api_key, model, prompt, images)
+    except ModelNotFound:
+        replacement = await async_pick_model(session, api_key)
+        if not replacement or replacement == model:
+            raise
+        _resolved[model] = replacement
+        return await _async_call(session, api_key, replacement, prompt, images)
+
+
+async def _async_call(session, api_key: str, model: str, prompt: str, images: list[str] | None) -> dict[str, Any]:
     import aiohttp
 
     parts: list[dict[str, Any]] = []
@@ -136,7 +204,7 @@ async def async_generate(session, api_key: str, model: str, prompt: str, images:
         "contents": [{"role": "user", "parts": parts}],
         "generationConfig": {"temperature": 0.2, "responseMimeType": "application/json"},
     }
-    url = f"{API}/{model or DEFAULT_MODEL}:generateContent"
+    url = f"{API}/{model}:generateContent"
     try:
         async with session.post(
             url, json=body, headers={"x-goog-api-key": api_key},
@@ -150,7 +218,8 @@ async def async_generate(session, api_key: str, model: str, prompt: str, images:
                 if resp.status == 429:
                     raise AIError("Limite gratuito di Gemini raggiunto per ora: riprova più tardi.")
                 if resp.status == 404:
-                    raise AIError(f"Il modello \"{model}\" non esiste: controllalo nelle opzioni di TaponBon.")
+                    raise ModelNotFound(f"Il modello \"{model}\" non è disponibile e non ne ho trovato un altro: "
+                                        "controlla il modello nelle opzioni di TaponBon.")
                 raise AIError(f"Gemini ha risposto con un errore ({resp.status}): {message[:200]}")
     except TimeoutError as err:
         raise AIError("Gemini non ha risposto in tempo: riprova.") from err
@@ -160,18 +229,21 @@ async def async_generate(session, api_key: str, model: str, prompt: str, images:
 
 
 async def async_check_key(session, api_key: str, model: str) -> str | None:
-    """None if key and model work, otherwise an error code for the options form."""
+    """None if the key works, otherwise an error code for the options form."""
     import aiohttp
 
     try:
         async with session.get(
-            f"{API}/{model or DEFAULT_MODEL}", headers={"x-goog-api-key": api_key},
+            f"{API}?pageSize=200", headers={"x-goog-api-key": api_key},
             timeout=aiohttp.ClientTimeout(total=15),
         ) as resp:
-            if resp.status == 200:
-                return None
-            if resp.status == 404:
-                return "bad_model"
-            return "invalid_key"
+            if resp.status != 200:
+                return "invalid_key"
+            payload = await resp.json(content_type=None)
     except (TimeoutError, aiohttp.ClientError):
         return "cannot_connect"
+    names = {str(m.get("name", "")).removeprefix("models/") for m in payload.get("models") or []}
+    wanted = (model or DEFAULT_MODEL).strip()
+    if wanted.endswith("-latest") or wanted in names:
+        return None
+    return "bad_model"

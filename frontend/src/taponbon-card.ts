@@ -466,9 +466,11 @@ export class TaponBonCard extends LitElement {
         color: var(--secondary-text-color);
       }
       .toast {
-        position: absolute;
+        position: fixed;
         left: 50%;
-        bottom: 14px;
+        bottom: 28px;
+        max-width: min(520px, 90vw);
+        text-align: center;
         transform: translateX(-50%);
         background: rgba(20, 16, 17, 0.92);
         border: 1px solid rgba(255, 255, 255, 0.1);
@@ -477,6 +479,7 @@ export class TaponBonCard extends LitElement {
         padding: 10px 18px;
         border-radius: 999px;
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        z-index: 1001;
         font-size: 0.9em;
         z-index: 2;
       }
