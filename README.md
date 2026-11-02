@@ -13,8 +13,8 @@ quando un vino va bevuto.
 - **QR per ogni bottiglia**: inquadrandolo con l'app Home Assistant la bottiglia
   viene tolta dalla cantina e finisce nello storico. Funziona anche con un tag
   NFC attaccato a una posizione dello scaffale o con un lettore fisso.
-- **Etichette 50 × 30 mm** con QR, nome, annata, tipo, produttore e posizione:
-  dalla stampante etichette (automazione) o dal browser.
+- **Etichette**: solo QR 23 × 23 mm (predefinita) oppure 50 × 30 mm con nome,
+  annata, tipo, produttore e posizione; dalla stampante etichette o dal browser.
 - **Finestra di beva**: le bottiglie da bere presto o oltre la finestra sono
   evidenziate; ogni mattina alle 10 arriva una notifica per quelle nuove.
 - **Etichette lette con l'AI** (Gemini, chiave gratuita): fotografi l'etichetta e

@@ -17,6 +17,13 @@ from .logic import qr_payload_for
 LABEL_DIR = "taponbon_labels"
 WIDTH, HEIGHT = 400, 240
 
+# Label formats: (width mm, height mm). "qr" is a small square with only the
+# QR (and the short code under it, in case the QR gets scuffed); "full" adds
+# name, vintage, type, producer and position.
+FORMATS = {"qr": (23, 23), "full": (50, 30)}
+DEFAULT_FORMAT = "qr"
+QR_PX = 272  # 23 mm at 300 dpi
+
 
 def qr_svg(code: str) -> str:
     import segno
@@ -101,9 +108,34 @@ def render_png(code: str, lines: list[str]) -> bytes:
     return out.getvalue()
 
 
-def write_png(config_dir: str, code: str, lines: list[str]) -> str:
+def render_qr_only(code: str) -> bytes:
+    """Square label: the QR with the short code underneath."""
+    import segno
+    from PIL import Image, ImageDraw
+
+    label = Image.new("1", (QR_PX, QR_PX), 1)
+    buf = io.BytesIO()
+    segno.make(qr_payload_for(code), error="m").save(buf, kind="png", scale=1, border=0)
+    qr = Image.open(io.BytesIO(buf.getvalue())).convert("1")
+    scale = max(1, (QR_PX - 52) // qr.width)
+    qr = qr.resize((qr.width * scale, qr.height * scale), Image.NEAREST)
+    label.paste(qr, ((QR_PX - qr.width) // 2, 10))
+    draw = ImageDraw.Draw(label)
+    font = _font(22)
+    width = draw.textlength(code, font=font)
+    draw.text(((QR_PX - width) / 2, QR_PX - 34), code, font=font, fill=0)
+    out = io.BytesIO()
+    label.save(out, format="PNG")
+    return out.getvalue()
+
+
+def render(code: str, lines: list[str], fmt: str = DEFAULT_FORMAT) -> bytes:
+    return render_qr_only(code) if fmt == "qr" else render_png(code, lines)
+
+
+def write_png(config_dir: str, code: str, lines: list[str], fmt: str = DEFAULT_FORMAT) -> str:
     folder = Path(config_dir) / LABEL_DIR
     folder.mkdir(parents=True, exist_ok=True)
     path = folder / f"{code}.png"
-    path.write_bytes(render_png(code, lines))
+    path.write_bytes(render(code, lines, fmt))
     return str(path)

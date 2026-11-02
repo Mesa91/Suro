@@ -55,3 +55,11 @@ def test_label_renders_and_decodes_size():
     png = labels.render_png("k7m2xq9p", lines)
     assert Image.open(io.BytesIO(png)).size == (labels.WIDTH, labels.HEIGHT)
     assert labels.qr_svg("k7m2xq9p").startswith("<svg")
+
+
+def test_qr_only_label_is_square_and_decodable_size():
+    from PIL import Image
+
+    png = labels.render("k7m2xq9p", [], "qr")
+    assert Image.open(io.BytesIO(png)).size == (labels.QR_PX, labels.QR_PX)
+    assert labels.render("k7m2xq9p", ["A"], "full") != png

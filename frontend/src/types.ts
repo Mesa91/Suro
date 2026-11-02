@@ -49,7 +49,7 @@ export interface HistoryEntry extends Bottle {
 export interface Snapshot {
   racks: Rack[];
   bottles: Bottle[];
-  settings: { auto_labels: boolean; alert_days: number };
+  settings: { auto_labels: boolean; alert_days: number; label_format: "qr" | "full" };
   types: Record<string, { label: string; color: string }>;
   reasons: Record<string, string>;
   history_count: number;

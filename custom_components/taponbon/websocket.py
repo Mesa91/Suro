@@ -49,6 +49,7 @@ def _snapshot(hass: HomeAssistant) -> dict[str, Any]:
         "racks": sorted(store.racks, key=lambda r: r.get("order", 0)),
         "bottles": [{**b, "alert": flagged.get(b["id"])} for b in store.bottles],
         "settings": {
+            "label_format": core.label_format(store),
             CONF_AUTO_LABELS: bool(store.settings.get(CONF_AUTO_LABELS, DEFAULT_AUTO_LABELS)),
             CONF_ALERT_DAYS: int(store.settings.get(CONF_ALERT_DAYS, DEFAULT_ALERT_DAYS)),
         },
@@ -274,7 +275,7 @@ async def ws_get_label(hass, connection, msg) -> None:
         connection.send_error(msg["id"], "not_found", "Bottiglia non trovata")
         return
     info = core.label_info(store, bottle)
-    png = await hass.async_add_executor_job(labels.render_png, bottle["code"], info["lines"])
+    png = await hass.async_add_executor_job(labels.render, bottle["code"], info["lines"], info["label_format"])
     connection.send_result(msg["id"], {**info, "png_base64": base64.b64encode(png).decode("ascii")})
 
 
@@ -309,13 +310,14 @@ async def ws_take_code(hass, connection, msg) -> None:
     vol.Required("type"): "taponbon/update_settings",
     vol.Optional(CONF_AUTO_LABELS): bool,
     vol.Optional(CONF_ALERT_DAYS): vol.All(int, vol.Range(min=0, max=730)),
+    vol.Optional("label_format"): vol.In(list(labels.FORMATS)),
 })
 @websocket_api.async_response
 async def ws_update_settings(hass, connection, msg) -> None:
     store = _store(hass, connection, msg)
     if not store:
         return
-    for key in (CONF_AUTO_LABELS, CONF_ALERT_DAYS):
+    for key in (CONF_AUTO_LABELS, CONF_ALERT_DAYS, "label_format"):
         if key in msg:
             store.settings[key] = msg[key]
     await core.async_changed(hass)

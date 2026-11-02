@@ -167,6 +167,12 @@ export class RacksDialog extends LitElement {
             <button class="btn" @click=${this._add}>＋ Nuovo scaffale</button>
 
             <div class="section">Etichette</div>
+            <div class="types" style="margin-bottom:12px">
+              ${[["qr", "Solo QR · 23 × 23 mm"], ["full", "QR e dati del vino · 50 × 30 mm"]].map(
+                ([fmt, label]) => html`<button class="chip ${s.label_format === fmt ? "active" : ""}"
+                  @click=${() => this._setting("label_format", fmt)}>${label}</button>`,
+              )}
+            </div>
             <label class="check">
               <input type="checkbox" .checked=${s.auto_labels}
                 @change=${(e: Event) => this._setting("auto_labels", (e.target as HTMLInputElement).checked)} />

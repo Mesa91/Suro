@@ -16,6 +16,7 @@ from .const import (
     ALERT_HOUR,
     CONF_ALERT_DAYS,
     CONF_AUTO_LABELS,
+    CONF_LABEL_FORMAT,
     CONF_NOTIFIED,
     DEFAULT_ALERT_DAYS,
     DEFAULT_AUTO_LABELS,
@@ -150,10 +151,20 @@ def async_setup_tag_listener(hass: HomeAssistant):
 
 # ── Labels ────────────────────────────────────────────────────────────────────
 
+def label_format(store: TaponBonStore | None) -> str:
+    fmt = (store.settings.get(CONF_LABEL_FORMAT) if store else None) or labels.DEFAULT_FORMAT
+    return fmt if fmt in labels.FORMATS else labels.DEFAULT_FORMAT
+
+
 def label_info(store: TaponBonStore, bottle: dict[str, Any]) -> dict[str, Any]:
     location = location_text(bottle, store.racks)
     tlabel = type_label(bottle.get("type"))
+    fmt = label_format(store)
+    width_mm, height_mm = labels.FORMATS[fmt]
     return {
+        "label_format": fmt,
+        "width_mm": width_mm,
+        "height_mm": height_mm,
         "bottle_id": bottle["id"],
         "code": bottle["code"],
         "tag_id": tag_id_for(bottle["code"]),
@@ -173,7 +184,7 @@ async def async_request_label(hass: HomeAssistant, bottle: dict[str, Any], reaso
     store = get_store(hass)
     info = label_info(store, bottle)
     info["label_path"] = await hass.async_add_executor_job(
-        labels.write_png, hass.config.config_dir, bottle["code"], info["lines"]
+        labels.write_png, hass.config.config_dir, bottle["code"], info["lines"], info["label_format"]
     )
     hass.bus.async_fire(EVENT_LABEL_REQUESTED, {**info, "reason": reason})
     return info

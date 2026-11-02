@@ -23,7 +23,7 @@
     const reasons = { drank: "Bevuta", gifted: "Regalata", broken: "Rotta", spoiled: "Andata a male", deleted: "Eliminata", other: "Altro" };
     let n = 0; const id = (p) => p + (++n);
     const db = { racks: [{ id: "rack-a", name: "Scaffale", rows: 7, cols: 10, shelves: [10, 10, 10, 10, 10, 10, 10], order: 0 }], bottles: [], history: [],
-      settings: { auto_labels: true, alert_days: 180 } };
+      settings: { auto_labels: true, alert_days: 180, label_format: "qr" } };
     const seed = [["Barolo Cannubi", "Brezza", 2016, "red", 2022, 2034, 3], ["Brunello di Montalcino", "Mastrojanni", 2015, "red", 2020, 2026, 2],
       ["Soave Classico", "Pieropan", 2019, "white", 2020, 2024, 1], ["Franciacorta Satèn", "Ca' del Bosco", null, "sparkling", null, 2027, 4],
       ["Chiaretto", "Zenato", 2023, "rose", 2024, 2026, 2], ["Passito di Pantelleria", "Donnafugata", 2018, "dessert", 2020, 2040, 1]];
@@ -61,8 +61,8 @@
         Object.assign(r, { name: m.rack.name, shelves: sh, rows: sh.length, cols: Math.max(...sh) }); changed(); return { rack: r, displaced: 0 }; },
       "taponbon/delete_rack": (m) => { db.racks = db.racks.filter((r) => r.id !== m.rack_id);
         db.bottles.forEach((b) => { if (b.rack_id === m.rack_id) Object.assign(b, { rack_id: null, row: null, col: null }); }); changed(); return { displaced: 0 }; },
-      "taponbon/update_settings": (m) => { if ("auto_labels" in m) db.settings.auto_labels = m.auto_labels; if ("alert_days" in m) db.settings.alert_days = m.alert_days; changed(); return {}; },
-      "taponbon/get_label": () => ({ code: "k7m2xq9p", png_base64: window.LABEL_PNG || "" }),
+      "taponbon/update_settings": (m) => { if ("auto_labels" in m) db.settings.auto_labels = m.auto_labels; if ("alert_days" in m) db.settings.alert_days = m.alert_days; if ("label_format" in m) db.settings.label_format = m.label_format; changed(); return {}; },
+      "taponbon/get_label": () => ({ code: "k7m2xq9p", png_base64: (db.settings.label_format === "qr" ? window.QR_PNG : window.LABEL_PNG) || "", label_format: db.settings.label_format, width_mm: db.settings.label_format === "qr" ? 23 : 50, height_mm: db.settings.label_format === "qr" ? 23 : 30 }),
       "taponbon/request_label": () => ({}),
       "taponbon/ai_recognize": (m) => (window.AI_CALLS = (window.AI_CALLS || []).concat([{ back: !!m.back_image }]), { wine: { name: "Rosé di Morgante", producer: "Morgante", vintage: 2023, type: "rose",
         region: "Sicilia DOC", country: "Italia", grape: "Nero d'Avola", alcohol: "12,5%", drink_from: 2024, drink_until: 2026,

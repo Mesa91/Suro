@@ -8,7 +8,7 @@ STORAGE_VERSION = 1
 
 # Card: served from the integration folder and loaded on every dashboard.
 CARD_URL = "/taponbon/taponbon-card.js"
-CARD_VERSION = "20261102j"  # bump with every frontend build to bust the cache
+CARD_VERSION = "20261103a"  # bump with every frontend build to bust the cache
 
 # Wine types: key -> (Italian label, colour used on the rack).
 WINE_TYPES: dict[str, tuple[str, str]] = {
@@ -37,6 +37,7 @@ DEFAULT_AUTO_LABELS = True
 CONF_ALERT_DAYS = "alert_days"
 DEFAULT_ALERT_DAYS = 180
 CONF_NOTIFIED = "notified_alerts"  # bookkeeping, not user-editable
+CONF_LABEL_FORMAT = "label_format"  # "qr" (23 × 23 mm, QR only) or "full" (50 × 30 mm)
 
 # Events.
 EVENT_UPDATED = f"{DOMAIN}_updated"

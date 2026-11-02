@@ -8,6 +8,9 @@ import { BOTTLE_DEFS, bottleSvg } from "./bottle";
 interface Label {
   code: string;
   png_base64: string;
+  label_format: "qr" | "full";
+  width_mm: number;
+  height_mm: number;
 }
 
 @customElement("tb-bottle-dialog")
@@ -23,6 +26,10 @@ export class BottleDialog extends LitElement {
   @state() private _busy = false;
 
   protected willUpdate(changed: PropertyValues) {
+    if (changed.has("data") && this._label && this.data.settings.label_format !== this._label.label_format) {
+      this._label = null;
+      this._loadLabel();
+    }
     if (changed.has("bottle")) {
       const previous = changed.get("bottle") as Bottle | undefined;
       if (previous?.id !== this.bottle.id) {
@@ -93,8 +100,9 @@ export class BottleDialog extends LitElement {
       this.card.toast("Il browser ha bloccato la finestra di stampa");
       return;
     }
+    const { width_mm: w, height_mm: h } = this._label;
     win.document.write(`<!doctype html><html><head><title>Etichetta ${this._label.code}</title>
-      <style>@page{size:50mm 30mm;margin:0}html,body{margin:0}img{width:50mm;height:30mm;display:block}</style></head>
+      <style>@page{size:${w}mm ${h}mm;margin:0}html,body{margin:0}img{width:${w}mm;height:${h}mm;display:block}</style></head>
       <body><img src="data:image/png;base64,${this._label.png_base64}"
       onload="setTimeout(function(){window.print();window.close();},150)"></body></html>`);
     win.document.close();
@@ -144,7 +152,7 @@ export class BottleDialog extends LitElement {
       </dl>
       <div class="label-box">
         ${this._label
-          ? html`<img class="label" alt="Etichetta QR" src="data:image/png;base64,${this._label.png_base64}" />`
+          ? html`<img class="label ${this._label.label_format}" alt="Etichetta QR" src="data:image/png;base64,${this._label.png_base64}" />`
           : html`<div class="note">Preparo l'etichetta…</div>`}
         <div class="note">Inquadra il QR con l'app Home Assistant quando prendi la bottiglia: verrà tolta dalla cantina.</div>
         <div class="row">
@@ -290,6 +298,10 @@ export class BottleDialog extends LitElement {
         border: 1px solid var(--tb-line);
         background: rgba(255, 255, 255, 0.025);
         text-align: center;
+      }
+      .label.qr {
+        max-width: 140px;
+        padding: 6px;
       }
       .label {
         width: 100%;
