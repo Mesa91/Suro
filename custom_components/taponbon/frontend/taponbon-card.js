@@ -531,7 +531,7 @@ function t(t,e,i,s){var o,a=arguments.length,r=a<3?e:null===s?s=Object.getOwnPro
         ${this._toast?V`<div class="toast">${this._toast}</div>`:W}
       </ha-card>
       ${t?this._renderDialog(t):W}
-    `}_renderBody(t){const e=t.bottles.length,i=t.racks.reduce((t,e)=>t+e.rows*e.cols,0),s=t.bottles.filter(t=>"closing"===t.alert).length,o=t.bottles.filter(t=>"past"===t.alert).length,a=t.bottles.filter(t=>!t.rack_id),r=Object.fromEntries(Object.keys(t.types).map(e=>[e,t.bottles.filter(t=>t.type===e).length])),n=Math.max(1,Math.min(6,Math.round(Number(this._config.columns))||0));return V`
+    `}_renderBody(t){const e=t.bottles.length,i=t.racks.reduce((t,e)=>t+e.rows*e.cols,0),s=t.bottles.filter(t=>"closing"===t.alert).length,o=t.bottles.filter(t=>"past"===t.alert).length,a=t.bottles.filter(t=>!t.rack_id),r=Object.fromEntries(Object.keys(t.types).map(e=>[e,t.bottles.filter(t=>t.type===e).length])),n=Math.round(Number(this._config.columns))||0,l=n?Math.max(1,Math.min(6,n,t.racks.length||1)):0;return V`
       <div class="header">
         <div class="title">
           <span class="logo">🍷</span>
@@ -570,7 +570,7 @@ function t(t,e,i,s){var o,a=arguments.length,r=a<3?e:null===s?s=Object.getOwnPro
           .value=${this._query} @input=${t=>this._query=t.target.value} />
       </div>
 
-      <div class="racks ${n?"fixed":""}" style=${n?`--tb-columns:${n}`:""}>
+      <div class="racks ${l?"fixed":""}" style=${l?`--tb-columns:${l}`:""}>
         ${t.racks.map(e=>this._renderRack(t,e))}
       </div>
 
