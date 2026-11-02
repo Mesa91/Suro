@@ -15,7 +15,7 @@ API = "https://generativelanguage.googleapis.com/v1beta/models"
 # An alias Google keeps pointing at its newest Flash model, so a model being
 # retired never breaks label reading.
 DEFAULT_MODEL = "gemini-flash-latest"
-TIMEOUT = 45
+TIMEOUT = 30  # per attempt; a busy model then falls back to Flash-Lite
 
 TYPES = ("red", "white", "rose", "sparkling", "dessert")
 
@@ -121,13 +121,18 @@ class ModelNotFound(AIError):
     """The configured model does not exist (any more) for this key."""
 
 
+class ModelBusy(AIError):
+    """Google is overloaded or too slow right now (503/500/timeout)."""
+
+
 _SKIP = ("image", "tts", "live", "audio", "embed", "robotics", "computer", "exp", "learnlm", "gemma", "nano")
 
 
-def choose_model(models: list[dict[str, Any]]) -> str | None:
+def choose_model(models: list[dict[str, Any]], lite: bool = False) -> str | None:
     """Best general-purpose Flash model from a models.list answer.
 
-    Stable before preview, full Flash before Flash-Lite, newest version first.
+    Stable before preview, then full Flash before Flash-Lite (or the other way
+    round with ``lite``), newest version first.
     """
     best: tuple | None = None
     choice = None
@@ -142,7 +147,7 @@ def choose_model(models: list[dict[str, Any]]) -> str | None:
         version = re.search(r"gemini-(\d+(?:\.\d+)?)", name)
         rank = (
             "preview" not in name and "latest" not in name,
-            "lite" not in name,
+            ("lite" in name) == lite,
             float(version.group(1)) if version else 0.0,
             -len(name),
         )
@@ -151,7 +156,7 @@ def choose_model(models: list[dict[str, Any]]) -> str | None:
     return choice
 
 
-async def async_pick_model(session, api_key: str) -> str | None:
+async def async_pick_model(session, api_key: str, lite: bool = False) -> str | None:
     """Ask Google which models this key can use and pick the best Flash."""
     import aiohttp
 
@@ -165,7 +170,7 @@ async def async_pick_model(session, api_key: str) -> str | None:
             payload = await resp.json(content_type=None)
     except (TimeoutError, aiohttp.ClientError):
         return None
-    return choose_model(payload.get("models") or [])
+    return choose_model(payload.get("models") or [], lite)
 
 
 def _strip_data_url(image: str) -> tuple[str, str]:
@@ -190,6 +195,13 @@ async def async_generate(session, api_key: str, model: str, prompt: str, images:
             raise
         _resolved[model] = replacement
         return await _async_call(session, api_key, replacement, prompt, images)
+    except ModelBusy:
+        # The free tier is often the first to be throttled on the big model;
+        # Flash-Lite is lighter, quicker and reads labels just as well.
+        lite = await async_pick_model(session, api_key, lite=True) or "gemini-flash-lite-latest"
+        if lite == model:
+            raise
+        return await _async_call(session, api_key, lite, prompt, images)
 
 
 async def _async_call(session, api_key: str, model: str, prompt: str, images: list[str] | None) -> dict[str, Any]:
@@ -215,6 +227,8 @@ async def _async_call(session, api_key: str, model: str, prompt: str, images: li
                 message = ((payload or {}).get("error") or {}).get("message", "")
                 if resp.status in (401, 403) or "API key" in message:
                     raise AIError("La chiave Gemini non è valida. Controllala nelle opzioni di TaponBon.")
+                if resp.status in (500, 502, 503, 504):
+                    raise ModelBusy("Gemini è sovraccarico in questo momento: riprova tra qualche minuto.")
                 if resp.status == 429:
                     raise AIError("Limite gratuito di Gemini raggiunto per ora: riprova più tardi.")
                 if resp.status == 404:
@@ -222,7 +236,7 @@ async def _async_call(session, api_key: str, model: str, prompt: str, images: li
                                         "controlla il modello nelle opzioni di TaponBon.")
                 raise AIError(f"Gemini ha risposto con un errore ({resp.status}): {message[:200]}")
     except TimeoutError as err:
-        raise AIError("Gemini non ha risposto in tempo: riprova.") from err
+        raise ModelBusy("Gemini non ha risposto in tempo: riprova tra qualche minuto.") from err
     except aiohttp.ClientError as err:
         raise AIError(f"Impossibile contattare Gemini: {err}") from err
     return parse_response(payload)

@@ -51,4 +51,5 @@ def test_choose_model_prefers_newest_stable_flash():
         {"name": "models/gemini-flash-latest", "supportedGenerationMethods": gen},
     ]
     assert ai.choose_model(models) == "gemini-3.6-flash"
+    assert ai.choose_model(models, lite=True) == "gemini-3.5-flash-lite"
     assert ai.choose_model([]) is None
