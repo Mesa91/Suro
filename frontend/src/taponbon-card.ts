@@ -1,4 +1,4 @@
-import { LitElement, html, css, nothing, PropertyValues } from "lit";
+import { LitElement, html, svg, css, nothing, PropertyValues } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { Bottle, CardConfig, HistoryEntry, Rack, Snapshot, matches, wineTitle } from "./types";
 import { sharedStyles } from "./styles";
@@ -13,6 +13,14 @@ type Dialog =
   | { kind: "racks" }
   | { kind: "history" }
   | null;
+
+// A standing wine bottle: capsule, neck, shoulders, body, with a highlight.
+const BOTTLE_SVG = svg`<svg viewBox="0 0 20 52" aria-hidden="true">
+  <path class="glass" d="M8 1h4v3h-.4v9c0 2.5 6.4 4.5 6.4 10.5V49a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V23.5C2 17.5 8.4 15.5 8.4 13V4H8z"/>
+  <rect class="capsule" x="7.6" y="1" width="4.8" height="7" rx="1"/>
+  <rect class="label" x="3.5" y="29" width="13" height="11" rx="1"/>
+  <path class="shine" d="M4.3 24c0-3 2-4.5 3.4-5.6V47H4.3z"/>
+</svg>`;
 
 @customElement("taponbon-card")
 export class TaponBonCard extends LitElement {
@@ -225,13 +233,13 @@ export class TaponBonCard extends LitElement {
           style=${b ? `--bottle:${color}` : ""}
           title=${b ? `${wineTitle(b)}${b.producer ? ` · ${b.producer}` : ""}` : `Fila ${r + 1}, posto ${c + 1}: libero`}
           @click=${() => this._onCell(rack, r, c, b)}
-        ></button>`);
+        >${BOTTLE_SVG}</button>`);
       }
     }
     return html`
       <div class="rack">
         <div class="rack-head"><span>${rack.name}</span><span class="muted">${inRack.length}/${rack.rows * rack.cols}</span></div>
-        <div class="grid" style="grid-template-columns: repeat(${rack.cols}, minmax(0, 52px))">${cells}</div>
+        <div class="grid" style="grid-template-columns: repeat(${rack.cols}, minmax(0, 34px))">${cells}</div>
       </div>
     `;
   }
@@ -357,31 +365,54 @@ export class TaponBonCard extends LitElement {
       }
       .grid {
         display: grid;
-        gap: 4px;
+        gap: 8px 5px;
         justify-content: center;
       }
       .cell {
-        aspect-ratio: 1;
-        border-radius: 50%;
+        aspect-ratio: 20 / 52;
         border: none;
+        background: none;
         padding: 0;
         cursor: pointer;
         position: relative;
         transition: transform 0.1s, opacity 0.2s;
       }
-      .cell.free {
-        background: rgba(0, 0, 0, 0.35);
-        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.6);
+      .cell svg {
+        width: 100%;
+        height: 100%;
+        display: block;
+        overflow: visible;
       }
-      .cell.free:hover {
-        background: rgba(255, 255, 255, 0.15);
+      .cell.free .glass {
+        fill: rgba(0, 0, 0, 0.28);
+        stroke: rgba(255, 255, 255, 0.12);
+        stroke-width: 0.6;
       }
-      .cell.full {
-        background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.45), var(--bottle) 45%, rgba(0, 0, 0, 0.55));
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+      .cell.free .capsule,
+      .cell.free .label,
+      .cell.free .shine {
+        display: none;
+      }
+      .cell.free:hover .glass {
+        fill: rgba(255, 255, 255, 0.15);
+      }
+      .cell.full .glass {
+        fill: var(--bottle);
+        stroke: rgba(0, 0, 0, 0.5);
+        stroke-width: 0.6;
+      }
+      .cell.full .capsule {
+        fill: #2a1a10;
+      }
+      .cell.full .label {
+        fill: #f4ead6;
+        opacity: 0.9;
+      }
+      .cell.full .shine {
+        fill: rgba(255, 255, 255, 0.28);
       }
       .cell.full:hover {
-        transform: scale(1.12);
+        transform: translateY(-3px);
       }
       .cell.dim {
         opacity: 0.18;
@@ -390,10 +421,10 @@ export class TaponBonCard extends LitElement {
       .cell.past::after {
         content: "";
         position: absolute;
-        top: -2px;
-        right: -2px;
-        width: 34%;
-        height: 34%;
+        top: -3px;
+        right: -4px;
+        width: 45%;
+        aspect-ratio: 1;
         border-radius: 50%;
         border: 1.5px solid #3e2716;
         background: #ffa000;
@@ -402,8 +433,9 @@ export class TaponBonCard extends LitElement {
         background: #e53935;
       }
       .cell.moving {
-        outline: 3px solid #2196f3;
-        outline-offset: 1px;
+        outline: 2px solid #2196f3;
+        outline-offset: 2px;
+        border-radius: 4px;
       }
       .unplaced {
         padding: 0 16px 16px;
