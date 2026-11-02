@@ -1,26 +1,32 @@
-name: Compila la card
+name: Compila e pubblica
 
-# Ricompila la card quando cambiano i sorgenti in frontend/ e salva il file
-# compilato, così quello installato da HACS corrisponde sempre ai sorgenti.
+# A ogni push su main:
+# 1. ricompila la card e salva il file compilato (se è cambiato);
+# 2. se la versione in manifest.json non ha ancora una release, la crea:
+#    è quello che HACS mostra come "versione disponibile".
 
 on:
   push:
     branches: [main]
-    paths: ["frontend/src/**", "frontend/package.json", "frontend/rollup.config.js", "frontend/tsconfig.json"]
   workflow_dispatch:
 
 permissions:
   contents: write
 
+concurrency:
+  group: build-main
+  cancel-in-progress: false
+
 jobs:
   build:
+    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Compila
+      - name: Compila la card
         working-directory: frontend
         run: |
           npm install --no-audit --no-fund
@@ -34,3 +40,13 @@ jobs:
           git add custom_components/taponbon/frontend/taponbon-card.js
           git diff --cached --quiet || git commit -m "Ricompila la card"
           git push
+      - name: Pubblica la release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION=$(python3 -c "import json;print(json.load(open('custom_components/taponbon/manifest.json'))['version'])")
+          if gh release view "v$VERSION" >/dev/null 2>&1; then
+            echo "La release v$VERSION esiste già"
+          else
+            gh release create "v$VERSION" --target "$(git rev-parse HEAD)" --title "TaponBon $VERSION" --generate-notes
+          fi
