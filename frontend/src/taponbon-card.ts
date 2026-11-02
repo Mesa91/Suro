@@ -140,7 +140,9 @@ export class TaponBonCard extends LitElement {
     const past = d.bottles.filter((b) => b.alert === "past").length;
     const unplaced = d.bottles.filter((b) => !b.rack_id);
     const counts = Object.fromEntries(Object.keys(d.types).map((t) => [t, d.bottles.filter((b) => b.type === t).length]));
-    const columns = Math.max(1, Math.min(6, Math.round(Number(this._config.columns)) || 0));
+    // Never more columns than racks: one rack should use the whole width.
+    const wanted = Math.round(Number(this._config.columns)) || 0;
+    const columns = wanted ? Math.max(1, Math.min(6, wanted, d.racks.length || 1)) : 0;
 
     return html`
       <div class="header">
