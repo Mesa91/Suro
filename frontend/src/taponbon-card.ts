@@ -1,0 +1,464 @@
+import { LitElement, html, css, nothing, PropertyValues } from "lit";
+import { customElement, property, state } from "lit/decorators.js";
+import { Bottle, CardConfig, HistoryEntry, Rack, Snapshot, matches, wineTitle } from "./types";
+import { sharedStyles } from "./styles";
+import "./bottle-dialog";
+import "./add-dialog";
+import "./racks-dialog";
+import "./history-dialog";
+
+type Dialog =
+  | { kind: "add"; rackId: string | null; row: number | null; col: number | null }
+  | { kind: "bottle"; bottleId: string }
+  | { kind: "racks" }
+  | { kind: "history" }
+  | null;
+
+@customElement("taponbon-card")
+export class TaponBonCard extends LitElement {
+  @property({ attribute: false }) hass: any;
+  @state() private _config: CardConfig = { type: "custom:taponbon-card" };
+  @state() private _data: Snapshot | null = null;
+  @state() private _error = "";
+  @state() private _typeFilter = "";
+  @state() private _query = "";
+  @state() private _dialog: Dialog = null;
+  @state() private _moving: Bottle | null = null;
+  @state() private _toast = "";
+  private _unsub?: () => void;
+  private _subscribing = false;
+  private _toastTimer?: number;
+
+  setConfig(config: CardConfig) {
+    this._config = { ...config };
+  }
+
+  static getStubConfig() {
+    return { type: "custom:taponbon-card" };
+  }
+
+  getCardSize() {
+    return 8;
+  }
+
+  getGridOptions() {
+    return { columns: "full", min_columns: 6 };
+  }
+
+  connectedCallback() {
+    super.connectedCallback();
+    if (this.hass) this._subscribe();
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    this._unsub?.();
+    this._unsub = undefined;
+  }
+
+  protected updated(changed: PropertyValues) {
+    if (changed.has("hass") && this.hass && !this._unsub && !this._subscribing) this._subscribe();
+  }
+
+  private async _subscribe() {
+    if (this._unsub || this._subscribing || !this.hass?.connection) return;
+    this._subscribing = true;
+    try {
+      this._unsub = await this.hass.connection.subscribeMessage(
+        (data: Snapshot) => {
+          this._data = data;
+          this._error = "";
+        },
+        { type: "taponbon/subscribe" },
+      );
+    } catch (err: any) {
+      this._error =
+        err?.code === "unknown_command"
+          ? "L'integrazione TaponBon non è installata: aggiungila da Impostazioni → Dispositivi e servizi."
+          : `Impossibile caricare la cantina: ${err?.message || err}`;
+    } finally {
+      this._subscribing = false;
+    }
+  }
+
+  async ws(msg: Record<string, unknown>): Promise<any> {
+    try {
+      return await this.hass.callWS(msg);
+    } catch (err: any) {
+      this.toast(err?.message || "Operazione non riuscita");
+      throw err;
+    }
+  }
+
+  toast(text: string) {
+    this._toast = text;
+    clearTimeout(this._toastTimer);
+    this._toastTimer = window.setTimeout(() => (this._toast = ""), 3500);
+  }
+
+  // ── interactions ─────────────────────────────────────────────────────────
+
+  private _onCell(rack: Rack, row: number, col: number, bottle?: Bottle) {
+    if (this._moving) {
+      const moving = this._moving;
+      this._moving = null;
+      if (bottle?.id === moving.id) return;
+      this.ws({ type: "taponbon/move_bottle", bottle_id: moving.id, rack_id: rack.id, row, col }).then(() =>
+        this.toast(bottle ? "Bottiglie scambiate di posto" : "Bottiglia spostata"),
+      );
+      return;
+    }
+    this._dialog = bottle
+      ? { kind: "bottle", bottleId: bottle.id }
+      : { kind: "add", rackId: rack.id, row, col };
+  }
+
+  private _startMove = (e: CustomEvent) => {
+    this._moving = e.detail.bottle;
+    this._dialog = null;
+  };
+
+  // ── render ───────────────────────────────────────────────────────────────
+
+  render() {
+    const d = this._data;
+    return html`
+      <ha-card>
+        ${this._error ? html`<div class="empty">${this._error}</div>` : !d ? html`<div class="empty">Carico la cantina…</div>` : this._renderBody(d)}
+        ${this._toast ? html`<div class="toast">${this._toast}</div>` : nothing}
+      </ha-card>
+      ${d ? this._renderDialog(d) : nothing}
+    `;
+  }
+
+  private _renderBody(d: Snapshot) {
+    const total = d.bottles.length;
+    const capacity = d.racks.reduce((s, r) => s + r.rows * r.cols, 0);
+    const closing = d.bottles.filter((b) => b.alert === "closing").length;
+    const past = d.bottles.filter((b) => b.alert === "past").length;
+    const unplaced = d.bottles.filter((b) => !b.rack_id);
+    const counts = Object.fromEntries(Object.keys(d.types).map((t) => [t, d.bottles.filter((b) => b.type === t).length]));
+    const columns = Math.max(1, Math.min(6, Math.round(Number(this._config.columns)) || 0));
+
+    return html`
+      <div class="header">
+        <div class="title">
+          <span class="logo">🍷</span>
+          <div>
+            <div class="name">${this._config.title || "TaponBon"}</div>
+            <div class="sub">${total} bottiglie · ${capacity - d.racks.reduce((s, r) => s + this._inRack(d, r).length, 0)} posti liberi</div>
+          </div>
+        </div>
+        <div class="actions">
+          <button class="btn primary" @click=${() => (this._dialog = { kind: "add", rackId: null, row: null, col: null })}>
+            ＋ Aggiungi
+          </button>
+          <button class="btn" title="Storico" @click=${() => (this._dialog = { kind: "history" })}>🕓 Storico</button>
+          <button class="btn" title="Scaffali e impostazioni" @click=${() => (this._dialog = { kind: "racks" })}>⚙︎</button>
+        </div>
+      </div>
+
+      ${closing || past
+        ? html`<div class="banner">
+            ${closing ? html`<span>🍷 <b>${closing}</b> da bere presto</span>` : nothing}
+            ${past ? html`<span>⚠️ <b>${past}</b> oltre la finestra di beva</span>` : nothing}
+            <span class="hint">sono evidenziate sullo scaffale</span>
+          </div>`
+        : nothing}
+
+      ${this._moving
+        ? html`<div class="banner moving">
+            Tocca la nuova posizione per <b>${wineTitle(this._moving)}</b>
+            <button class="btn small" @click=${() => (this._moving = null)}>Annulla</button>
+          </div>`
+        : nothing}
+
+      <div class="filters">
+        <button class="chip ${this._typeFilter ? "" : "active"}" @click=${() => (this._typeFilter = "")}>Tutti ${total}</button>
+        ${Object.entries(d.types).map(
+          ([key, t]) => html`<button
+            class="chip ${this._typeFilter === key ? "active" : ""}"
+            @click=${() => (this._typeFilter = this._typeFilter === key ? "" : key)}
+          ><span class="dot" style="background:${t.color}"></span>${t.label} ${counts[key] || 0}</button>`,
+        )}
+        <input class="search" type="search" placeholder="Cerca vino, produttore, annata…"
+          .value=${this._query} @input=${(e: Event) => (this._query = (e.target as HTMLInputElement).value)} />
+      </div>
+
+      <div class="racks ${columns ? "fixed" : ""}" style=${columns ? `--tb-columns:${columns}` : ""}>
+        ${d.racks.map((rack) => this._renderRack(d, rack))}
+      </div>
+
+      ${unplaced.length
+        ? html`<div class="unplaced">
+            <div class="section-title">Da sistemare (${unplaced.length})</div>
+            <div class="list">
+              ${unplaced.map((b) => html`<button class="list-item ${this._dims(b) ? "dim" : ""}"
+                  @click=${() => (this._dialog = { kind: "bottle", bottleId: b.id })}>
+                  <span class="dot" style="background:${d.types[b.type]?.color}"></span>${wineTitle(b)}
+                </button>`)}
+            </div>
+          </div>`
+        : nothing}
+      ${!d.racks.length ? html`<div class="empty">Nessuno scaffale: creane uno da ⚙︎.</div>` : nothing}
+    `;
+  }
+
+  private _inRack(d: Snapshot, rack: Rack) {
+    return d.bottles.filter((b) => b.rack_id === rack.id && b.row != null && b.col != null);
+  }
+
+  private _dims(b: Bottle) {
+    return (this._typeFilter && b.type !== this._typeFilter) || !matches(b, this._query);
+  }
+
+  private _renderRack(d: Snapshot, rack: Rack) {
+    const inRack = this._inRack(d, rack);
+    const at = new Map(inRack.map((b) => [`${b.row}:${b.col}`, b]));
+    const cells = [];
+    for (let r = 0; r < rack.rows; r++) {
+      for (let c = 0; c < rack.cols; c++) {
+        const b = at.get(`${r}:${c}`);
+        const color = b ? d.types[b.type]?.color || "#888" : "";
+        cells.push(html`<button
+          class="cell ${b ? "full" : "free"} ${b && this._dims(b) ? "dim" : ""} ${b?.alert || ""} ${this._moving?.id === b?.id && b ? "moving" : ""}"
+          style=${b ? `--bottle:${color}` : ""}
+          title=${b ? `${wineTitle(b)}${b.producer ? ` · ${b.producer}` : ""}` : `Fila ${r + 1}, posto ${c + 1}: libero`}
+          @click=${() => this._onCell(rack, r, c, b)}
+        ></button>`);
+      }
+    }
+    return html`
+      <div class="rack">
+        <div class="rack-head"><span>${rack.name}</span><span class="muted">${inRack.length}/${rack.rows * rack.cols}</span></div>
+        <div class="grid" style="grid-template-columns: repeat(${rack.cols}, minmax(0, 52px))">${cells}</div>
+      </div>
+    `;
+  }
+
+  private _renderDialog(d: Snapshot) {
+    const dlg = this._dialog;
+    if (!dlg) return nothing;
+    const close = () => (this._dialog = null);
+    switch (dlg.kind) {
+      case "add":
+        return html`<tb-add-dialog .card=${this} .data=${d} .rackId=${dlg.rackId} .row=${dlg.row} .col=${dlg.col} @close=${close}></tb-add-dialog>`;
+      case "bottle": {
+        const bottle = d.bottles.find((b) => b.id === dlg.bottleId);
+        if (!bottle) return nothing;
+        return html`<tb-bottle-dialog .card=${this} .data=${d} .bottle=${bottle} @close=${close} @move=${this._startMove}></tb-bottle-dialog>`;
+      }
+      case "racks":
+        return html`<tb-racks-dialog .card=${this} .data=${d} @close=${close}></tb-racks-dialog>`;
+      case "history":
+        return html`<tb-history-dialog .card=${this} .data=${d} @close=${close}></tb-history-dialog>`;
+    }
+  }
+
+  static styles = [
+    sharedStyles,
+    css`
+      ha-card {
+        overflow: hidden;
+        position: relative;
+      }
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        padding: 16px 16px 8px;
+        flex-wrap: wrap;
+      }
+      .title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .logo {
+        font-size: 1.8em;
+      }
+      .name {
+        font-size: 1.3em;
+        font-weight: 600;
+      }
+      .sub,
+      .muted {
+        color: var(--secondary-text-color);
+        font-size: 0.85em;
+      }
+      .actions {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+      .banner {
+        margin: 4px 16px 8px;
+        padding: 8px 12px;
+        border-radius: 10px;
+        background: rgba(255, 152, 0, 0.12);
+        display: flex;
+        gap: 14px;
+        flex-wrap: wrap;
+        align-items: center;
+        font-size: 0.9em;
+      }
+      .banner.moving {
+        background: rgba(33, 150, 243, 0.15);
+        justify-content: space-between;
+      }
+      .hint {
+        color: var(--secondary-text-color);
+        font-size: 0.85em;
+      }
+      .filters {
+        display: flex;
+        gap: 6px;
+        padding: 4px 16px 10px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+      .search {
+        flex: 1 1 180px;
+        min-width: 150px;
+        padding: 7px 10px;
+        border-radius: 18px;
+        border: 1px solid var(--divider-color);
+        background: var(--card-background-color);
+        color: var(--primary-text-color);
+        font: inherit;
+      }
+      .racks {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 14px;
+        padding: 4px 16px 16px;
+      }
+      @media (min-width: 600px) {
+        .racks.fixed {
+          grid-template-columns: repeat(var(--tb-columns), minmax(0, 1fr));
+        }
+      }
+      .rack {
+        border-radius: 12px;
+        padding: 10px;
+        background: linear-gradient(180deg, #5b3a22, #3e2716);
+        box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.25);
+      }
+      .rack-head {
+        display: flex;
+        justify-content: space-between;
+        color: #f3e2c7;
+        font-weight: 600;
+        padding: 0 2px 8px;
+      }
+      .rack-head .muted {
+        color: #d8c2a0;
+      }
+      .grid {
+        display: grid;
+        gap: 4px;
+        justify-content: center;
+      }
+      .cell {
+        aspect-ratio: 1;
+        border-radius: 50%;
+        border: none;
+        padding: 0;
+        cursor: pointer;
+        position: relative;
+        transition: transform 0.1s, opacity 0.2s;
+      }
+      .cell.free {
+        background: rgba(0, 0, 0, 0.35);
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.6);
+      }
+      .cell.free:hover {
+        background: rgba(255, 255, 255, 0.15);
+      }
+      .cell.full {
+        background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.45), var(--bottle) 45%, rgba(0, 0, 0, 0.55));
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+      }
+      .cell.full:hover {
+        transform: scale(1.12);
+      }
+      .cell.dim {
+        opacity: 0.18;
+      }
+      .cell.closing::after,
+      .cell.past::after {
+        content: "";
+        position: absolute;
+        top: -2px;
+        right: -2px;
+        width: 34%;
+        height: 34%;
+        border-radius: 50%;
+        border: 1.5px solid #3e2716;
+        background: #ffa000;
+      }
+      .cell.past::after {
+        background: #e53935;
+      }
+      .cell.moving {
+        outline: 3px solid #2196f3;
+        outline-offset: 1px;
+      }
+      .unplaced {
+        padding: 0 16px 16px;
+      }
+      .section-title {
+        font-weight: 600;
+        margin-bottom: 6px;
+      }
+      .list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .list-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        border: 1px solid var(--divider-color);
+        background: none;
+        color: inherit;
+        border-radius: 16px;
+        padding: 5px 10px;
+        cursor: pointer;
+        font: inherit;
+      }
+      .list-item.dim {
+        opacity: 0.3;
+      }
+      .empty {
+        padding: 24px 16px;
+        text-align: center;
+        color: var(--secondary-text-color);
+      }
+      .toast {
+        position: absolute;
+        left: 50%;
+        bottom: 14px;
+        transform: translateX(-50%);
+        background: rgba(0, 0, 0, 0.85);
+        color: #fff;
+        padding: 8px 14px;
+        border-radius: 18px;
+        font-size: 0.9em;
+        z-index: 2;
+      }
+    `,
+  ];
+}
+
+(window as any).customCards = (window as any).customCards || [];
+(window as any).customCards.push({
+  type: "taponbon-card",
+  name: "TaponBon",
+  description: "La tua cantina: scaffali, bottiglie, QR e finestre di beva",
+  preview: false,
+});
+
+export type { HistoryEntry };

@@ -1,0 +1,21 @@
+take_bottle:
+  fields:
+    code:
+      required: true
+      example: "https://www.home-assistant.io/tag/taponbon-k7m2xq9p"
+      selector:
+        text:
+print_label:
+  fields:
+    bottle_id:
+      selector:
+        text:
+    code:
+      selector:
+        text:
+check_drink_alerts:
+  fields:
+    force:
+      default: false
+      selector:
+        boolean:

@@ -1,0 +1,63 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "TaponBon",
+        "description": "Adds the wine cellar. Then add the `custom:taponbon-card` card to a dashboard."
+      }
+    },
+    "abort": {
+      "already_configured": "TaponBon is already configured.",
+      "single_instance_allowed": "TaponBon is already configured."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "bottles": {
+        "name": "Bottles"
+      },
+      "free_slots": {
+        "name": "Free slots"
+      },
+      "drink_soon": {
+        "name": "Drink soon"
+      }
+    }
+  },
+  "services": {
+    "take_bottle": {
+      "name": "Take bottle",
+      "description": "Takes the bottle of a scanned QR (or of a rack slot NFC tag) out of the cellar.",
+      "fields": {
+        "code": {
+          "name": "Code",
+          "description": "The scanned code or the whole QR URL."
+        }
+      }
+    },
+    "print_label": {
+      "name": "Print label",
+      "description": "Prepares a bottle label and fires taponbon_label_requested for the printer.",
+      "fields": {
+        "bottle_id": {
+          "name": "Bottle ID",
+          "description": "Internal bottle id."
+        },
+        "code": {
+          "name": "Code",
+          "description": "The code printed under the QR."
+        }
+      }
+    },
+    "check_drink_alerts": {
+      "name": "Check drinking windows",
+      "description": "Runs the check that normally runs every morning at 10.",
+      "fields": {
+        "force": {
+          "name": "Repeat sent alerts",
+          "description": "Also resend alerts already notified."
+        }
+      }
+    }
+  }
+}

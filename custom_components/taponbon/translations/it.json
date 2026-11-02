@@ -1,0 +1,63 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "TaponBon",
+        "description": "Aggiunge la cantina dei vini. Dopo l'installazione aggiungi in una dashboard la scheda `custom:taponbon-card`."
+      }
+    },
+    "abort": {
+      "already_configured": "TaponBon è già configurato.",
+      "single_instance_allowed": "TaponBon è già configurato."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "bottles": {
+        "name": "Bottiglie"
+      },
+      "free_slots": {
+        "name": "Posti liberi"
+      },
+      "drink_soon": {
+        "name": "Da bere presto"
+      }
+    }
+  },
+  "services": {
+    "take_bottle": {
+      "name": "Preleva bottiglia",
+      "description": "Toglie dalla cantina la bottiglia di un QR (o la bottiglia in una posizione, per un tag NFC sullo scaffale). Serve per un lettore fisso: con l'app Home Assistant basta inquadrare il QR.",
+      "fields": {
+        "code": {
+          "name": "Codice",
+          "description": "Il codice letto: taponbon-… oppure l'intero indirizzo del QR."
+        }
+      }
+    },
+    "print_label": {
+      "name": "Stampa etichetta",
+      "description": "Prepara l'etichetta di una bottiglia e lancia l'evento taponbon_label_requested per la stampante.",
+      "fields": {
+        "bottle_id": {
+          "name": "ID bottiglia",
+          "description": "ID interno della bottiglia."
+        },
+        "code": {
+          "name": "Codice",
+          "description": "Il codice stampato sotto il QR."
+        }
+      }
+    },
+    "check_drink_alerts": {
+      "name": "Controlla finestre di beva",
+      "description": "Esegue subito il controllo che di solito parte ogni mattina alle 10.",
+      "fields": {
+        "force": {
+          "name": "Ripeti gli avvisi già inviati",
+          "description": "Rimanda anche gli avvisi già notificati."
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,36 @@
+name: Compila la card
+
+# Ricompila la card quando cambiano i sorgenti in frontend/ e salva il file
+# compilato, così quello installato da HACS corrisponde sempre ai sorgenti.
+
+on:
+  push:
+    branches: [main]
+    paths: ["frontend/src/**", "frontend/package.json", "frontend/rollup.config.js", "frontend/tsconfig.json"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Compila
+        working-directory: frontend
+        run: |
+          npm install --no-audit --no-fund
+          npx tsc --noEmit -p tsconfig.json
+          npm run build
+          node --check ../custom_components/taponbon/frontend/taponbon-card.js
+      - name: Salva il file compilato
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add custom_components/taponbon/frontend/taponbon-card.js
+          git diff --cached --quiet || git commit -m "Ricompila la card"
+          git push

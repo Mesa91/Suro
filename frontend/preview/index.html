@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TaponBon – anteprima</title>
+  <style>
+    body { margin: 0; padding: 16px; font-family: Roboto, system-ui, sans-serif; background: #111;
+      --primary-text-color: #e8e8e8; --secondary-text-color: #9a9a9a; --card-background-color: #1c1c1c;
+      --divider-color: #333; --secondary-background-color: #262626; color: var(--primary-text-color); }
+    ha-card { display: block; background: var(--card-background-color); border-radius: 12px; }
+  </style>
+</head>
+<body>
+  <taponbon-card></taponbon-card>
+  <script>
+    // Minimal in-memory imitation of the integration, for trying the card
+    // without Home Assistant: `python3 -m http.server` in this folder's parent.
+    customElements.define("ha-card", class extends HTMLElement {});
+    const types = { red: { label: "Rosso", color: "#7b1e2b" }, white: { label: "Bianco", color: "#e9dca4" },
+      rose: { label: "Rosato", color: "#e79bb3" }, sparkling: { label: "Bollicine", color: "#c9d97a" },
+      dessert: { label: "Dolce", color: "#d9a03a" } };
+    const reasons = { drank: "Bevuta", gifted: "Regalata", broken: "Rotta", spoiled: "Andata a male", deleted: "Eliminata", other: "Altro" };
+    let n = 0; const id = (p) => p + (++n);
+    const db = { racks: [{ id: "rack-a", name: "Scaffale", rows: 7, cols: 10, order: 0 }], bottles: [], history: [],
+      settings: { auto_labels: true, alert_days: 180 } };
+    const seed = [["Barolo Cannubi", "Brezza", 2016, "red", 2022, 2034, 3], ["Brunello di Montalcino", "Mastrojanni", 2015, "red", 2020, 2026, 2],
+      ["Soave Classico", "Pieropan", 2019, "white", 2020, 2024, 1], ["Franciacorta Satèn", "Ca' del Bosco", null, "sparkling", null, 2027, 4],
+      ["Chiaretto", "Zenato", 2023, "rose", 2024, 2026, 2], ["Passito di Pantelleria", "Donnafugata", 2018, "dessert", 2020, 2040, 1]];
+    let pos = 0;
+    for (const [name, producer, vintage, type, f, u, q] of seed) for (let i = 0; i < q; i++, pos++)
+      db.bottles.push({ id: id("b"), code: "k7m2xq9" + pos, name, producer, vintage, type, drink_from: f, drink_until: u,
+        rack_id: "rack-a", row: Math.floor(pos / 10), col: pos % 10, added_at: new Date().toISOString() });
+    const alertOf = (b) => { if (!b.drink_until) return null; const days = (new Date(b.drink_until, 11, 31) - new Date()) / 864e5;
+      return days < 0 ? "past" : days <= db.settings.alert_days ? "closing" : null; };
+    const snap = () => ({ racks: db.racks, bottles: db.bottles.map((b) => ({ ...b, alert: alertOf(b) })), settings: db.settings,
+      types, reasons, history_count: db.history.length });
+    const subs = [];
+    const changed = () => subs.forEach((cb) => cb(snap()));
+    const free = (rack) => { const t = new Set(db.bottles.filter((b) => b.rack_id === rack.id).map((b) => b.row + ":" + b.col));
+      const out = []; for (let r = 0; r < rack.rows; r++) for (let c = 0; c < rack.cols; c++) if (!t.has(r + ":" + c)) out.push([r, c]); return out; };
+    const handlers = {
+      "taponbon/add_bottles": (m) => { const rack = db.racks.find((r) => r.id === m.rack_id) || db.racks[0]; let slots = rack ? free(rack) : [];
+        if (m.row != null) slots = slots.filter(([r, c]) => r > m.row || (r === m.row && c >= m.col)).concat(slots.filter(([r, c]) => r < m.row || (r === m.row && c < m.col)));
+        const added = []; for (let i = 0; i < (m.quantity || 1); i++) { const s = slots[i];
+          const b = { ...m.wine, vintage: m.wine.vintage ? Number(m.wine.vintage) : null, drink_from: m.wine.drink_from ? Number(m.wine.drink_from) : null,
+            drink_until: m.wine.drink_until ? Number(m.wine.drink_until) : null, id: id("b"), code: "new" + n,
+            rack_id: s ? rack.id : null, row: s ? s[0] : null, col: s ? s[1] : null, added_at: new Date().toISOString() };
+          db.bottles.push(b); added.push(b); } changed(); return { bottles: added }; },
+      "taponbon/remove_bottle": (m) => { const i = db.bottles.findIndex((b) => b.id === m.bottle_id); const [b] = db.bottles.splice(i, 1);
+        db.history.push({ ...b, history_id: id("h"), removed_at: new Date().toISOString(), reason: m.reason }); changed(); return {}; },
+      "taponbon/move_bottle": (m) => { const b = db.bottles.find((x) => x.id === m.bottle_id);
+        const o = db.bottles.find((x) => x.rack_id === m.rack_id && x.row === m.row && x.col === m.col);
+        if (o) Object.assign(o, { rack_id: b.rack_id, row: b.row, col: b.col }); Object.assign(b, { rack_id: m.rack_id, row: m.row, col: m.col }); changed(); return {}; },
+      "taponbon/update_bottle": (m) => { const b = db.bottles.find((x) => x.id === m.bottle_id); Object.assign(b, m.changes); changed(); return { updated: 1 }; },
+      "taponbon/get_history": () => ({ history: [...db.history].reverse() }),
+      "taponbon/restore": (m) => { const i = db.history.findIndex((h) => h.history_id === m.history_id); const [h] = db.history.splice(i, 1);
+        db.bottles.push(h); changed(); return { bottle: h }; },
+      "taponbon/save_rack": (m) => { let r = db.racks.find((x) => x.id === m.rack.id);
+        if (!r) { r = { id: id("rack-"), order: db.racks.length }; db.racks.push(r); } Object.assign(r, { name: m.rack.name, rows: m.rack.rows, cols: m.rack.cols }); changed(); return { rack: r, displaced: 0 }; },
+      "taponbon/delete_rack": (m) => { db.racks = db.racks.filter((r) => r.id !== m.rack_id);
+        db.bottles.forEach((b) => { if (b.rack_id === m.rack_id) Object.assign(b, { rack_id: null, row: null, col: null }); }); changed(); return { displaced: 0 }; },
+      "taponbon/update_settings": (m) => { if ("auto_labels" in m) db.settings.auto_labels = m.auto_labels; if ("alert_days" in m) db.settings.alert_days = m.alert_days; changed(); return {}; },
+      "taponbon/get_label": () => ({ code: "k7m2xq9p", png_base64: window.LABEL_PNG || "" }),
+      "taponbon/request_label": () => ({}),
+    };
+    customElements.whenDefined("taponbon-card").then(() => {
+    const card = document.querySelector("taponbon-card");
+    card.setConfig({ type: "custom:taponbon-card" });
+    card.hass = {
+      callWS: async (m) => { const h = handlers[m.type]; if (!h) throw new Error("mock: " + m.type); return JSON.parse(JSON.stringify(h(m))); },
+      connection: { subscribeMessage: async (cb) => { subs.push(cb); setTimeout(() => cb(snap())); return () => {}; } },
+    };
+    });
+  </script>
+  <script type="module" src="../../custom_components/taponbon/frontend/taponbon-card.js"></script>
+</body>
+</html>
