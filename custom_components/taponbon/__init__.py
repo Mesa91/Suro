@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 
 import voluptuous as vol
@@ -9,13 +10,16 @@ import voluptuous as vol
 from homeassistant.components.frontend import add_extra_js_url
 from homeassistant.components.http import StaticPathConfig
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, ServiceCall, ServiceResponse, SupportsResponse
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
+from homeassistant.core import CoreState, Event, HomeAssistant, ServiceCall, ServiceResponse, SupportsResponse
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 
 from . import core, websocket
 from .const import CARD_URL, CARD_VERSION, DOMAIN
 from .store import TaponBonStore
+
+_LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = ["sensor"]
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
@@ -25,9 +29,57 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     """Serve the card and load it on every dashboard (once per HA start)."""
     card = Path(__file__).parent / "frontend" / "taponbon-card.js"
     await hass.http.async_register_static_paths([StaticPathConfig(CARD_URL, str(card), False)])
-    add_extra_js_url(hass, f"{CARD_URL}?v={CARD_VERSION}")
     websocket.async_register(hass)
+
+    # The card must be loaded before dashboards are built: a card that is
+    # defined late is not redrawn inside some containers (e.g. Bubble Card
+    # pop-ups on a slower phone). Dashboard resources are loaded first, so
+    # register it as one; fall back to an extra module for YAML dashboards.
+    async def _register(_event: Event | None = None) -> None:
+        if not await _async_register_resource(hass):
+            add_extra_js_url(hass, f"{CARD_URL}?v={CARD_VERSION}")
+
+    if hass.state is CoreState.running:
+        await _register()
+    else:
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _register)
     return True
+
+
+async def _async_register_resource(hass: HomeAssistant) -> bool:
+    """Add or update the card in the dashboard resources. False if not possible."""
+    url = f"{CARD_URL}?v={CARD_VERSION}"
+    try:
+        try:
+            from homeassistant.components.lovelace.const import LOVELACE_DATA
+
+            lovelace = hass.data.get(LOVELACE_DATA)
+        except ImportError:
+            lovelace = None
+        if lovelace is None:
+            lovelace = hass.data.get("lovelace")
+        resources = getattr(lovelace, "resources", None)
+        if resources is None and isinstance(lovelace, dict):
+            resources = lovelace.get("resources")
+        if resources is None or not hasattr(resources, "async_create_item"):
+            return False  # YAML-mode resources: cannot be written
+        ensure = getattr(resources, "_async_ensure_loaded", None)
+        if ensure is not None:
+            await ensure()
+        elif not getattr(resources, "loaded", True):
+            await resources.async_load()
+            resources.loaded = True
+        mine = [item for item in resources.async_items() if str(item.get("url", "")).split("?")[0] == CARD_URL]
+        if not mine:
+            await resources.async_create_item({"res_type": "module", "url": url})
+        elif mine[0].get("url") != url:
+            await resources.async_update_item(mine[0]["id"], {"res_type": "module", "url": url})
+        for extra in mine[1:]:
+            await resources.async_delete_item(extra["id"])
+        return True
+    except Exception as err:  # never block the integration on this
+        _LOGGER.warning("Impossibile registrare la card tra le risorse della dashboard: %s", err)
+        return False
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

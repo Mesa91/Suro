@@ -3,12 +3,12 @@
   "name": "TaponBon",
   "codeowners": ["@Mesa91"],
   "config_flow": true,
-  "dependencies": ["frontend", "http", "persistent_notification", "websocket_api"],
+  "dependencies": ["frontend", "http", "lovelace", "persistent_notification", "websocket_api"],
   "documentation": "https://github.com/Mesa91/TaponBon",
   "integration_type": "service",
   "iot_class": "local_push",
   "issue_tracker": "https://github.com/Mesa91/TaponBon/issues",
   "requirements": ["segno==1.6.6"],
   "single_config_entry": true,
-  "version": "1.2.1"
+  "version": "1.2.2"
 }
