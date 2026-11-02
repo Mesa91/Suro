@@ -28,7 +28,7 @@ const STYLES: Record<string, Style> = {
   white: { shape: "burgundy", glass: "tb-wine-white", clear: true, foil: "tb-foil-silver" },
   rose: { shape: "bordeaux", glass: "tb-wine-rose", clear: true, foil: "tb-foil-rose" },
   sparkling: { shape: "champagne", glass: "tb-glass-green", clear: false, foil: "tb-foil-gold" },
-  dessert: { shape: "half", glass: "tb-glass-amber", clear: false, foil: "tb-foil-gold" },
+  dessert: { shape: "bordeaux", glass: "tb-glass-amber", clear: false, foil: "tb-foil-gold" },
 };
 
 interface Geometry {
@@ -142,7 +142,7 @@ export const BOTTLE_DEFS = svg`<svg width="0" height="0" style="position:absolut
   ${hgrad("tb-glass-green", [[0, "#030603"], [0.2, "#0e2412"], [0.42, "#1d4223"], [0.62, "#12301a"], [1, "#020402"]])}
   ${hgrad("tb-glass-amber", [[0, "#160902"], [0.2, "#5a2c08"], [0.42, "#9c5714"], [0.62, "#6e3a0c"], [1, "#120701"]])}
   ${hgrad("tb-wine-white", [[0, "#5a4a12"], [0.2, "#b9a043"], [0.42, "#ecd98e"], [0.62, "#cdb158"], [1, "#4d3e0e"]])}
-  ${hgrad("tb-wine-rose", [[0, "#6b2230"], [0.2, "#c96479"], [0.42, "#f6aab8"], [0.62, "#dc7e92"], [1, "#5c1b28"]])}
+  ${hgrad("tb-wine-rose", [[0, "#9a6a64"], [0.2, "#e6b9ad"], [0.42, "#fbe3da"], [0.62, "#efc8bd"], [1, "#8a5c56"]])}
   ${hgrad("tb-glass-clear", [[0, "rgba(190,215,200,.30)"], [0.3, "rgba(230,245,235,.10)"], [0.7, "rgba(230,245,235,.08)"], [1, "rgba(160,190,175,.35)"]])}
 
   <!-- light on a cylinder -->
