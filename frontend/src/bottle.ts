@@ -142,7 +142,7 @@ export const BOTTLE_DEFS = svg`<svg width="0" height="0" style="position:absolut
   ${hgrad("tb-glass-green", [[0, "#030603"], [0.2, "#0e2412"], [0.42, "#1d4223"], [0.62, "#12301a"], [1, "#020402"]])}
   ${hgrad("tb-glass-amber", [[0, "#160902"], [0.2, "#5a2c08"], [0.42, "#9c5714"], [0.62, "#6e3a0c"], [1, "#120701"]])}
   ${hgrad("tb-wine-white", [[0, "#5a4a12"], [0.2, "#b9a043"], [0.42, "#ecd98e"], [0.62, "#cdb158"], [1, "#4d3e0e"]])}
-  ${hgrad("tb-wine-rose", [[0, "#9a6a64"], [0.2, "#e6b9ad"], [0.42, "#fbe3da"], [0.62, "#efc8bd"], [1, "#8a5c56"]])}
+  ${hgrad("tb-wine-rose", [[0, "#b87a6d"], [0.2, "#d9917c"], [0.42, "#f0b3a0"], [0.62, "#e39a83"], [1, "#c48a7c"]])}
   ${hgrad("tb-glass-clear", [[0, "rgba(190,215,200,.30)"], [0.3, "rgba(230,245,235,.10)"], [0.7, "rgba(230,245,235,.08)"], [1, "rgba(160,190,175,.35)"]])}
 
   <!-- light on a cylinder -->
