@@ -1,7 +1,8 @@
-import { LitElement, html, svg, css, nothing, PropertyValues } from "lit";
+import { LitElement, html, css, nothing, PropertyValues } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { Bottle, CardConfig, HistoryEntry, Rack, Snapshot, matches, wineTitle } from "./types";
 import { sharedStyles } from "./styles";
+import { BOTTLE_DEFS, EMPTY_SVG, bottleSvg } from "./bottle";
 import "./bottle-dialog";
 import "./add-dialog";
 import "./racks-dialog";
@@ -13,47 +14,6 @@ type Dialog =
   | { kind: "racks" }
   | { kind: "history" }
   | null;
-
-// A standing Bordeaux bottle. Colour comes from --bottle; light and shade
-// are shared gradients (defined once in SHARED_DEFS), so every bottle gets
-// the same glass look whatever its colour.
-const BOTTLE_SVG = svg`<svg viewBox="0 0 24 64" aria-hidden="true">
-  <path class="glass" d="M9.6 6h4.8v12.5c0 3.2 6.6 4.6 6.6 11.5V60.5a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 60.5V30c0-6.9 6.6-8.3 6.6-11.5z"/>
-  <path class="shade" d="M9.6 6h4.8v12.5c0 3.2 6.6 4.6 6.6 11.5V60.5a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 60.5V30c0-6.9 6.6-8.3 6.6-11.5z"/>
-  <path class="capsule" d="M9.3 1.2c0-.7.5-1.2 1.2-1.2h3c.7 0 1.2.5 1.2 1.2v12.3H9.3z"/>
-  <rect class="capsule-ring" x="9.3" y="11.6" width="5.4" height="1.2"/>
-  <rect class="label" x="4.6" y="36" width="14.8" height="15" rx="0.8"/>
-  <rect class="label-ink" x="7.5" y="40" width="9" height="1.4" rx="0.7"/>
-  <rect class="label-ink thin" x="8.5" y="43.4" width="7" height="0.8" rx="0.4"/>
-  <rect class="label-ink thin" x="9.5" y="46" width="5" height="0.8" rx="0.4"/>
-  <path class="gloss" d="M5.6 31c.4-3.4 2.6-5 3.6-6v34.5H5.6z"/>
-</svg>`;
-
-const SHARED_DEFS = svg`<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
-  <linearGradient id="tb-shade" x1="0" x2="1" y1="0" y2="0">
-    <stop offset="0" stop-color="#000" stop-opacity=".55"/>
-    <stop offset=".22" stop-color="#fff" stop-opacity=".18"/>
-    <stop offset=".42" stop-color="#000" stop-opacity="0"/>
-    <stop offset=".78" stop-color="#000" stop-opacity=".25"/>
-    <stop offset="1" stop-color="#000" stop-opacity=".6"/>
-  </linearGradient>
-  <linearGradient id="tb-capsule" x1="0" x2="1">
-    <stop offset="0" stop-color="#1b1412"/><stop offset=".35" stop-color="#5a4a42"/>
-    <stop offset=".55" stop-color="#2a201c"/><stop offset="1" stop-color="#120c0a"/>
-  </linearGradient>
-  <linearGradient id="tb-capsule-warn" x1="0" x2="1">
-    <stop offset="0" stop-color="#8a5300"/><stop offset=".35" stop-color="#ffcf6b"/>
-    <stop offset=".55" stop-color="#d98a00"/><stop offset="1" stop-color="#6b3f00"/>
-  </linearGradient>
-  <linearGradient id="tb-capsule-past" x1="0" x2="1">
-    <stop offset="0" stop-color="#6b0f12"/><stop offset=".35" stop-color="#ff7b72"/>
-    <stop offset=".55" stop-color="#c62828"/><stop offset="1" stop-color="#4a0a0c"/>
-  </linearGradient>
-  <linearGradient id="tb-label" x1="0" x2="1">
-    <stop offset="0" stop-color="#cfc2a8"/><stop offset=".3" stop-color="#f7f0e1"/>
-    <stop offset=".75" stop-color="#ece2cc"/><stop offset="1" stop-color="#b9ab90"/>
-  </linearGradient>
-</defs></svg>`;
 
 @customElement("taponbon-card")
 export class TaponBonCard extends LitElement {
@@ -165,7 +125,7 @@ export class TaponBonCard extends LitElement {
     const d = this._data;
     return html`
       <ha-card>
-        ${SHARED_DEFS}
+        ${BOTTLE_DEFS}
         ${this._error ? html`<div class="empty">${this._error}</div>` : !d ? html`<div class="empty">Carico la cantina…</div>` : this._renderBody(d)}
         ${this._toast ? html`<div class="toast">${this._toast}</div>` : nothing}
       </ha-card>
@@ -204,7 +164,7 @@ export class TaponBonCard extends LitElement {
         ? html`<div class="banner">
             ${closing ? html`<span>🍷 <b>${closing}</b> da bere presto</span>` : nothing}
             ${past ? html`<span>⚠️ <b>${past}</b> oltre la finestra di beva</span>` : nothing}
-            <span class="hint">capsula dorata: da bere presto · capsula rossa: oltre la finestra</span>
+            <span class="hint">cartellino dorato: da bere presto · rosso: oltre la finestra</span>
           </div>`
         : nothing}
 
@@ -267,13 +227,13 @@ export class TaponBonCard extends LitElement {
           style=${b ? `--bottle:${color}` : ""}
           title=${b ? `${wineTitle(b)}${b.producer ? ` · ${b.producer}` : ""}` : `Fila ${r + 1}, posto ${c + 1}: libero`}
           @click=${() => this._onCell(rack, r, c, b)}
-        >${BOTTLE_SVG}</button>`);
+        >${b ? bottleSvg(b.type, b.alert) : EMPTY_SVG}</button>`);
       }
     }
     return html`
       <div class="rack">
         <div class="rack-head"><span>${rack.name}</span><span class="muted">${inRack.length}/${rack.rows * rack.cols}</span></div>
-        <div class="grid" style="grid-template-columns: repeat(${rack.cols}, minmax(0, 30px))">${cells}</div>
+        <div class="grid" style="grid-template-columns: repeat(${rack.cols}, minmax(0, 34px))">${cells}</div>
       </div>
     `;
   }
@@ -321,8 +281,10 @@ export class TaponBonCard extends LitElement {
         font-size: 1.8em;
       }
       .name {
-        font-size: 1.3em;
+        font-family: "Playfair Display", "Cormorant Garamond", Georgia, "Times New Roman", serif;
+        font-size: 1.55em;
         font-weight: 600;
+        letter-spacing: 0.01em;
       }
       .sub,
       .muted {
@@ -434,40 +396,29 @@ export class TaponBonCard extends LitElement {
         display: block;
         overflow: visible;
       }
-      .cell .shade { fill: url(#tb-shade); }
-      .cell .capsule, .cell .capsule-ring { fill: url(#tb-capsule); }
-      .cell .capsule-ring { opacity: 0.6; }
-      .cell .label { fill: url(#tb-label); }
-      .cell .label-ink { fill: rgba(60, 30, 20, 0.55); }
-      .cell .label-ink.thin { fill: rgba(60, 30, 20, 0.35); }
-      .cell .gloss { fill: rgba(255, 255, 255, 0.22); }
-      .cell.full .glass { fill: var(--bottle); }
       .cell.full {
-        filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.55));
+        filter: drop-shadow(0 4px 4px rgba(0, 0, 0, 0.5));
       }
       .cell.full:hover {
-        transform: translateY(-4px);
-        filter: drop-shadow(0 8px 6px rgba(0, 0, 0, 0.6));
+        transform: translateY(-5px);
+        filter: drop-shadow(0 10px 8px rgba(0, 0, 0, 0.6));
       }
-      .cell.free .glass {
-        fill: rgba(255, 255, 255, 0.035);
-        stroke: rgba(255, 255, 255, 0.14);
-        stroke-width: 0.5;
-        stroke-dasharray: 1.6 1.4;
+      .cell.free:hover svg path {
+        fill: rgba(255, 255, 255, 0.08);
+        stroke: rgba(255, 255, 255, 0.45);
       }
-      .cell.free .shade, .cell.free .capsule, .cell.free .capsule-ring,
-      .cell.free .label, .cell.free .label-ink, .cell.free .gloss { display: none; }
-      .cell.free:hover .glass {
-        fill: rgba(255, 255, 255, 0.1);
-        stroke: rgba(255, 255, 255, 0.4);
+      .cell .tag {
+        transform-box: fill-box;
+        transform-origin: 0 0;
+        animation: tb-sway 4s ease-in-out infinite;
       }
-      .cell.closing .capsule, .cell.closing .capsule-ring { fill: url(#tb-capsule-warn); }
-      .cell.past .capsule, .cell.past .capsule-ring { fill: url(#tb-capsule-past); }
-      .cell.closing { filter: drop-shadow(0 0 5px rgba(255, 190, 70, 0.55)) drop-shadow(0 3px 3px rgba(0, 0, 0, 0.5)); }
-      .cell.past { filter: drop-shadow(0 0 5px rgba(255, 90, 80, 0.55)) drop-shadow(0 3px 3px rgba(0, 0, 0, 0.5)); }
+      @keyframes tb-sway {
+        0%, 100% { transform: rotate(0deg); }
+        50% { transform: rotate(-4deg); }
+      }
       .cell.dim {
         opacity: 0.15;
-        filter: grayscale(0.6);
+        filter: grayscale(0.7);
       }
       .cell.moving {
         outline: 2px solid #2196f3;
