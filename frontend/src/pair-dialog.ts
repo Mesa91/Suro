@@ -1,6 +1,6 @@
 import { LitElement, html, css, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
-import { COURSE_COLORS, SEARCH_COLOR, Snapshot, wineTitle } from "./types";
+import { COURSE_COLORS, SEARCH_COLOR, Snapshot, serviceText, wineTitle } from "./types";
 import { sharedStyles } from "./styles";
 import { BOTTLE_DEFS, bottleSvg } from "./bottle";
 import { ratingText, renderStars } from "./rating";
@@ -17,6 +17,10 @@ interface Pick {
   locations: string[];
   reason: string;
   rating?: number | null;
+  opened?: number;
+  serve_temp?: string;
+  decant?: string;
+  glass?: string;
 }
 
 interface PairResult {
@@ -179,6 +183,7 @@ export class PairDialog extends LitElement {
           ${opts.best ? html`<span class="badge">Il migliore</span>` : nothing}
           ${wineTitle(p)}
           ${status[p.status] ? html`<span class="state ${p.status}">${status[p.status]}</span>` : nothing}
+          ${p.opened ? html`<span class="state open">🍾 già aperta</span>` : nothing}
         </div>
         ${p.producer || p.rating
           ? html`<div class="note">${p.producer || ""}${p.rating
@@ -186,6 +191,7 @@ export class PairDialog extends LitElement {
               : nothing}</div>`
           : nothing}
         ${reason ? html`<div class="reason">${reason}</div>` : nothing}
+        ${serviceText(p).length ? html`<div class="svc-line">${serviceText(p).join(" · ")}</div>` : nothing}
         <div class="where">📍 ${p.locations[0]}${p.bottles > 1 ? html` · ${p.bottles} bottiglie` : nothing}</div>
       </div>
       <span class="go">›</span>
@@ -398,6 +404,15 @@ export class PairDialog extends LitElement {
       }
       .state {
         background: rgba(255, 255, 255, 0.08);
+        color: var(--secondary-text-color);
+      }
+      .state.open {
+        background: rgba(129, 199, 132, 0.2);
+        color: #a5d6a7;
+      }
+      .svc-line {
+        margin-top: 4px;
+        font-size: 0.85em;
         color: var(--secondary-text-color);
       }
       .state.closing {

@@ -1,6 +1,6 @@
 import { LitElement, html, css, nothing, PropertyValues } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
-import { Bottle, Snapshot, WINE_FIELDS, locationText, maturity, windowText, wineTitle } from "./types";
+import { Bottle, Snapshot, WINE_FIELDS, locationText, maturity, openedText, serviceText, windowText, wineTitle } from "./types";
 import { sharedStyles } from "./styles";
 import { renderWineForm } from "./add-dialog";
 import { BOTTLE_DEFS, bottleSvg } from "./bottle";
@@ -175,9 +175,10 @@ export class BottleDialog extends LitElement {
     const win = windowText(b);
     return html`
       <div class="badges">
+        ${b.opened_at ? html`<span class="badge opened ${b.opened_state || ""}">🍾 ${openedText(b)}</span>` : nothing}
         ${b.alert === "closing" ? html`<span class="badge warn">Da bere presto</span>` : nothing}
         ${b.alert === "past" ? html`<span class="badge bad">Oltre la finestra</span>` : nothing}
-        <span class="where">📍 ${locationText(b, this.data.racks)}</span>
+        ${b.opened_at ? nothing : html`<span class="where">📍 ${locationText(b, this.data.racks)}</span>`}
         ${!this._reserving
           ? html`<button class="btn small res-btn" @click=${() => {
               this._resFor = b.reserved_for || "";
@@ -216,13 +217,14 @@ export class BottleDialog extends LitElement {
           </div>`
         : nothing}
       <dl class="facts">
-        ${WINE_FIELDS.filter((f) => !["name", "producer", "vintage", "drink_from", "drink_until", "drink_peak"].includes(f.key as string)).map((f) => {
+        ${WINE_FIELDS.filter((f) => !["name", "producer", "vintage", "drink_from", "drink_until", "drink_peak", "serve_temp", "decant", "glass"].includes(f.key as string)).map((f) => {
           const v = b[f.key];
           if (v == null || v === "") return nothing;
           return html`<dt>${f.label}</dt><dd>${f.key === "price" ? `${Number(v).toFixed(2)} €` : v}</dd>`;
         })}
         ${win ? html`<dt>Finestra di beva</dt><dd>${win}</dd>` : nothing}
       </dl>
+      ${this._renderService(b)}
       ${this._renderMaturity(b)}
       <div class="label-box">
         ${this._label
@@ -254,11 +256,15 @@ export class BottleDialog extends LitElement {
         this._editing = true;
       }}>✏️ Modifica</button>
       <button class="btn" @click=${() => (this._otherReason = !this._otherReason)}>Altro…</button>
+      ${this.bottle.opened_at
+        ? nothing
+        : html`<button class="btn" ?disabled=${this._busy} title="Aperta ma non finita: ti ricordo di finirla"
+            @click=${this._open}>🍾 Aperta</button>`}
       <button class="btn primary" ?disabled=${this._busy} @click=${() => {
         this._stars = null;
         this._tasting = "";
         this._rating = true;
-      }}>🍷 Bevuta</button>
+      }}>🍷 ${this.bottle.opened_at ? "Finita" : "Bevuta"}</button>
     </div>`;
   }
 
@@ -267,7 +273,7 @@ export class BottleDialog extends LitElement {
     const estimate = this.data.ai && !b.drink_peak
       ? html`<button class="btn small" ?disabled=${this._busy} @click=${this._estimatePeak}>✨ Stima il picco</button>` : nothing;
     if (!m) return this.data.ai ? html`<div class="maturity empty">${estimate}</div>` : nothing;
-    return html`<div class="maturity ${m.phase}">
+    return html`<div class="maturity ph-${m.phase}">
       <div class="m-head"><span class="m-label">${m.label}</span>${estimate}</div>
       <div class="m-bar" style=${m.peakPos != null ? `background:linear-gradient(90deg,#5c6bc0 0%,#7cb342 ${Math.max(0, m.peakPos - 22)}%,#e3b341 ${Math.max(0, m.peakPos - 4)}%,#e3b341 ${Math.min(100, m.peakPos + 4)}%,#ef6c00 ${Math.min(100, m.peakPos + 22)}%,#8d2b2b 100%)` : ""}>
         ${m.peakPos != null ? html`<span class="m-peak" style="left:${m.peakPos}%" title="Picco ${m.peak}"></span>` : nothing}
@@ -280,30 +286,62 @@ export class BottleDialog extends LitElement {
     </div>`;
   }
 
-  private _estimatePeak = async () => {
+  private _estimatePeak = () =>
+    this._aiComplete(["drink_peak", "drink_from", "drink_until"], "drink_peak",
+      (c) => `Al suo meglio nel ${c.drink_peak}`, "Gemini non ha saputo stimare il picco di questo vino");
+
+  private _estimateService = () =>
+    this._aiComplete(["serve_temp", "decant", "glass"], "serve_temp",
+      () => "Aggiunti i consigli di servizio", "Gemini non ha saputo dire come servirlo");
+
+  /** Ask Gemini for the missing fields of this wine and save them on every bottle of it. */
+  private async _aiComplete(keys: string[], required: string, ok: (c: Record<string, any>) => string, fail: string) {
     this._busy = true;
     try {
       const b = this.bottle;
       const res = await this.card.ws({ type: "taponbon/ai_fill", wine: {
         name: b.name, producer: b.producer, vintage: b.vintage, type: b.type, region: b.region, grape: b.grape } });
       const w = res.wine || {};
-      const changes: Record<string, unknown> = {};
-      for (const k of ["drink_peak", "drink_from", "drink_until"] as const) if (w[k] && !(b as any)[k]) changes[k] = w[k];
-      const lo = Number(changes.drink_from ?? b.drink_from) || 0;
-      const hi = Number(changes.drink_until ?? b.drink_until) || 9999;
-      if (changes.drink_peak) changes.drink_peak = Math.min(hi, Math.max(lo, Number(changes.drink_peak)));
-      if (!changes.drink_peak) {
-        this.card.toast("Gemini non ha saputo stimare il picco di questo vino");
+      const changes: Record<string, any> = {};
+      for (const k of keys) if (w[k] && !(b as any)[k]) changes[k] = w[k];
+      if ("drink_peak" in changes) {
+        const lo = Number(changes.drink_from ?? b.drink_from) || 0;
+        const hi = Number(changes.drink_until ?? b.drink_until) || 9999;
+        changes.drink_peak = Math.min(hi, Math.max(lo, Number(changes.drink_peak)));
+      }
+      if (!changes[required]) {
+        this.card.toast(fail);
         return;
       }
       await this.card.ws({ type: "taponbon/update_bottle", bottle_id: b.id, changes, same_wine: true });
-      this.card.toast(`Al suo meglio nel ${changes.drink_peak}`);
+      this.card.toast(ok(changes));
     } catch {
       /* shown by the card */
     } finally {
       this._busy = false;
     }
-  };
+  }
+
+  private _renderService(b: Bottle) {
+    const parts = serviceText(b);
+    if (!parts.length && !this.data.ai) return nothing;
+    return html`<div class="service">
+      ${parts.length
+        ? parts.map((p) => html`<span class="svc">${p}</span>`)
+        : html`<button class="btn small" ?disabled=${this._busy} @click=${this._estimateService}>✨ Come servirlo</button>`}
+    </div>`;
+  }
+
+  private async _open() {
+    this._busy = true;
+    try {
+      const res = await this.card.ws({ type: "taponbon/open_bottle", bottle_id: this.bottle.id });
+      this.card.toast(`Segnata come aperta: ti ricordo di finirla entro ${res.limit} giorni`);
+      this._close();
+    } finally {
+      this._busy = false;
+    }
+  }
 
   private _renderRate() {
     return html`<div class="rate">
@@ -368,14 +406,14 @@ export class BottleDialog extends LitElement {
         font-weight: 600;
         font-size: 0.92em;
       }
-      .maturity.peak .m-label {
+      .maturity.ph-peak .m-label {
         color: #e3b341;
       }
-      .maturity.declining .m-label,
-      .maturity.past .m-label {
+      .maturity.ph-declining .m-label,
+      .maturity.ph-past .m-label {
         color: #ef9a6a;
       }
-      .maturity.young .m-label {
+      .maturity.ph-young .m-label {
         color: #90caf9;
       }
       .m-bar {
@@ -416,6 +454,31 @@ export class BottleDialog extends LitElement {
         color: var(--secondary-text-color);
         margin-top: 6px;
         font-variant-numeric: tabular-nums;
+      }
+      .service {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin: 4px 0 12px;
+      }
+      .svc {
+        padding: 5px 10px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--tb-line, var(--divider-color));
+        font-size: 0.88em;
+      }
+      .badge.opened {
+        background: rgba(129, 199, 132, 0.2);
+        color: #a5d6a7;
+      }
+      .badge.opened.today {
+        background: rgba(227, 179, 65, 0.22);
+        color: #e3b341;
+      }
+      .badge.opened.late {
+        background: rgba(229, 57, 53, 0.22);
+        color: #ef7a77;
       }
       .res-btn {
         margin-left: auto;

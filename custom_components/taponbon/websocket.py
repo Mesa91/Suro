@@ -29,7 +29,7 @@ def async_register(hass: HomeAssistant) -> None:
         ws_get_label, ws_request_label, ws_take_code, ws_update_settings, ws_get_alerts,
         ws_ai_recognize, ws_ai_fill, ws_pair, ws_rate_history,
         ws_reserve_bottle, ws_remove_bottles, ws_wishlist_add, ws_wishlist_update, ws_wishlist_remove,
-        ws_inventory_start, ws_inventory_stop, ws_highlight, ws_highlight_clear, ws_check_wine,
+        ws_inventory_start, ws_inventory_stop, ws_highlight, ws_highlight_clear, ws_check_wine, ws_open_bottle,
     ):
         websocket_api.async_register_command(hass, handler)
 
@@ -55,9 +55,13 @@ def _snapshot(hass: HomeAssistant) -> dict[str, Any]:
         r = ratings.get(wine_key(b))
         return {"past_rating": r["rating"], "past_count": r["count"], "past_notes": r["notes"]} if r else {}
 
+    def opened(b: dict[str, Any]) -> dict[str, Any]:
+        info = core.opened_info(b)
+        return {"opened_days": info["days"], "opened_state": info["state"], "opened_limit": info["limit"]} if info else {}
+
     return {
         "racks": sorted(store.racks, key=lambda r: r.get("order", 0)),
-        "bottles": [{**b, "alert": flagged.get(b["id"]), **past(b)} for b in store.bottles],
+        "bottles": [{**b, "alert": flagged.get(b["id"]), **past(b), **opened(b)} for b in store.bottles],
         "value": cellar_value(store.bottles),
         "wishlist": list(reversed(store.wishlist)),
         "inventory": store.inventory_report(),
@@ -629,3 +633,19 @@ async def ws_check_wine(hass, connection, msg) -> None:
             wine.pop("vintage")
     result = check_wine(wine, store.bottles, store.history, store.wishlist, store.racks)
     connection.send_result(msg["id"], {"wine": wine, **result})
+
+
+@websocket_api.websocket_command({vol.Required("type"): "taponbon/open_bottle", vol.Required("bottle_id"): str})
+@websocket_api.async_response
+async def ws_open_bottle(hass, connection, msg) -> None:
+    """Opened but not finished (stopper, Coravin): off the shelf, reminder later."""
+    store = _store(hass, connection, msg)
+    if not store:
+        return
+    bottle = store.open_bottle(msg["bottle_id"])
+    if bottle is None:
+        connection.send_error(msg["id"], "not_found", "Bottiglia non trovata")
+        return
+    await core.async_changed(hass)
+    info = core.opened_info(bottle) or {}
+    connection.send_result(msg["id"], {"bottle": bottle, "limit": info.get("limit")})

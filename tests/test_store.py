@@ -145,3 +145,21 @@ def test_highlight_goes_dark_when_taken():
     st.set_highlight([{"bottle_ids": [b["id"]]}])
     st.clear_highlight()
     assert st.highlight is None
+
+
+def test_open_bottle_leaves_slot_and_inventory():
+    st = load(None)
+    rack = st.racks[0]["id"]
+    a, b = st.add_bottles({"name": "Soave", "type": "white"}, 2, rack, 0, 0)
+    st.set_highlight([{"bottle_ids": [a["id"]]}])
+    st.open_bottle(a["id"])
+    assert a["rack_id"] is None and a["opened_at"] and st.highlight is None
+    st.inventory_start(None)
+    assert st.inventory_report()["total"] == 1
+    st.inventory_stop()
+    assert st.move_bottle(a["id"], rack, 0, 0)
+    assert "opened_at" not in a
+    st.open_bottle(a["id"])
+    entry = st.remove_bottle(a["id"], "drank", 4)
+    back = st.restore(entry["history_id"])
+    assert "opened_at" not in back

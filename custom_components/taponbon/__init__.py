@@ -90,6 +90,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _register_services(hass)
     entry.async_on_unload(core.async_setup_tag_listener(hass))
     entry.async_on_unload(core.async_setup_daily_alerts(hass))
+    entry.async_on_unload(core.async_setup_opened_reminder(hass))
     entry.async_on_unload(core.async_setup_climate_monitor(hass))
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(_options_updated))

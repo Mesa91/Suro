@@ -331,6 +331,56 @@ async def async_check_reserved(hass: HomeAssistant, today: date | None = None) -
     return due
 
 
+def opened_info(bottle: dict[str, Any]) -> dict[str, Any] | None:
+    from homeassistant.util import dt as dt_util
+
+    from .const import OPEN_DAYS
+    from .logic import opened_status
+
+    return opened_status(bottle, dt_util.now(), OPEN_DAYS)
+
+
+async def async_check_opened(hass: HomeAssistant) -> list[dict[str, Any]]:
+    """Evening reminder for open bottles that should be finished (once per bottle)."""
+    from .const import EVENT_OPENED_REMINDER
+
+    store = get_store(hass)
+    if store is None:
+        return []
+    due = []
+    for b in store.bottles:
+        info = opened_info(b)
+        if info and info["state"] != "ok" and not b.get("opened_notified"):
+            due.append((b, info))
+    if not due:
+        return []
+    lines = [f"- **{wine_title(b)}**: aperta da {i['days']} {'giorno' if i['days'] == 1 else 'giorni'}"
+             + (" — meglio finirla stasera" if i["state"] == "today" else " — probabilmente non è più al meglio")
+             for b, i in due]
+    _notify(hass, "\n".join(lines), "TaponBon: bottiglie aperte", f"{DOMAIN}_opened")
+    for b, i in due:
+        b["opened_notified"] = True
+        hass.bus.async_fire(EVENT_OPENED_REMINDER, {
+            "bottle_id": b["id"], "name": b.get("name"), "vintage": b.get("vintage"), "type": b.get("type"),
+            "days": i["days"], "state": i["state"],
+        })
+    await async_changed(hass)
+    return [b for b, _ in due]
+
+
+@callback
+def async_setup_opened_reminder(hass: HomeAssistant):
+    from .const import OPENED_ALERT_HOUR
+
+    async def _evening(_now: Any) -> None:
+        try:
+            await async_check_opened(hass)
+        except Exception as err:
+            _LOGGER.warning("Controllo bottiglie aperte non riuscito: %s", err)
+
+    return async_track_time_change(hass, _evening, hour=OPENED_ALERT_HOUR, minute=0, second=0)
+
+
 @callback
 def async_setup_daily_alerts(hass: HomeAssistant):
     async def _daily(_now: Any) -> None:

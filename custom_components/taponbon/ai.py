@@ -33,6 +33,9 @@ FIELDS_DOC = """\
 - "drink_peak": anno in cui sarà al suo meglio (intero, tra drink_from e drink_until)
 - "description": 2-3 frasi in italiano su stile, profumi e gusto
 - "food_pairings": 3-5 abbinamenti in italiano separati da virgola
+- "serve_temp": temperatura di servizio, es. "16–18 °C"
+- "decant": se e quanto decantare, es. "1 ora" oppure "no"
+- "glass": bicchiere consigliato, es. "calice Borgogna", "flûte", "tulipano"
 """
 
 
@@ -68,7 +71,8 @@ def _int_year(value: Any) -> int | None:
 def normalize(raw: dict[str, Any]) -> dict[str, Any]:
     """Turn Gemini's answer into clean wine fields (unknown keys dropped)."""
     out: dict[str, Any] = {}
-    for key in ("name", "producer", "region", "country", "grape", "alcohol", "description", "food_pairings"):
+    for key in ("name", "producer", "region", "country", "grape", "alcohol", "description", "food_pairings",
+                "serve_temp", "decant", "glass"):
         value = raw.get(key)
         if isinstance(value, list):
             value = ", ".join(str(v) for v in value if v)
@@ -130,6 +134,8 @@ def _wine_listing(wines: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 "stato": status.get(w["status"], ""), "bottiglie": w["bottles"]}
         if w.get("drink_peak"):
             item["picco"] = w["drink_peak"]
+        if w.get("opened"):
+            item["aperta"] = "sì, una bottiglia è già aperta: da finire"
         if w.get("rating"):
             item["voto_mio"] = f"{w['rating']}/5"
         if w.get("tasting_notes"):
@@ -138,7 +144,7 @@ def _wine_listing(wines: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return listing
 
 
-_PREFS = """A parità, preferisci i vini "da bere presto" e quelli con "voto_mio" alto
+_PREFS = """A parità, preferisci le bottiglie già "aperta", poi i vini "da bere presto" e quelli con "voto_mio" alto
 (sono i voti che ho dato a bottiglie dello stesso vino già bevute); evita quelli
 "ancora giovane" se ce ne sono di pronti."""
 

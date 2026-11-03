@@ -130,3 +130,27 @@ def test_check_wine_matches():
 def test_peak_is_clamped():
     from tb import ai
     assert ai.normalize({"drink_from": 2020, "drink_until": 2030, "drink_peak": 2040})["drink_peak"] == 2030
+
+
+def test_opened_status():
+    from datetime import datetime, timedelta, timezone
+    from tb.logic import opened_status
+    now = datetime(2026, 11, 4, 18, tzinfo=timezone.utc)
+    days = {"white": 3, "red": 5}
+    def b(t, d):
+        return {"type": t, "opened_at": (now - timedelta(days=d, hours=1)).isoformat()}
+    assert opened_status({"type": "red"}, now, days) is None
+    assert opened_status(b("red", 1), now, days) == {"days": 1, "limit": 5, "state": "ok"}
+    assert opened_status(b("white", 2), now, days)["state"] == "today"
+    assert opened_status(b("white", 4), now, days)["state"] == "late"
+    assert opened_status(b("dessert", 10), now, days)["limit"] == 4
+
+
+def test_opened_bottle_first_in_pairing():
+    from datetime import date
+    from tb.logic import cellar_wines
+    racks = [{"id": "r", "name": "S", "shelves": [5]}]
+    bottles = [{"id": "1", "name": "Soave", "type": "white", "rack_id": "r", "row": 0, "col": 0},
+               {"id": "2", "name": "Soave", "type": "white", "rack_id": None, "opened_at": "2026-11-03T20:00:00+00:00"}]
+    (w,) = cellar_wines(bottles, racks, date(2026, 11, 4), 180)
+    assert w["opened"] == 1 and w["bottle_ids"][0] == "2" and w["locations"][0] == "Già aperta"

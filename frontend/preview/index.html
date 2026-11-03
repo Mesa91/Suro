@@ -31,7 +31,7 @@
     let pos = 0;
     for (const [name, producer, vintage, type, f, u, q] of seed) for (let i = 0; i < q; i++, pos++)
       db.bottles.push({ id: id("b"), code: "k7m2xq9" + pos, name, producer, vintage, type, drink_from: f, drink_until: u,
-        rack_id: "rack-a", row: Math.floor(pos / 10), col: pos % 10, added_at: new Date().toISOString(), price: [38, 55, 16, 29, 12, null][seed.findIndex((x) => x[0] === name)], drink_peak: name === "Barolo Cannubi" ? 2028 : null });
+        rack_id: "rack-a", row: Math.floor(pos / 10), col: pos % 10, added_at: new Date().toISOString(), price: [38, 55, 16, 29, 12, null][seed.findIndex((x) => x[0] === name)], drink_peak: name === "Barolo Cannubi" ? 2028 : null, ...(name === "Barolo Cannubi" ? { serve_temp: "16–18 °C", decant: "1 ora", glass: "calice Borgogna" } : {}) });
     db.history.push({ ...db.bottles[0], id: "old1", history_id: "h0", removed_at: "2026-09-12T20:00:00Z", reason: "drank", rating: 5, tasting_notes: "Splendido con il brasato, ricomprare" });
     const alertOf = (b) => { if (!b.drink_until) return null; const days = (new Date(b.drink_until, 11, 31) - new Date()) / 864e5;
       return days < 0 ? "past" : days <= db.settings.alert_days ? "closing" : null; };
@@ -72,6 +72,7 @@
         return new Promise((ok) => setTimeout(() => ok({ wine: { type: "red", ...w }, cellar: Object.values(grp),
           drunk: dr.length ? [{ match: "same", name: dr[0].name, producer: dr[0].producer, vintage: dr[0].vintage, times: dr.length, rating: 5, notes: dr[0].tasting_notes || "", last: dr[0].removed_at }] : [],
           wished: db.wishlist.filter(hit).map((x) => ({ match: "same", name: x.name, vintage: x.vintage, wish_id: x.id, source: x.source })) }), 500)); },
+      "taponbon/open_bottle": (m) => { const b = db.bottles.find((x) => x.id === m.bottle_id); Object.assign(b, { rack_id: null, row: null, col: null, opened_at: new Date(Date.now() - 3 * 864e5).toISOString(), opened_days: 3, opened_state: "today" }); changed(); return { bottle: b, limit: 3 }; },
       "taponbon/highlight": (m) => { db.highlight = { source: m.source, query: m.query, groups: m.groups }; changed(); return { highlight: db.highlight }; },
       "taponbon/highlight_clear": () => { db.highlight = null; changed(); return {}; },
       "taponbon/reserve_bottle": (m) => { const b = db.bottles.find((x) => x.id === m.bottle_id); delete b.reserved_for; delete b.reserved_until;
@@ -112,7 +113,7 @@
             courses: m.courses.map((c, i) => ({ course: c, wine: plan[i] ? { ...plan[i], reason: "" } : null, reason: plan[i] ? "Accompagna bene " + c.toLowerCase() + "." : "" })),
             one: { ...ws.find((w) => w.type === "sparkling"), reason: "Le bollicine reggono tutto il menu, dall'antipasto al dolce." } }), 600)); }
         return new Promise((ok) => setTimeout(() => ok({ source: "ai", advice: "Servilo a 18 °C dopo mezz'ora di decanter.", picks: reds.map((w, i) => ({ ...w, reason: i ? "Più leggero, regge comunque il sugo." : "Tannino e struttura reggono la lunga cottura del " + m.dish.toLowerCase() + "." })) }), 600)); },
-      "taponbon/ai_fill": (m) => ({ wine: { producer: "Brezza", region: "Barolo DOCG", country: "Italia", grape: "Nebbiolo", drink_from: 2024, drink_until: 2036, drink_peak: 2030 } }),
+      "taponbon/ai_fill": (m) => ({ wine: { producer: "Brezza", region: "Barolo DOCG", country: "Italia", grape: "Nebbiolo", drink_from: 2024, drink_until: 2036, drink_peak: 2030, serve_temp: "10–12 °C", decant: "no", glass: "tulipano" } }),
     };
     customElements.whenDefined("taponbon-card").then(() => {
     const card = document.querySelector("taponbon-card");

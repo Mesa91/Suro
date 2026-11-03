@@ -23,7 +23,7 @@ from __future__ import annotations
 import re
 import secrets
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, datetime
 from typing import Any, Iterable
 
 TAG_URL_PREFIX = "https://www.home-assistant.io/tag/"
@@ -286,6 +286,10 @@ def cellar_wines(bottles: Iterable[dict[str, Any]], racks: list[dict[str, Any]],
                 "region": b.get("region") or "",
                 "food_pairings": b.get("food_pairings") or "",
                 "drink_peak": b.get("drink_peak"),
+                "serve_temp": b.get("serve_temp") or "",
+                "decant": b.get("decant") or "",
+                "glass": b.get("glass") or "",
+                "opened": 0,
                 "status": status,
                 "days_left": days_left,
                 "bottles": 0,
@@ -295,8 +299,13 @@ def cellar_wines(bottles: Iterable[dict[str, Any]], racks: list[dict[str, Any]],
                 "tasting_notes": (ratings.get(key) or {}).get("notes", ""),
             }
         entry["bottles"] += 1
-        entry["bottle_ids"].append(b.get("id"))
-        entry["locations"].append(location_text(b, racks))
+        if b.get("opened_at"):
+            entry["opened"] += 1
+            entry["bottle_ids"].insert(0, b.get("id"))  # the open one first: finish it
+            entry["locations"].insert(0, "Già aperta")
+        else:
+            entry["bottle_ids"].append(b.get("id"))
+            entry["locations"].append(location_text(b, racks))
     return sorted(wines.values(), key=lambda w: (w["type"], w["name"].lower()))
 
 
@@ -347,6 +356,8 @@ def local_pairing(dish: str, wines: list[dict[str, Any]], limit: int = 3) -> lis
             score -= 1
         if w.get("rating"):
             score += (w["rating"] - 3) * 0.4
+        if w.get("opened"):
+            score += 1
         if score <= 0:
             continue
         if common:
@@ -483,3 +494,22 @@ def check_wine(target: dict[str, Any], bottles: list[dict[str, Any]], history: l
         items = e.pop("items")
         wished.append({**e, "wish_id": items[0]["id"], "source": items[0].get("source")})
     return {"cellar": cellar, "drunk": drunk, "wished": wished}
+
+
+
+# ── Opened bottles ────────────────────────────────────────────────────────────
+
+def opened_status(bottle: dict[str, Any], now: datetime, open_days: dict[str, int]) -> dict[str, Any] | None:
+    """How long a bottle has been open and whether it should be finished."""
+    if not bottle.get("opened_at"):
+        return None
+    try:
+        opened = datetime.fromisoformat(bottle["opened_at"])
+    except ValueError:
+        return None
+    if opened.tzinfo is None:
+        opened = opened.replace(tzinfo=now.tzinfo)
+    days = max(0, (now - opened).days)
+    limit = open_days.get(bottle.get("type") or "", 4)
+    state = "ok" if days < limit - 1 else "today" if days <= limit else "late"
+    return {"days": days, "limit": limit, "state": state}

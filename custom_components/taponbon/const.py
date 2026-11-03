@@ -8,7 +8,7 @@ STORAGE_VERSION = 1
 
 # Card: served from the integration folder and loaded on every dashboard.
 CARD_URL = "/taponbon/taponbon-card.js"
-CARD_VERSION = "20261104a"  # bump with every frontend build to bust the cache
+CARD_VERSION = "20261104b"  # bump with every frontend build to bust the cache
 
 # Wine types: key -> (Italian label, colour used on the rack).
 WINE_TYPES: dict[str, tuple[str, str]] = {
@@ -74,3 +74,7 @@ EVENT_RESERVED_DUE = "taponbon_reserved_due"
 EVENT_INVENTORY_SCAN = "taponbon_inventory_scan"
 REBUY_MIN_RATING = 4
 EVENT_HIGHLIGHT = "taponbon_highlight"
+# Days an opened bottle keeps well (with a stopper, in the fridge or cool).
+OPEN_DAYS = {"sparkling": 2, "white": 3, "rose": 3, "red": 5, "dessert": 14}
+OPENED_ALERT_HOUR = 17
+EVENT_OPENED_REMINDER = "taponbon_opened_reminder"

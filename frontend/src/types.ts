@@ -47,6 +47,14 @@ export interface Bottle {
   /** Set aside for an occasion: excluded from pairings. */
   reserved_for?: string;
   reserved_until?: string;
+  serve_temp?: string;
+  decant?: string;
+  glass?: string;
+  /** Opened but not finished: days since, and whether to finish it ("ok" | "today" | "late"). */
+  opened_at?: string;
+  opened_days?: number;
+  opened_state?: "ok" | "today" | "late";
+  opened_limit?: number;
 }
 
 export interface Wish extends Partial<Bottle> {
@@ -121,6 +129,9 @@ export const WINE_FIELDS: { key: keyof Bottle; label: string; kind: "text" | "nu
   { key: "drink_until", label: "Da bere entro il", kind: "year" },
   { key: "drink_peak", label: "Al suo meglio nel", kind: "year" },
   { key: "alcohol", label: "Gradazione", kind: "text" },
+  { key: "serve_temp", label: "Temperatura di servizio", kind: "text" },
+  { key: "decant", label: "Decantazione", kind: "text" },
+  { key: "glass", label: "Bicchiere", kind: "text" },
   { key: "price", label: "Prezzo (€)", kind: "number" },
   { key: "food_pairings", label: "Abbinamenti", kind: "area" },
   { key: "description", label: "Descrizione", kind: "area" },
@@ -189,4 +200,17 @@ export function maturity(b: { drink_from?: number | null; drink_until?: number |
   const span = Math.max(1, end - start + 1);
   const pos = (y: number) => Math.min(100, Math.max(0, ((y - start + 0.5) / span) * 100));
   return { start, end, peak, phase, label, today: pos(year), peakPos: peak ? pos(peak) : null };
+}
+
+export function serviceText(b: { serve_temp?: string; decant?: string; glass?: string }): string[] {
+  const out: string[] = [];
+  if (b.serve_temp) out.push(`🌡 ${b.serve_temp}`);
+  if (b.decant) out.push(/^(no|non serve|nessuna)\b/i.test(b.decant.trim()) ? "⏳ senza decanter" : `⏳ decantare ${b.decant}`);
+  if (b.glass) out.push(`🍷 ${b.glass}`);
+  return out;
+}
+
+export function openedText(b: Bottle): string {
+  const d = b.opened_days ?? 0;
+  return d === 0 ? "Aperta oggi" : d === 1 ? "Aperta da ieri" : `Aperta da ${d} giorni`;
 }

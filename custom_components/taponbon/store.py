@@ -20,7 +20,7 @@ WINE_FIELDS = {
     "name": str, "producer": str, "vintage": int, "type": str, "region": str,
     "country": str, "grape": str, "drink_from": int, "drink_until": int, "drink_peak": int,
     "price": float, "notes": str, "description": str, "food_pairings": str,
-    "alcohol": str, "image": str,
+    "alcohol": str, "image": str, "serve_temp": str, "decant": str, "glass": str,
 }
 
 
@@ -208,6 +208,9 @@ class TaponBonStore:
             bottle.update(rack_id=None, row=None, col=None)
             return True
         rack = self.get_rack(rack_id)
+        # Put back on a shelf: it is no longer an open bottle in the fridge.
+        for key in ("opened_at", "opened_notified"):
+            bottle.pop(key, None)
         if rack is None or not slot_exists(rack, row, col):
             return False
         other = self.bottle_at(rack_id, row, col)
@@ -254,6 +257,18 @@ class TaponBonStore:
         if self.get_by_code(bottle.get("code", "")):
             bottle["code"] = new_code(self._all_codes())
         self.bottles.append(bottle)
+        return bottle
+
+    # ── opened bottles ───────────────────────────────────────────────────────
+
+    def open_bottle(self, bottle_id: str) -> dict[str, Any] | None:
+        """Opened but not finished: it leaves its slot and the clock starts."""
+        bottle = self.get_bottle(bottle_id)
+        if bottle is None:
+            return None
+        bottle.update(rack_id=None, row=None, col=None, opened_at=_now())
+        bottle.pop("opened_notified", None)
+        self._unlight(bottle_id)
         return bottle
 
     # ── reservations ─────────────────────────────────────────────────────────
@@ -390,7 +405,8 @@ class TaponBonStore:
         if inv is None:
             return None
         rack_id = inv.get("rack_id")
-        scope = [b for b in self.bottles if rack_id is None or b.get("rack_id") == rack_id]
+        scope = [b for b in self.bottles
+                 if not b.get("opened_at") and (rack_id is None or b.get("rack_id") == rack_id)]
         seen = set(inv["seen"])
         missing = [b for b in scope if b.get("code") not in seen]
         misplaced = [b for b in self.bottles if b.get("code") in seen and rack_id and b.get("rack_id") != rack_id]
@@ -449,7 +465,7 @@ class TaponBonStore:
         return sum(rack_capacity(r) - len(occupied(self.bottles, r["id"])) for r in self.racks)
 
 
-HISTORY_ONLY = ("history_id", "removed_at", "reason", "rating", "tasting_notes")
+HISTORY_ONLY = ("history_id", "removed_at", "reason", "rating", "tasting_notes", "opened_at", "opened_notified")
 
 
 def _hex_color(value: Any) -> str:

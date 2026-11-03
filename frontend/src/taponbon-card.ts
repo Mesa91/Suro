@@ -1,6 +1,6 @@
 import { LitElement, html, css, nothing, PropertyValues } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
-import { Bottle, CardConfig, HistoryEntry, InventoryReport, Rack, SEARCH_COLOR, Snapshot, Wish, capacityOf, matches, shelvesOf, wineTitle } from "./types";
+import { Bottle, CardConfig, HistoryEntry, InventoryReport, Rack, SEARCH_COLOR, Snapshot, Wish, openedText, capacityOf, matches, shelvesOf, wineTitle } from "./types";
 import { sharedStyles } from "./styles";
 import { BOTTLE_DEFS, EMPTY_SVG, bottleSvg } from "./bottle";
 import "./bottle-dialog";
@@ -152,7 +152,8 @@ export class TaponBonCard extends LitElement {
     const capacity = d.racks.reduce((s, r) => s + capacityOf(r), 0);
     const closing = d.bottles.filter((b) => b.alert === "closing").length;
     const past = d.bottles.filter((b) => b.alert === "past").length;
-    const unplaced = d.bottles.filter((b) => !b.rack_id);
+    const unplaced = d.bottles.filter((b) => !b.rack_id && !b.opened_at);
+    const opened = d.bottles.filter((b) => b.opened_at).sort((a, b) => (b.opened_days ?? 0) - (a.opened_days ?? 0));
     const counts = Object.fromEntries(Object.keys(d.types).map((t) => [t, d.bottles.filter((b) => b.type === t).length]));
     // Never more columns than racks: one rack should use the whole width.
     const wanted = Math.round(Number(this._config.columns)) || 0;
@@ -218,6 +219,18 @@ export class TaponBonCard extends LitElement {
         ${d.racks.map((rack) => this._renderRack(d, rack))}
       </div>
 
+      ${opened.length
+        ? html`<div class="unplaced">
+            <div class="section-title">🍾 Aperte (${opened.length})</div>
+            <div class="list">
+              ${opened.map((b) => html`<button class="list-item opened ${b.opened_state || ""}"
+                  @click=${() => (this._dialog = { kind: "bottle", bottleId: b.id })}>
+                  <span class="dot" style="background:${d.types[b.type]?.color}"></span>${wineTitle(b)}
+                  <span class="od">${openedText(b)}</span>
+                </button>`)}
+            </div>
+          </div>`
+        : nothing}
       ${unplaced.length
         ? html`<div class="unplaced">
             <div class="section-title">Da sistemare (${unplaced.length})</div>
@@ -771,6 +784,22 @@ export class TaponBonCard extends LitElement {
         padding: 5px 10px;
         cursor: pointer;
         font: inherit;
+      }
+      .list-item .od {
+        font-size: 0.8em;
+        color: var(--secondary-text-color);
+      }
+      .list-item.opened.today {
+        border-color: rgba(227, 179, 65, 0.6);
+      }
+      .list-item.opened.today .od {
+        color: #e3b341;
+      }
+      .list-item.opened.late {
+        border-color: rgba(229, 57, 53, 0.6);
+      }
+      .list-item.opened.late .od {
+        color: #ef7a77;
       }
       .list-item.dim {
         opacity: 0.3;
