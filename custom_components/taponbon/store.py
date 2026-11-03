@@ -117,6 +117,10 @@ class TaponBonStore:
         return self.data["wishlist"]
 
     @property
+    def highlight(self) -> dict[str, Any] | None:
+        return self.data.get("highlight")
+
+    @property
     def inventory(self) -> dict[str, Any] | None:
         return self.data.get("inventory")
 
@@ -219,6 +223,7 @@ class TaponBonStore:
         if bottle is None:
             return None
         self.bottles.remove(bottle)
+        self._unlight(bottle_id)
         entry = {**bottle, "history_id": new_id("h"), "removed_at": _now(), "reason": reason}
         _apply_rating(entry, rating, tasting_notes)
         self.history.append(entry)
@@ -267,6 +272,42 @@ class TaponBonStore:
             if day:
                 bottle["reserved_until"] = day
         return bottle
+
+    # ── highlighted bottles (search / pairing; later also the shelf LEDs) ──────
+
+    highlight_dirty = False
+
+    def set_highlight(self, groups: list[dict[str, Any]], source: str = "search", query: str = "") -> dict[str, Any] | None:
+        """Light up bottles until one of them is taken or the user switches off."""
+        known = {b["id"] for b in self.bottles}
+        clean = []
+        for g in groups[:12]:
+            ids = [i for i in dict.fromkeys(g.get("bottle_ids") or []) if i in known]
+            if ids:
+                clean.append({"label": str(g.get("label") or "").strip()[:80],
+                              "color": _hex_color(g.get("color")), "bottle_ids": ids})
+        self.data["highlight"] = (
+            {"source": source, "query": str(query or "")[:200], "started_at": _now(), "groups": clean} if clean else None
+        )
+        self.highlight_dirty = True
+        return self.highlight
+
+    def clear_highlight(self) -> None:
+        if self.data.get("highlight"):
+            self.data["highlight"] = None
+            self.highlight_dirty = True
+
+    def _unlight(self, bottle_id: str) -> None:
+        """A highlighted bottle was taken: its group has done its job and goes dark."""
+        hl = self.highlight
+        if not hl:
+            return
+        groups = [g for g in hl["groups"] if bottle_id not in g["bottle_ids"]]
+        if len(groups) != len(hl["groups"]):
+            hl["groups"] = groups
+            if not groups:
+                self.data["highlight"] = None
+            self.highlight_dirty = True
 
     # ── wishlist ─────────────────────────────────────────────────────────────
 
@@ -409,6 +450,13 @@ class TaponBonStore:
 
 
 HISTORY_ONLY = ("history_id", "removed_at", "reason", "rating", "tasting_notes")
+
+
+def _hex_color(value: Any) -> str:
+    import re
+
+    text = str(value or "").strip()
+    return text.lower() if re.fullmatch(r"#[0-9a-fA-F]{6}", text) else "#ffe2b0"
 
 
 def _iso_day(value: Any) -> str | None:

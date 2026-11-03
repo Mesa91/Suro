@@ -29,7 +29,7 @@ def async_register(hass: HomeAssistant) -> None:
         ws_get_label, ws_request_label, ws_take_code, ws_update_settings, ws_get_alerts,
         ws_ai_recognize, ws_ai_fill, ws_pair, ws_rate_history,
         ws_reserve_bottle, ws_remove_bottles, ws_wishlist_add, ws_wishlist_update, ws_wishlist_remove,
-        ws_inventory_start, ws_inventory_stop,
+        ws_inventory_start, ws_inventory_stop, ws_highlight, ws_highlight_clear,
     ):
         websocket_api.async_register_command(hass, handler)
 
@@ -61,6 +61,7 @@ def _snapshot(hass: HomeAssistant) -> dict[str, Any]:
         "value": cellar_value(store.bottles),
         "wishlist": list(reversed(store.wishlist)),
         "inventory": store.inventory_report(),
+        "highlight": store.highlight,
         "settings": {
             "label_format": core.label_format(store),
             CONF_AUTO_LABELS: bool(store.settings.get(CONF_AUTO_LABELS, DEFAULT_AUTO_LABELS)),
@@ -557,3 +558,33 @@ async def ws_update_settings(hass, connection, msg) -> None:
 def ws_get_alerts(hass, connection, msg) -> None:
     if _store(hass, connection, msg):
         connection.send_result(msg["id"], core.current_alerts(hass))
+
+
+@websocket_api.websocket_command({
+    vol.Required("type"): "taponbon/highlight",
+    vol.Required("groups"): [{
+        vol.Optional("label"): str, vol.Optional("color"): str, vol.Required("bottle_ids"): [str],
+    }],
+    vol.Optional("source", default="search"): vol.In(["search", "pair", "menu"]),
+    vol.Optional("query", default=""): str,
+})
+@websocket_api.async_response
+async def ws_highlight(hass, connection, msg) -> None:
+    """Light up bottles (in the card now, on the shelf LEDs later)."""
+    store = _store(hass, connection, msg)
+    if not store:
+        return
+    hl = store.set_highlight(msg["groups"], msg["source"], msg["query"])
+    await core.async_changed(hass)
+    connection.send_result(msg["id"], {"highlight": hl})
+
+
+@websocket_api.websocket_command({vol.Required("type"): "taponbon/highlight_clear"})
+@websocket_api.async_response
+async def ws_highlight_clear(hass, connection, msg) -> None:
+    store = _store(hass, connection, msg)
+    if not store:
+        return
+    store.clear_highlight()
+    await core.async_changed(hass)
+    connection.send_result(msg["id"], {})

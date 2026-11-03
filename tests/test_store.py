@@ -123,3 +123,25 @@ def test_reserve_wishlist_rebuy_and_inventory():
     assert rep["misplaced"] == [c["id"]] and rep["total"] == 0
     st.inventory_stop()
     assert st.inventory is None and st.inventory_report() is None
+
+
+def test_highlight_goes_dark_when_taken():
+    st = load(None)
+    rack = st.racks[0]["id"]
+    a, b, c = st.add_bottles({"name": "Barolo", "type": "red"}, 3, rack, 0, 0)
+    hl = st.set_highlight([
+        {"label": "Antipasto", "color": "#4FC3F7", "bottle_ids": [a["id"], "nope"]},
+        {"label": "Secondo", "color": "red", "bottle_ids": [b["id"], c["id"]]},
+        {"label": "Vuoto", "bottle_ids": []},
+    ], "menu")
+    assert [g["label"] for g in hl["groups"]] == ["Antipasto", "Secondo"]
+    assert hl["groups"][0] == {"label": "Antipasto", "color": "#4fc3f7", "bottle_ids": [a["id"]]}
+    assert hl["groups"][1]["color"] == "#ffe2b0"
+    st.highlight_dirty = False
+    st.remove_bottle(c["id"])
+    assert [g["label"] for g in st.highlight["groups"]] == ["Antipasto"] and st.highlight_dirty
+    st.remove_bottle(a["id"])
+    assert st.highlight is None
+    st.set_highlight([{"bottle_ids": [b["id"]]}])
+    st.clear_highlight()
+    assert st.highlight is None

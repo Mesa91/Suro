@@ -45,7 +45,7 @@
         unknown: inv.unknown, last: inv.last, missing: scope.filter((b) => !inv.seen.includes(b.code)).map((b) => b.id),
         misplaced: db.bottles.filter((b) => inv.seen.includes(b.code) && inv.rack_id && b.rack_id !== inv.rack_id).map((b) => b.id), found_taken: inv.found };
     };
-    const snap = () => ({ racks: db.racks, bottles: db.bottles.map((b) => ({ ...b, alert: alertOf(b), ...past(b) })), settings: db.settings, value: value(), wishlist: [...db.wishlist].reverse(), inventory: invReport(),
+    const snap = () => ({ racks: db.racks, bottles: db.bottles.map((b) => ({ ...b, alert: alertOf(b), ...past(b) })), settings: db.settings, value: value(), wishlist: [...db.wishlist].reverse(), inventory: invReport(), highlight: db.highlight || null,
       types, reasons, history_count: db.history.length, ai: true, printer: false,
       climate: { temperature_entity: "sensor.cantina_temperatura", humidity_entity: "sensor.cantina_umidita",
         temperature_min: 10, temperature_max: 16, humidity_min: 60, humidity_max: 80 } });
@@ -62,7 +62,10 @@
             rack_id: s ? rack.id : null, row: s ? s[0] : null, col: s ? s[1] : null, added_at: new Date().toISOString() };
           db.bottles.push(b); added.push(b); } if (m.wish_id) db.wishlist = db.wishlist.filter((w) => w.id !== m.wish_id); changed(); return { bottles: added }; },
       "taponbon/remove_bottle": (m) => { const i = db.bottles.findIndex((b) => b.id === m.bottle_id); const [b] = db.bottles.splice(i, 1);
+        if (db.highlight) { db.highlight.groups = db.highlight.groups.filter((g) => !g.bottle_ids.includes(b.id)); if (!db.highlight.groups.length) db.highlight = null; }
         db.history.push({ ...b, history_id: id("h"), removed_at: new Date().toISOString(), reason: m.reason, rating: m.rating, tasting_notes: m.tasting_notes }); changed(); return {}; },
+      "taponbon/highlight": (m) => { db.highlight = { source: m.source, query: m.query, groups: m.groups }; changed(); return { highlight: db.highlight }; },
+      "taponbon/highlight_clear": () => { db.highlight = null; changed(); return {}; },
       "taponbon/reserve_bottle": (m) => { const b = db.bottles.find((x) => x.id === m.bottle_id); delete b.reserved_for; delete b.reserved_until;
         if (m.reserved_for) { b.reserved_for = m.reserved_for; if (m.reserved_until) b.reserved_until = m.reserved_until; } changed(); return { bottle: b }; },
       "taponbon/wishlist_add": (m) => { const w = { ...m.wine, id: id("w"), added_at: new Date().toISOString(), source: "manual", where: m.where, wish_notes: m.wish_notes }; db.wishlist.push(w); changed(); return { wish: w }; },

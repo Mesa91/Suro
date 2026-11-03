@@ -88,6 +88,7 @@ export interface Snapshot {
   value?: { total: number; priced: number; bottles: number };
   wishlist?: Wish[];
   inventory?: InventoryReport | null;
+  highlight?: Highlight | null;
   ai: boolean;
   printer: boolean;
   climate: {
@@ -151,3 +152,14 @@ export function matches(b: Bottle, query: string): boolean {
   );
   return normalize(query).split(/\s+/).every((word) => hay.includes(word));
 }
+
+export interface Highlight {
+  source: "search" | "pair" | "menu";
+  query: string;
+  started_at: string;
+  groups: { label: string; color: string; bottle_ids: string[] }[];
+}
+
+/** Warm white for a plain search; one colour per course of a menu (same on the shelf LEDs). */
+export const SEARCH_COLOR = "#ffe2b0";
+export const COURSE_COLORS = ["#4fc3f7", "#81c784", "#e0525f", "#ffb74d", "#ba68c8", "#f48fb1", "#4db6ac", "#fff176"];

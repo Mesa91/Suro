@@ -1,6 +1,6 @@
 import { LitElement, html, css, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
-import { Snapshot, wineTitle } from "./types";
+import { COURSE_COLORS, SEARCH_COLOR, Snapshot, wineTitle } from "./types";
 import { sharedStyles } from "./styles";
 import { BOTTLE_DEFS, bottleSvg } from "./bottle";
 import { ratingText, renderStars } from "./rating";
@@ -85,6 +85,13 @@ export class PairDialog extends LitElement {
     if (this._mode === mode) return;
     this._mode = mode;
     this._result = null;
+  }
+
+  private async _light(groups: { label: string; color: string; bottle_ids: string[] }[], source: "pair" | "menu") {
+    if (!groups.length) return;
+    await this.card.ws({ type: "taponbon/highlight", source, query: this._asked, groups });
+    this.card.toast("Illuminate sullo scaffale: si spengono quando ne prendi una");
+    this._close();
   }
 
   private _open(p: Pick) {
@@ -191,14 +198,21 @@ export class PairDialog extends LitElement {
       <div class="eyebrow small">Il percorso</div>
       <div class="path">
         ${courses.map((c, i) => html`<div class="step">
-          <div class="step-head"><span class="num">${i + 1}</span>${c.course.charAt(0).toUpperCase() + c.course.slice(1)}</div>
+          <div class="step-head"><span class="num" style="--c:${COURSE_COLORS[i % COURSE_COLORS.length]}">${i + 1}</span>${c.course.charAt(0).toUpperCase() + c.course.slice(1)}</div>
           ${c.wine
             ? this._wineCard(c.wine, { compact: true, reason: c.reason })
             : html`<div class="note nothing">Nessun vino della cantina è adatto a questa portata.</div>`}
         </div>`)}
       </div>
+      ${courses.some((c) => c.wine)
+        ? html`<button class="btn primary light" @click=${() => this._light(
+            courses.map((c, i) => ({ label: c.course, color: COURSE_COLORS[i % COURSE_COLORS.length], bottle_ids: c.wine?.bottle_ids || [] }))
+              .filter((g) => g.bottle_ids.length), "menu")}>💡 Illumina il percorso sullo scaffale</button>`
+        : nothing}
       ${r.one
-        ? html`<div class="eyebrow small">Oppure un vino per tutta la cena</div>${this._wineCard(r.one, { best: true })}`
+        ? html`<div class="eyebrow small">Oppure un vino per tutta la cena</div>${this._wineCard(r.one, { best: true })}
+            <button class="btn small light" @click=${() => this._light(
+              [{ label: "Tutta la cena", color: SEARCH_COLOR, bottle_ids: r.one!.bottle_ids }], "pair")}>💡 Illumina questo</button>`
         : nothing}
       ${r.advice ? html`<div class="advice ${r.source}">${r.source === "ai" ? "🍷 " : "ℹ️ "}${r.advice}</div>` : nothing}
     `;
@@ -210,6 +224,11 @@ export class PairDialog extends LitElement {
         ? html`<div class="note">Nessun vino della cantina è davvero adatto a «${this._asked}».</div>`
         : html`<div class="eyebrow small">Per «${this._asked}»</div>`}
       ${(r.picks || []).map((p, i) => this._wineCard(p, { best: i === 0 }))}
+      ${(r.picks || []).length
+        ? html`<button class="btn primary light" @click=${() => this._light(
+            [{ label: this._asked, color: SEARCH_COLOR, bottle_ids: (r.picks || []).flatMap((p) => p.bottle_ids) }], "pair")}>
+            💡 Illumina sullo scaffale</button>`
+        : nothing}
       ${r.advice ? html`<div class="advice ${r.source}">${r.source === "ai" ? "🍷 " : "ℹ️ "}${r.advice}</div>` : nothing}
     `;
   }
@@ -246,6 +265,15 @@ export class PairDialog extends LitElement {
         display: flex;
         align-items: center;
         gap: 8px;
+      }
+      .light {
+        display: block;
+        margin: 4px 0 12px auto;
+      }
+      .step-head .num {
+        background: color-mix(in srgb, var(--c) 22%, transparent);
+        color: var(--c);
+        box-shadow: 0 0 10px -2px var(--c);
       }
       .num {
         flex: none;

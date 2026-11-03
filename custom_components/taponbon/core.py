@@ -23,6 +23,7 @@ from .const import (
     DOMAIN,
     EVENT_BOTTLE_TAKEN,
     EVENT_DRINK_ALERT,
+    EVENT_HIGHLIGHT,
     EVENT_INVENTORY_SCAN,
     EVENT_RESERVED_DUE,
     EVENT_LABEL_REQUESTED,
@@ -65,7 +66,22 @@ async def async_changed(hass: HomeAssistant) -> None:
     store = get_store(hass)
     if store:
         await store.async_save()
+        if store.highlight_dirty:
+            store.highlight_dirty = False
+            hass.bus.async_fire(EVENT_HIGHLIGHT, highlight_payload(store))
     hass.bus.async_fire(EVENT_UPDATED)
+
+
+def highlight_payload(store: TaponBonStore) -> dict[str, Any]:
+    """What is lit, with shelf positions: what LED automations need."""
+    hl = store.highlight or {}
+    by_id = {b["id"]: b for b in store.bottles}
+    groups = []
+    for g in hl.get("groups", []):
+        slots = [{"bottle_id": i, "rack_id": by_id[i].get("rack_id"), "row": by_id[i].get("row"),
+                  "col": by_id[i].get("col")} for i in g["bottle_ids"] if i in by_id]
+        groups.append({"label": g["label"], "color": g["color"], "slots": slots})
+    return {"active": bool(groups), "source": hl.get("source"), "query": hl.get("query"), "groups": groups}
 
 
 def _notify(hass: HomeAssistant, message: str, title: str, notification_id: str) -> None:

@@ -1,4 +1,8 @@
-function t(t,e,i,s){var a,o=arguments.length,r=o<3?e:null===s?s=Object.getOwnPropertyDescriptor(e,i):s;if("object"==typeof Reflect&&"function"==typeof Reflect.decorate)r=Reflect.decorate(t,e,i,s);else for(var n=t.length-1;n>=0;n--)(a=t[n])&&(r=(o<3?a(r):o>3?a(e,i,r):a(e,i))||r);return o>3&&r&&Object.defineProperty(e,i,r),r}"function"==typeof SuppressedError&&SuppressedError;const e=globalThis,i=e.ShadowRoot&&(void 0===e.ShadyCSS||e.ShadyCSS.nativeShadow)&&"adoptedStyleSheets"in Document.prototype&&"replace"in CSSStyleSheet.prototype,s=Symbol(),a=new WeakMap;let o=class{constructor(t,e,i){if(this._$cssResult$=!0,i!==s)throw Error("CSSResult is not constructable. Use `unsafeCSS` or `css` instead.");this.cssText=t,this.t=e}get styleSheet(){let t=this.o;const e=this.t;if(i&&void 0===t){const i=void 0!==e&&1===e.length;i&&(t=a.get(e)),void 0===t&&((this.o=t=new CSSStyleSheet).replaceSync(this.cssText),i&&a.set(e,t))}return t}toString(){return this.cssText}};const r=(t,...e)=>{const i=1===t.length?t[0]:e.reduce((e,i,s)=>e+(t=>{if(!0===t._$cssResult$)return t.cssText;if("number"==typeof t)return t;throw Error("Value passed to 'css' function must be a 'css' function result: "+t+". Use 'unsafeCSS' to pass non-literal values, but take care to ensure page security.")})(i)+t[s+1],t[0]);return new o(i,t,s)},n=i?t=>t:t=>t instanceof CSSStyleSheet?(t=>{let e="";for(const i of t.cssRules)e+=i.cssText;return(t=>new o("string"==typeof t?t:t+"",void 0,s))(e)})(t):t,{is:l,defineProperty:d,getOwnPropertyDescriptor:c,getOwnPropertyNames:p,getOwnPropertySymbols:h,getPrototypeOf:u}=Object,b=globalThis,g=b.trustedTypes,v=g?g.emptyScript:"",m=b.reactiveElementPolyfillSupport,f=(t,e)=>t,_={toAttribute(t,e){switch(e){case Boolean:t=t?v:null;break;case Object:case Array:t=null==t?t:JSON.stringify(t)}return t},fromAttribute(t,e){let i=t;switch(e){case Boolean:i=null!==t;break;case Number:i=null===t?null:Number(t);break;case Object:case Array:try{i=JSON.parse(t)}catch(t){i=null}}return i}},$=(t,e)=>!l(t,e),y={attribute:!0,type:String,converter:_,reflect:!1,useDefault:!1,hasChanged:$};Symbol.metadata??=Symbol("metadata"),b.litPropertyMetadata??=new WeakMap;let x=class extends HTMLElement{static addInitializer(t){this._$Ei(),(this.l??=[]).push(t)}static get observedAttributes(){return this.finalize(),this._$Eh&&[...this._$Eh.keys()]}static createProperty(t,e=y){if(e.state&&(e.attribute=!1),this._$Ei(),this.prototype.hasOwnProperty(t)&&((e=Object.create(e)).wrapped=!0),this.elementProperties.set(t,e),!e.noAccessor){const i=Symbol(),s=this.getPropertyDescriptor(t,i,e);void 0!==s&&d(this.prototype,t,s)}}static getPropertyDescriptor(t,e,i){const{get:s,set:a}=c(this.prototype,t)??{get(){return this[e]},set(t){this[e]=t}};return{get:s,set(e){const o=s?.call(this);a?.call(this,e),this.requestUpdate(t,o,i)},configurable:!0,enumerable:!0}}static getPropertyOptions(t){return this.elementProperties.get(t)??y}static _$Ei(){if(this.hasOwnProperty(f("elementProperties")))return;const t=u(this);t.finalize(),void 0!==t.l&&(this.l=[...t.l]),this.elementProperties=new Map(t.elementProperties)}static finalize(){if(this.hasOwnProperty(f("finalized")))return;if(this.finalized=!0,this._$Ei(),this.hasOwnProperty(f("properties"))){const t=this.properties,e=[...p(t),...h(t)];for(const i of e)this.createProperty(i,t[i])}const t=this[Symbol.metadata];if(null!==t){const e=litPropertyMetadata.get(t);if(void 0!==e)for(const[t,i]of e)this.elementProperties.set(t,i)}this._$Eh=new Map;for(const[t,e]of this.elementProperties){const i=this._$Eu(t,e);void 0!==i&&this._$Eh.set(i,t)}this.elementStyles=this.finalizeStyles(this.styles)}static finalizeStyles(t){const e=[];if(Array.isArray(t)){const i=new Set(t.flat(1/0).reverse());for(const t of i)e.unshift(n(t))}else void 0!==t&&e.push(n(t));return e}static _$Eu(t,e){const i=e.attribute;return!1===i?void 0:"string"==typeof i?i:"string"==typeof t?t.toLowerCase():void 0}constructor(){super(),this._$Ep=void 0,this.isUpdatePending=!1,this.hasUpdated=!1,this._$Em=null,this._$Ev()}_$Ev(){this._$ES=new Promise(t=>this.enableUpdating=t),this._$AL=new Map,this._$E_(),this.requestUpdate(),this.constructor.l?.forEach(t=>t(this))}addController(t){(this._$EO??=new Set).add(t),void 0!==this.renderRoot&&this.isConnected&&t.hostConnected?.()}removeController(t){this._$EO?.delete(t)}_$E_(){const t=new Map,e=this.constructor.elementProperties;for(const i of e.keys())this.hasOwnProperty(i)&&(t.set(i,this[i]),delete this[i]);t.size>0&&(this._$Ep=t)}createRenderRoot(){const t=this.shadowRoot??this.attachShadow(this.constructor.shadowRootOptions);return((t,s)=>{if(i)t.adoptedStyleSheets=s.map(t=>t instanceof CSSStyleSheet?t:t.styleSheet);else for(const i of s){const s=document.createElement("style"),a=e.litNonce;void 0!==a&&s.setAttribute("nonce",a),s.textContent=i.cssText,t.appendChild(s)}})(t,this.constructor.elementStyles),t}connectedCallback(){this.renderRoot??=this.createRenderRoot(),this.enableUpdating(!0),this._$EO?.forEach(t=>t.hostConnected?.())}enableUpdating(t){}disconnectedCallback(){this._$EO?.forEach(t=>t.hostDisconnected?.())}attributeChangedCallback(t,e,i){this._$AK(t,i)}_$ET(t,e){const i=this.constructor.elementProperties.get(t),s=this.constructor._$Eu(t,i);if(void 0!==s&&!0===i.reflect){const a=(void 0!==i.converter?.toAttribute?i.converter:_).toAttribute(e,i.type);this._$Em=t,null==a?this.removeAttribute(s):this.setAttribute(s,a),this._$Em=null}}_$AK(t,e){const i=this.constructor,s=i._$Eh.get(t);if(void 0!==s&&this._$Em!==s){const t=i.getPropertyOptions(s),a="function"==typeof t.converter?{fromAttribute:t.converter}:void 0!==t.converter?.fromAttribute?t.converter:_;this._$Em=s;const o=a.fromAttribute(e,t.type);this[s]=o??this._$Ej?.get(s)??o,this._$Em=null}}requestUpdate(t,e,i,s=!1,a){if(void 0!==t){const o=this.constructor;if(!1===s&&(a=this[t]),i??=o.getPropertyOptions(t),!((i.hasChanged??$)(a,e)||i.useDefault&&i.reflect&&a===this._$Ej?.get(t)&&!this.hasAttribute(o._$Eu(t,i))))return;this.C(t,e,i)}!1===this.isUpdatePending&&(this._$ES=this._$EP())}C(t,e,{useDefault:i,reflect:s,wrapped:a},o){i&&!(this._$Ej??=new Map).has(t)&&(this._$Ej.set(t,o??e??this[t]),!0!==a||void 0!==o)||(this._$AL.has(t)||(this.hasUpdated||i||(e=void 0),this._$AL.set(t,e)),!0===s&&this._$Em!==t&&(this._$Eq??=new Set).add(t))}async _$EP(){this.isUpdatePending=!0;try{await this._$ES}catch(t){Promise.reject(t)}const t=this.scheduleUpdate();return null!=t&&await t,!this.isUpdatePending}scheduleUpdate(){return this.performUpdate()}performUpdate(){if(!this.isUpdatePending)return;if(!this.hasUpdated){if(this.renderRoot??=this.createRenderRoot(),this._$Ep){for(const[t,e]of this._$Ep)this[t]=e;this._$Ep=void 0}const t=this.constructor.elementProperties;if(t.size>0)for(const[e,i]of t){const{wrapped:t}=i,s=this[e];!0!==t||this._$AL.has(e)||void 0===s||this.C(e,void 0,i,s)}}let t=!1;const e=this._$AL;try{t=this.shouldUpdate(e),t?(this.willUpdate(e),this._$EO?.forEach(t=>t.hostUpdate?.()),this.update(e)):this._$EM()}catch(e){throw t=!1,this._$EM(),e}t&&this._$AE(e)}willUpdate(t){}_$AE(t){this._$EO?.forEach(t=>t.hostUpdated?.()),this.hasUpdated||(this.hasUpdated=!0,this.firstUpdated(t)),this.updated(t)}_$EM(){this._$AL=new Map,this.isUpdatePending=!1}get updateComplete(){return this.getUpdateComplete()}getUpdateComplete(){return this._$ES}shouldUpdate(t){return!0}update(t){this._$Eq&&=this._$Eq.forEach(t=>this._$ET(t,this[t])),this._$EM()}updated(t){}firstUpdated(t){}};x.elementStyles=[],x.shadowRootOptions={mode:"open"},x[f("elementProperties")]=new Map,x[f("finalized")]=new Map,m?.({ReactiveElement:x}),(b.reactiveElementVersions??=[]).push("2.1.2");const w=globalThis,k=t=>t,A=w.trustedTypes,E=A?A.createPolicy("lit-html",{createHTML:t=>t}):void 0,S="$lit$",C=`lit$${Math.random().toFixed(9).slice(2)}$`,z="?"+C,M=`<${z}>`,R=document,P=()=>R.createComment(""),I=t=>null===t||"object"!=typeof t&&"function"!=typeof t,T=Array.isArray,O="[ \t\n\f\r]",U=/<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g,N=/-->/g,D=/>/g,j=RegExp(`>|${O}(?:([^\\s"'>=/]+)(${O}*=${O}*(?:[^ \t\n\f\r"'\`<>=]|("|')|))|$)`,"g"),H=/'/g,L=/"/g,q=/^(?:script|style|textarea|title)$/i,F=t=>(e,...i)=>({_$litType$:t,strings:e,values:i}),B=F(1),V=F(2),G=Symbol.for("lit-noChange"),W=Symbol.for("lit-nothing"),Y=new WeakMap,Q=R.createTreeWalker(R,129);function J(t,e){if(!T(t)||!t.hasOwnProperty("raw"))throw Error("invalid template strings array");return void 0!==E?E.createHTML(e):e}const K=(t,e)=>{const i=t.length-1,s=[];let a,o=2===e?"<svg>":3===e?"<math>":"",r=U;for(let e=0;e<i;e++){const i=t[e];let n,l,d=-1,c=0;for(;c<i.length&&(r.lastIndex=c,l=r.exec(i),null!==l);)c=r.lastIndex,r===U?"!--"===l[1]?r=N:void 0!==l[1]?r=D:void 0!==l[2]?(q.test(l[2])&&(a=RegExp("</"+l[2],"g")),r=j):void 0!==l[3]&&(r=j):r===j?">"===l[0]?(r=a??U,d=-1):void 0===l[1]?d=-2:(d=r.lastIndex-l[2].length,n=l[1],r=void 0===l[3]?j:'"'===l[3]?L:H):r===L||r===H?r=j:r===N||r===D?r=U:(r=j,a=void 0);const p=r===j&&t[e+1].startsWith("/>")?" ":"";o+=r===U?i+M:d>=0?(s.push(n),i.slice(0,d)+S+i.slice(d)+C+p):i+C+(-2===d?e:p)}return[J(t,o+(t[i]||"<?>")+(2===e?"</svg>":3===e?"</math>":"")),s]};class X{constructor({strings:t,_$litType$:e},i){let s;this.parts=[];let a=0,o=0;const r=t.length-1,n=this.parts,[l,d]=K(t,e);if(this.el=X.createElement(l,i),Q.currentNode=this.el.content,2===e||3===e){const t=this.el.content.firstChild;t.replaceWith(...t.childNodes)}for(;null!==(s=Q.nextNode())&&n.length<r;){if(1===s.nodeType){if(s.hasAttributes())for(const t of s.getAttributeNames())if(t.endsWith(S)){const e=d[o++],i=s.getAttribute(t).split(C),r=/([.?@])?(.*)/.exec(e);n.push({type:1,index:a,name:r[2],strings:i,ctor:"."===r[1]?st:"?"===r[1]?at:"@"===r[1]?ot:it}),s.removeAttribute(t)}else t.startsWith(C)&&(n.push({type:6,index:a}),s.removeAttribute(t));if(q.test(s.tagName)){const t=s.textContent.split(C),e=t.length-1;if(e>0){s.textContent=A?A.emptyScript:"";for(let i=0;i<e;i++)s.append(t[i],P()),Q.nextNode(),n.push({type:2,index:++a});s.append(t[e],P())}}}else if(8===s.nodeType)if(s.data===z)n.push({type:2,index:a});else{let t=-1;for(;-1!==(t=s.data.indexOf(C,t+1));)n.push({type:7,index:a}),t+=C.length-1}a++}}static createElement(t,e){const i=R.createElement("template");return i.innerHTML=t,i}}function Z(t,e,i=t,s){if(e===G)return e;let a=void 0!==s?i._$Co?.[s]:i._$Cl;const o=I(e)?void 0:e._$litDirective$;return a?.constructor!==o&&(a?._$AO?.(!1),void 0===o?a=void 0:(a=new o(t),a._$AT(t,i,s)),void 0!==s?(i._$Co??=[])[s]=a:i._$Cl=a),void 0!==a&&(e=Z(t,a._$AS(t,e.values),a,s)),e}class tt{constructor(t,e){this._$AV=[],this._$AN=void 0,this._$AD=t,this._$AM=e}get parentNode(){return this._$AM.parentNode}get _$AU(){return this._$AM._$AU}u(t){const{el:{content:e},parts:i}=this._$AD,s=(t?.creationScope??R).importNode(e,!0);Q.currentNode=s;let a=Q.nextNode(),o=0,r=0,n=i[0];for(;void 0!==n;){if(o===n.index){let e;2===n.type?e=new et(a,a.nextSibling,this,t):1===n.type?e=new n.ctor(a,n.name,n.strings,this,t):6===n.type&&(e=new rt(a,this,t)),this._$AV.push(e),n=i[++r]}o!==n?.index&&(a=Q.nextNode(),o++)}return Q.currentNode=R,s}p(t){let e=0;for(const i of this._$AV)void 0!==i&&(void 0!==i.strings?(i._$AI(t,i,e),e+=i.strings.length-2):i._$AI(t[e])),e++}}class et{get _$AU(){return this._$AM?._$AU??this._$Cv}constructor(t,e,i,s){this.type=2,this._$AH=W,this._$AN=void 0,this._$AA=t,this._$AB=e,this._$AM=i,this.options=s,this._$Cv=s?.isConnected??!0}get parentNode(){let t=this._$AA.parentNode;const e=this._$AM;return void 0!==e&&11===t?.nodeType&&(t=e.parentNode),t}get startNode(){return this._$AA}get endNode(){return this._$AB}_$AI(t,e=this){t=Z(this,t,e),I(t)?t===W||null==t||""===t?(this._$AH!==W&&this._$AR(),this._$AH=W):t!==this._$AH&&t!==G&&this._(t):void 0!==t._$litType$?this.$(t):void 0!==t.nodeType?this.T(t):(t=>T(t)||"function"==typeof t?.[Symbol.iterator])(t)?this.k(t):this._(t)}O(t){return this._$AA.parentNode.insertBefore(t,this._$AB)}T(t){this._$AH!==t&&(this._$AR(),this._$AH=this.O(t))}_(t){this._$AH!==W&&I(this._$AH)?this._$AA.nextSibling.data=t:this.T(R.createTextNode(t)),this._$AH=t}$(t){const{values:e,_$litType$:i}=t,s="number"==typeof i?this._$AC(t):(void 0===i.el&&(i.el=X.createElement(J(i.h,i.h[0]),this.options)),i);if(this._$AH?._$AD===s)this._$AH.p(e);else{const t=new tt(s,this),i=t.u(this.options);t.p(e),this.T(i),this._$AH=t}}_$AC(t){let e=Y.get(t.strings);return void 0===e&&Y.set(t.strings,e=new X(t)),e}k(t){T(this._$AH)||(this._$AH=[],this._$AR());const e=this._$AH;let i,s=0;for(const a of t)s===e.length?e.push(i=new et(this.O(P()),this.O(P()),this,this.options)):i=e[s],i._$AI(a),s++;s<e.length&&(this._$AR(i&&i._$AB.nextSibling,s),e.length=s)}_$AR(t=this._$AA.nextSibling,e){for(this._$AP?.(!1,!0,e);t!==this._$AB;){const e=k(t).nextSibling;k(t).remove(),t=e}}setConnected(t){void 0===this._$AM&&(this._$Cv=t,this._$AP?.(t))}}class it{get tagName(){return this.element.tagName}get _$AU(){return this._$AM._$AU}constructor(t,e,i,s,a){this.type=1,this._$AH=W,this._$AN=void 0,this.element=t,this.name=e,this._$AM=s,this.options=a,i.length>2||""!==i[0]||""!==i[1]?(this._$AH=Array(i.length-1).fill(new String),this.strings=i):this._$AH=W}_$AI(t,e=this,i,s){const a=this.strings;let o=!1;if(void 0===a)t=Z(this,t,e,0),o=!I(t)||t!==this._$AH&&t!==G,o&&(this._$AH=t);else{const s=t;let r,n;for(t=a[0],r=0;r<a.length-1;r++)n=Z(this,s[i+r],e,r),n===G&&(n=this._$AH[r]),o||=!I(n)||n!==this._$AH[r],n===W?t=W:t!==W&&(t+=(n??"")+a[r+1]),this._$AH[r]=n}o&&!s&&this.j(t)}j(t){t===W?this.element.removeAttribute(this.name):this.element.setAttribute(this.name,t??"")}}class st extends it{constructor(){super(...arguments),this.type=3}j(t){this.element[this.name]=t===W?void 0:t}}class at extends it{constructor(){super(...arguments),this.type=4}j(t){this.element.toggleAttribute(this.name,!!t&&t!==W)}}class ot extends it{constructor(t,e,i,s,a){super(t,e,i,s,a),this.type=5}_$AI(t,e=this){if((t=Z(this,t,e,0)??W)===G)return;const i=this._$AH,s=t===W&&i!==W||t.capture!==i.capture||t.once!==i.once||t.passive!==i.passive,a=t!==W&&(i===W||s);s&&this.element.removeEventListener(this.name,this,i),a&&this.element.addEventListener(this.name,this,t),this._$AH=t}handleEvent(t){"function"==typeof this._$AH?this._$AH.call(this.options?.host??this.element,t):this._$AH.handleEvent(t)}}class rt{constructor(t,e,i){this.element=t,this.type=6,this._$AN=void 0,this._$AM=e,this.options=i}get _$AU(){return this._$AM._$AU}_$AI(t){Z(this,t)}}const nt=w.litHtmlPolyfillSupport;nt?.(X,et),(w.litHtmlVersions??=[]).push("3.3.3");const lt=globalThis;class dt extends x{constructor(){super(...arguments),this.renderOptions={host:this},this._$Do=void 0}createRenderRoot(){const t=super.createRenderRoot();return this.renderOptions.renderBefore??=t.firstChild,t}update(t){const e=this.render();this.hasUpdated||(this.renderOptions.isConnected=this.isConnected),super.update(t),this._$Do=((t,e,i)=>{const s=i?.renderBefore??e;let a=s._$litPart$;if(void 0===a){const t=i?.renderBefore??null;s._$litPart$=a=new et(e.insertBefore(P(),t),t,void 0,i??{})}return a._$AI(t),a})(e,this.renderRoot,this.renderOptions)}connectedCallback(){super.connectedCallback(),this._$Do?.setConnected(!0)}disconnectedCallback(){super.disconnectedCallback(),this._$Do?.setConnected(!1)}render(){return G}}dt._$litElement$=!0,dt.finalized=!0,lt.litElementHydrateSupport?.({LitElement:dt});const ct=lt.litElementPolyfillSupport;ct?.({LitElement:dt}),(lt.litElementVersions??=[]).push("4.2.2");const pt=t=>(e,i)=>{void 0!==i?i.addInitializer(()=>{customElements.define(t,e)}):customElements.define(t,e)},ht={attribute:!0,type:String,converter:_,reflect:!1,hasChanged:$},ut=(t=ht,e,i)=>{const{kind:s,metadata:a}=i;let o=globalThis.litPropertyMetadata.get(a);if(void 0===o&&globalThis.litPropertyMetadata.set(a,o=new Map),"setter"===s&&((t=Object.create(t)).wrapped=!0),o.set(i.name,t),"accessor"===s){const{name:s}=i;return{set(i){const a=e.get.call(this);e.set.call(this,i),this.requestUpdate(s,a,t,!0,i)},init(e){return void 0!==e&&this.C(s,void 0,t,e),e}}}if("setter"===s){const{name:s}=i;return function(i){const a=this[s];e.call(this,i),this.requestUpdate(s,a,t,!0,i)}}throw Error("Unsupported decorator location: "+s)};function bt(t){return(e,i)=>"object"==typeof i?ut(t,e,i):((t,e,i)=>{const s=e.hasOwnProperty(i);return e.constructor.createProperty(i,t),s?Object.getOwnPropertyDescriptor(e,i):void 0})(t,e,i)}function gt(t){return bt({...t,state:!0,attribute:!1})}function vt(t){return t.shelves?.length?t.shelves:Array(t.rows).fill(t.cols)}function mt(t){return vt(t).reduce((t,e)=>t+e,0)}const ft=[{key:"name",label:"Nome del vino",kind:"text"},{key:"producer",label:"Produttore",kind:"text"},{key:"vintage",label:"Annata",kind:"year"},{key:"region",label:"Regione / denominazione",kind:"text"},{key:"country",label:"Paese",kind:"text"},{key:"grape",label:"Vitigno",kind:"text"},{key:"drink_from",label:"Da bere dal",kind:"year"},{key:"drink_until",label:"Da bere entro il",kind:"year"},{key:"alcohol",label:"Gradazione",kind:"text"},{key:"price",label:"Prezzo (€)",kind:"number"},{key:"food_pairings",label:"Abbinamenti",kind:"area"},{key:"description",label:"Descrizione",kind:"area"},{key:"notes",label:"Note personali",kind:"area"}];function _t(t){return`${t.name||"Vino"}${t.vintage?` ${t.vintage}`:""}`}function $t(t,e){const i=e.find(e=>e.id===t.rack_id);return i&&null!=t.row&&null!=t.col?`${i.name} · mensola ${t.row+1}, posto ${t.col+1}`:"Da sistemare"}function yt(t){return t.normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase()}const xt=r`
+var c=function(t,e,i,s){var r=arguments.length,o=r<3?e:s===null?s=Object.getOwnPropertyDescriptor(e,i):s,l;if(typeof Reflect==="object"&&typeof Reflect.decorate==="function")o=Reflect.decorate(t,e,i,s);else for(var n=t.length-1;n>=0;n--)if(l=t[n])o=(r<3?l(o):r>3?l(e,i,o):l(e,i))||o;return r>3&&o&&Object.defineProperty(e,i,o),o};var X=globalThis,J=X.ShadowRoot&&(X.ShadyCSS===void 0||X.ShadyCSS.nativeShadow)&&"adoptedStyleSheets"in Document.prototype&&"replace"in CSSStyleSheet.prototype,at=Symbol(),$t=new WeakMap;class Z{constructor(t,e,i){if(this._$cssResult$=!0,i!==at)throw Error("CSSResult is not constructable. Use `unsafeCSS` or `css` instead.");this.cssText=t,this.t=e}get styleSheet(){let t=this.o,e=this.t;if(J&&t===void 0){let i=e!==void 0&&e.length===1;i&&(t=$t.get(e)),t===void 0&&((this.o=t=new CSSStyleSheet).replaceSync(this.cssText),i&&$t.set(e,t))}return t}toString(){return this.cssText}}var xt=(t)=>new Z(typeof t=="string"?t:t+"",void 0,at),v=(t,...e)=>{let i=t.length===1?t[0]:e.reduce((s,r,o)=>s+((l)=>{if(l._$cssResult$===!0)return l.cssText;if(typeof l=="number")return l;throw Error("Value passed to 'css' function must be a 'css' function result: "+l+". Use 'unsafeCSS' to pass non-literal values, but take care to ensure page security.")})(r)+t[o+1],t[0]);return new Z(i,t,at)},wt=(t,e)=>{if(J)t.adoptedStyleSheets=e.map((i)=>i instanceof CSSStyleSheet?i:i.styleSheet);else for(let i of e){let s=document.createElement("style"),r=X.litNonce;r!==void 0&&s.setAttribute("nonce",r),s.textContent=i.cssText,t.appendChild(s)}},rt=J?(t)=>t:(t)=>t instanceof CSSStyleSheet?((e)=>{let i="";for(let s of e.cssRules)i+=s.cssText;return xt(i)})(t):t;var{is:Yt,defineProperty:Qt,getOwnPropertyDescriptor:Kt,getOwnPropertyNames:Xt,getOwnPropertySymbols:Jt,getPrototypeOf:Zt}=Object,tt=globalThis,kt=tt.trustedTypes,te=kt?kt.emptyScript:"",ee=tt.reactiveElementPolyfillSupport,H=(t,e)=>t,B={toAttribute(t,e){switch(e){case Boolean:t=t?te:null;break;case Object:case Array:t=t==null?t:JSON.stringify(t)}return t},fromAttribute(t,e){let i=t;switch(e){case Boolean:i=t!==null;break;case Number:i=t===null?null:Number(t);break;case Object:case Array:try{i=JSON.parse(t)}catch(s){i=null}}return i}},et=(t,e)=>!Yt(t,e),Et={attribute:!0,type:String,converter:B,reflect:!1,useDefault:!1,hasChanged:et};Symbol.metadata??=Symbol("metadata"),tt.litPropertyMetadata??=new WeakMap;class z extends HTMLElement{static addInitializer(t){this._$Ei(),(this.l??=[]).push(t)}static get observedAttributes(){return this.finalize(),this._$Eh&&[...this._$Eh.keys()]}static createProperty(t,e=Et){if(e.state&&(e.attribute=!1),this._$Ei(),this.prototype.hasOwnProperty(t)&&((e=Object.create(e)).wrapped=!0),this.elementProperties.set(t,e),!e.noAccessor){let i=Symbol(),s=this.getPropertyDescriptor(t,i,e);s!==void 0&&Qt(this.prototype,t,s)}}static getPropertyDescriptor(t,e,i){let{get:s,set:r}=Kt(this.prototype,t)??{get(){return this[e]},set(o){this[e]=o}};return{get:s,set(o){let l=s?.call(this);r?.call(this,o),this.requestUpdate(t,l,i)},configurable:!0,enumerable:!0}}static getPropertyOptions(t){return this.elementProperties.get(t)??Et}static _$Ei(){if(this.hasOwnProperty(H("elementProperties")))return;let t=Zt(this);t.finalize(),t.l!==void 0&&(this.l=[...t.l]),this.elementProperties=new Map(t.elementProperties)}static finalize(){if(this.hasOwnProperty(H("finalized")))return;if(this.finalized=!0,this._$Ei(),this.hasOwnProperty(H("properties"))){let e=this.properties,i=[...Xt(e),...Jt(e)];for(let s of i)this.createProperty(s,e[s])}let t=this[Symbol.metadata];if(t!==null){let e=litPropertyMetadata.get(t);if(e!==void 0)for(let[i,s]of e)this.elementProperties.set(i,s)}this._$Eh=new Map;for(let[e,i]of this.elementProperties){let s=this._$Eu(e,i);s!==void 0&&this._$Eh.set(s,e)}this.elementStyles=this.finalizeStyles(this.styles)}static finalizeStyles(t){let e=[];if(Array.isArray(t)){let i=new Set(t.flat(1/0).reverse());for(let s of i)e.unshift(rt(s))}else t!==void 0&&e.push(rt(t));return e}static _$Eu(t,e){let i=e.attribute;return i===!1?void 0:typeof i=="string"?i:typeof t=="string"?t.toLowerCase():void 0}constructor(){super(),this._$Ep=void 0,this.isUpdatePending=!1,this.hasUpdated=!1,this._$Em=null,this._$Ev()}_$Ev(){this._$ES=new Promise((t)=>this.enableUpdating=t),this._$AL=new Map,this._$E_(),this.requestUpdate(),this.constructor.l?.forEach((t)=>t(this))}addController(t){(this._$EO??=new Set).add(t),this.renderRoot!==void 0&&this.isConnected&&t.hostConnected?.()}removeController(t){this._$EO?.delete(t)}_$E_(){let t=new Map,e=this.constructor.elementProperties;for(let i of e.keys())this.hasOwnProperty(i)&&(t.set(i,this[i]),delete this[i]);t.size>0&&(this._$Ep=t)}createRenderRoot(){let t=this.shadowRoot??this.attachShadow(this.constructor.shadowRootOptions);return wt(t,this.constructor.elementStyles),t}connectedCallback(){this.renderRoot??=this.createRenderRoot(),this.enableUpdating(!0),this._$EO?.forEach((t)=>t.hostConnected?.())}enableUpdating(t){}disconnectedCallback(){this._$EO?.forEach((t)=>t.hostDisconnected?.())}attributeChangedCallback(t,e,i){this._$AK(t,i)}_$ET(t,e){let i=this.constructor.elementProperties.get(t),s=this.constructor._$Eu(t,i);if(s!==void 0&&i.reflect===!0){let r=(i.converter?.toAttribute!==void 0?i.converter:B).toAttribute(e,i.type);this._$Em=t,r==null?this.removeAttribute(s):this.setAttribute(s,r),this._$Em=null}}_$AK(t,e){let i=this.constructor,s=i._$Eh.get(t);if(s!==void 0&&this._$Em!==s){let r=i.getPropertyOptions(s),o=typeof r.converter=="function"?{fromAttribute:r.converter}:r.converter?.fromAttribute!==void 0?r.converter:B;this._$Em=s;let l=o.fromAttribute(e,r.type);this[s]=l??this._$Ej?.get(s)??l,this._$Em=null}}requestUpdate(t,e,i,s=!1,r){if(t!==void 0){let o=this.constructor;if(s===!1&&(r=this[t]),i??=o.getPropertyOptions(t),!((i.hasChanged??et)(r,e)||i.useDefault&&i.reflect&&r===this._$Ej?.get(t)&&!this.hasAttribute(o._$Eu(t,i))))return;this.C(t,e,i)}this.isUpdatePending===!1&&(this._$ES=this._$EP())}C(t,e,{useDefault:i,reflect:s,wrapped:r},o){i&&!(this._$Ej??=new Map).has(t)&&(this._$Ej.set(t,o??e??this[t]),r!==!0||o!==void 0)||(this._$AL.has(t)||(this.hasUpdated||i||(e=void 0),this._$AL.set(t,e)),s===!0&&this._$Em!==t&&(this._$Eq??=new Set).add(t))}async _$EP(){this.isUpdatePending=!0;try{await this._$ES}catch(e){Promise.reject(e)}let t=this.scheduleUpdate();return t!=null&&await t,!this.isUpdatePending}scheduleUpdate(){return this.performUpdate()}performUpdate(){if(!this.isUpdatePending)return;if(!this.hasUpdated){if(this.renderRoot??=this.createRenderRoot(),this._$Ep){for(let[s,r]of this._$Ep)this[s]=r;this._$Ep=void 0}let i=this.constructor.elementProperties;if(i.size>0)for(let[s,r]of i){let{wrapped:o}=r,l=this[s];o!==!0||this._$AL.has(s)||l===void 0||this.C(s,void 0,r,l)}}let t=!1,e=this._$AL;try{t=this.shouldUpdate(e),t?(this.willUpdate(e),this._$EO?.forEach((i)=>i.hostUpdate?.()),this.update(e)):this._$EM()}catch(i){throw t=!1,this._$EM(),i}t&&this._$AE(e)}willUpdate(t){}_$AE(t){this._$EO?.forEach((e)=>e.hostUpdated?.()),this.hasUpdated||(this.hasUpdated=!0,this.firstUpdated(t)),this.updated(t)}_$EM(){this._$AL=new Map,this.isUpdatePending=!1}get updateComplete(){return this.getUpdateComplete()}getUpdateComplete(){return this._$ES}shouldUpdate(t){return!0}update(t){this._$Eq&&=this._$Eq.forEach((e)=>this._$ET(e,this[e])),this._$EM()}updated(t){}firstUpdated(t){}}z.elementStyles=[],z.shadowRootOptions={mode:"open"},z[H("elementProperties")]=new Map,z[H("finalized")]=new Map,ee?.({ReactiveElement:z}),(tt.reactiveElementVersions??=[]).push("2.1.2");var nt=globalThis,St=(t)=>t,it=nt.trustedTypes,At=it?it.createPolicy("lit-html",{createHTML:(t)=>t}):void 0;var T=`lit$${Math.random().toFixed(9).slice(2)}$`,Pt="?"+T,ie=`<${Pt}>`,I=document,U=()=>I.createComment(""),F=(t)=>t===null||typeof t!="object"&&typeof t!="function",ot=Array.isArray,se=(t)=>ot(t)||typeof t?.[Symbol.iterator]=="function";var N=/<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g,Ct=/-->/g,Rt=/>/g,M=RegExp(`>|[ 	
+\f\r](?:([^\\s"'>=/]+)([ 	
+\f\r]*=[ 	
+\f\r]*(?:[^ 	
+\f\r"'\`<>=]|("|')|))|$)`,"g"),zt=/'/g,Tt=/"/g,It=/^(?:script|style|textarea|title)$/i,lt=(t)=>(e,...i)=>({_$litType$:t,strings:e,values:i}),a=lt(1),S=lt(2),_e=lt(3),L=Symbol.for("lit-noChange"),d=Symbol.for("lit-nothing"),Mt=new WeakMap,P=I.createTreeWalker(I,129);function Lt(t,e){if(!ot(t)||!t.hasOwnProperty("raw"))throw Error("invalid template strings array");return At!==void 0?At.createHTML(e):e}var ae=(t,e)=>{let i=t.length-1,s=[],r,o=e===2?"<svg>":e===3?"<math>":"",l=N;for(let n=0;n<i;n++){let u=t[n],g,p,_=-1,w=0;for(;w<u.length&&(l.lastIndex=w,p=l.exec(u),p!==null);)w=l.lastIndex,l===N?p[1]==="!--"?l=Ct:p[1]!==void 0?l=Rt:p[2]!==void 0?(It.test(p[2])&&(r=RegExp("</"+p[2],"g")),l=M):p[3]!==void 0&&(l=M):l===M?p[0]===">"?(l=r??N,_=-1):p[1]===void 0?_=-2:(_=l.lastIndex-p[2].length,g=p[1],l=p[3]===void 0?M:p[3]==='"'?Tt:zt):l===Tt||l===zt?l=M:l===Ct||l===Rt?l=N:(l=M,r=void 0);let R=l===M&&t[n+1].startsWith("/>")?" ":"";o+=l===N?u+ie:_>=0?(s.push(g),u.slice(0,_)+"$lit$"+u.slice(_)+T+R):u+T+(_===-2?n:R)}return[Lt(t,o+(t[i]||"<?>")+(e===2?"</svg>":e===3?"</math>":"")),s]};class D{constructor({strings:t,_$litType$:e},i){let s;this.parts=[];let r=0,o=0,l=t.length-1,n=this.parts,[u,g]=ae(t,e);if(this.el=D.createElement(u,i),P.currentNode=this.el.content,e===2||e===3){let p=this.el.content.firstChild;p.replaceWith(...p.childNodes)}for(;(s=P.nextNode())!==null&&n.length<l;){if(s.nodeType===1){if(s.hasAttributes())for(let p of s.getAttributeNames())if(p.endsWith("$lit$")){let _=g[o++],w=s.getAttribute(p).split(T),R=/([.?@])?(.*)/.exec(_);n.push({type:1,index:r,name:R[2],strings:w,ctor:R[1]==="."?Ht:R[1]==="?"?Bt:R[1]==="@"?Nt:j}),s.removeAttribute(p)}else p.startsWith(T)&&(n.push({type:6,index:r}),s.removeAttribute(p));if(It.test(s.tagName)){let p=s.textContent.split(T),_=p.length-1;if(_>0){s.textContent=it?it.emptyScript:"";for(let w=0;w<_;w++)s.append(p[w],U()),P.nextNode(),n.push({type:2,index:++r});s.append(p[_],U())}}}else if(s.nodeType===8)if(s.data===Pt)n.push({type:2,index:r});else{let p=-1;for(;(p=s.data.indexOf(T,p+1))!==-1;)n.push({type:7,index:r}),p+=T.length-1}r++}}static createElement(t,e){let i=I.createElement("template");return i.innerHTML=t,i}}function O(t,e,i=t,s){if(e===L)return e;let r=s!==void 0?i._$Co?.[s]:i._$Cl,o=F(e)?void 0:e._$litDirective$;return r?.constructor!==o&&(r?._$AO?.(!1),o===void 0?r=void 0:(r=new o(t),r._$AT(t,i,s)),s!==void 0?(i._$Co??=[])[s]=r:i._$Cl=r),r!==void 0&&(e=O(t,r._$AS(t,e.values),r,s)),e}class Ot{constructor(t,e){this._$AV=[],this._$AN=void 0,this._$AD=t,this._$AM=e}get parentNode(){return this._$AM.parentNode}get _$AU(){return this._$AM._$AU}u(t){let{el:{content:e},parts:i}=this._$AD,s=(t?.creationScope??I).importNode(e,!0);P.currentNode=s;let r=P.nextNode(),o=0,l=0,n=i[0];for(;n!==void 0;){if(o===n.index){let u;n.type===2?u=new q(r,r.nextSibling,this,t):n.type===1?u=new n.ctor(r,n.name,n.strings,this,t):n.type===6&&(u=new Ut(r,this,t)),this._$AV.push(u),n=i[++l]}o!==n?.index&&(r=P.nextNode(),o++)}return P.currentNode=I,s}p(t){let e=0;for(let i of this._$AV)i!==void 0&&(i.strings!==void 0?(i._$AI(t,i,e),e+=i.strings.length-2):i._$AI(t[e])),e++}}class q{get _$AU(){return this._$AM?._$AU??this._$Cv}constructor(t,e,i,s){this.type=2,this._$AH=d,this._$AN=void 0,this._$AA=t,this._$AB=e,this._$AM=i,this.options=s,this._$Cv=s?.isConnected??!0}get parentNode(){let t=this._$AA.parentNode,e=this._$AM;return e!==void 0&&t?.nodeType===11&&(t=e.parentNode),t}get startNode(){return this._$AA}get endNode(){return this._$AB}_$AI(t,e=this){t=O(this,t,e),F(t)?t===d||t==null||t===""?(this._$AH!==d&&this._$AR(),this._$AH=d):t!==this._$AH&&t!==L&&this._(t):t._$litType$!==void 0?this.$(t):t.nodeType!==void 0?this.T(t):se(t)?this.k(t):this._(t)}O(t){return this._$AA.parentNode.insertBefore(t,this._$AB)}T(t){this._$AH!==t&&(this._$AR(),this._$AH=this.O(t))}_(t){this._$AH!==d&&F(this._$AH)?this._$AA.nextSibling.data=t:this.T(I.createTextNode(t)),this._$AH=t}$(t){let{values:e,_$litType$:i}=t,s=typeof i=="number"?this._$AC(t):(i.el===void 0&&(i.el=D.createElement(Lt(i.h,i.h[0]),this.options)),i);if(this._$AH?._$AD===s)this._$AH.p(e);else{let r=new Ot(s,this),o=r.u(this.options);r.p(e),this.T(o),this._$AH=r}}_$AC(t){let e=Mt.get(t.strings);return e===void 0&&Mt.set(t.strings,e=new D(t)),e}k(t){ot(this._$AH)||(this._$AH=[],this._$AR());let e=this._$AH,i,s=0;for(let r of t)s===e.length?e.push(i=new q(this.O(U()),this.O(U()),this,this.options)):i=e[s],i._$AI(r),s++;s<e.length&&(this._$AR(i&&i._$AB.nextSibling,s),e.length=s)}_$AR(t=this._$AA.nextSibling,e){for(this._$AP?.(!1,!0,e);t!==this._$AB;){let i=St(t).nextSibling;St(t).remove(),t=i}}setConnected(t){this._$AM===void 0&&(this._$Cv=t,this._$AP?.(t))}}class j{get tagName(){return this.element.tagName}get _$AU(){return this._$AM._$AU}constructor(t,e,i,s,r){this.type=1,this._$AH=d,this._$AN=void 0,this.element=t,this.name=e,this._$AM=s,this.options=r,i.length>2||i[0]!==""||i[1]!==""?(this._$AH=Array(i.length-1).fill(new String),this.strings=i):this._$AH=d}_$AI(t,e=this,i,s){let r=this.strings,o=!1;if(r===void 0)t=O(this,t,e,0),o=!F(t)||t!==this._$AH&&t!==L,o&&(this._$AH=t);else{let l=t,n,u;for(t=r[0],n=0;n<r.length-1;n++)u=O(this,l[i+n],e,n),u===L&&(u=this._$AH[n]),o||=!F(u)||u!==this._$AH[n],u===d?t=d:t!==d&&(t+=(u??"")+r[n+1]),this._$AH[n]=u}o&&!s&&this.j(t)}j(t){t===d?this.element.removeAttribute(this.name):this.element.setAttribute(this.name,t??"")}}class Ht extends j{constructor(){super(...arguments),this.type=3}j(t){this.element[this.name]=t===d?void 0:t}}class Bt extends j{constructor(){super(...arguments),this.type=4}j(t){this.element.toggleAttribute(this.name,!!t&&t!==d)}}class Nt extends j{constructor(t,e,i,s,r){super(t,e,i,s,r),this.type=5}_$AI(t,e=this){if((t=O(this,t,e,0)??d)===L)return;let i=this._$AH,s=t===d&&i!==d||t.capture!==i.capture||t.once!==i.once||t.passive!==i.passive,r=t!==d&&(i===d||s);s&&this.element.removeEventListener(this.name,this,i),r&&this.element.addEventListener(this.name,this,t),this._$AH=t}handleEvent(t){typeof this._$AH=="function"?this._$AH.call(this.options?.host??this.element,t):this._$AH.handleEvent(t)}}class Ut{constructor(t,e,i){this.element=t,this.type=6,this._$AN=void 0,this._$AM=e,this.options=i}get _$AU(){return this._$AM._$AU}_$AI(t){O(this,t)}}var re=nt.litHtmlPolyfillSupport;re?.(D,q),(nt.litHtmlVersions??=[]).push("3.3.2");var Ft=(t,e,i)=>{let s=i?.renderBefore??e,r=s._$litPart$;if(r===void 0){let o=i?.renderBefore??null;s._$litPart$=r=new q(e.insertBefore(U(),o),o,void 0,i??{})}return r._$AI(t),r};var dt=globalThis;class m extends z{constructor(){super(...arguments),this.renderOptions={host:this},this._$Do=void 0}createRenderRoot(){let t=super.createRenderRoot();return this.renderOptions.renderBefore??=t.firstChild,t}update(t){let e=this.render();this.hasUpdated||(this.renderOptions.isConnected=this.isConnected),super.update(t),this._$Do=Ft(e,this.renderRoot,this.renderOptions)}connectedCallback(){super.connectedCallback(),this._$Do?.setConnected(!0)}disconnectedCallback(){super.disconnectedCallback(),this._$Do?.setConnected(!1)}render(){return L}}m._$litElement$=!0,m.finalized=!0,dt.litElementHydrateSupport?.({LitElement:m});var ne=dt.litElementPolyfillSupport;ne?.({LitElement:m});(dt.litElementVersions??=[]).push("4.2.2");var y=(t)=>(e,i)=>{i!==void 0?i.addInitializer(()=>{customElements.define(t,e)}):customElements.define(t,e)};var oe={attribute:!0,type:String,converter:B,reflect:!1,hasChanged:et},le=(t=oe,e,i)=>{let{kind:s,metadata:r}=i,o=globalThis.litPropertyMetadata.get(r);if(o===void 0&&globalThis.litPropertyMetadata.set(r,o=new Map),s==="setter"&&((t=Object.create(t)).wrapped=!0),o.set(i.name,t),s==="accessor"){let{name:l}=i;return{set(n){let u=e.get.call(this);e.set.call(this,n),this.requestUpdate(l,u,t,!0,n)},init(n){return n!==void 0&&this.C(l,void 0,t,n),n}}}if(s==="setter"){let{name:l}=i;return function(n){let u=this[l];e.call(this,n),this.requestUpdate(l,u,t,!0,n)}}throw Error("Unsupported decorator location: "+s)};function b(t){return(e,i)=>typeof i=="object"?le(t,e,i):((s,r,o)=>{let l=r.hasOwnProperty(o);return r.constructor.createProperty(o,s),l?Object.getOwnPropertyDescriptor(r,o):void 0})(t,e,i)}function h(t){return b({...t,state:!0,attribute:!1})}function V(t){return t.shelves?.length?t.shelves:Array(t.rows).fill(t.cols)}function W(t){return V(t).reduce((e,i)=>e+i,0)}var G=[{key:"name",label:"Nome del vino",kind:"text"},{key:"producer",label:"Produttore",kind:"text"},{key:"vintage",label:"Annata",kind:"year"},{key:"region",label:"Regione / denominazione",kind:"text"},{key:"country",label:"Paese",kind:"text"},{key:"grape",label:"Vitigno",kind:"text"},{key:"drink_from",label:"Da bere dal",kind:"year"},{key:"drink_until",label:"Da bere entro il",kind:"year"},{key:"alcohol",label:"Gradazione",kind:"text"},{key:"price",label:"Prezzo (€)",kind:"number"},{key:"food_pairings",label:"Abbinamenti",kind:"area"},{key:"description",label:"Descrizione",kind:"area"},{key:"notes",label:"Note personali",kind:"area"}];function f(t){return`${t.name||"Vino"}${t.vintage?` ${t.vintage}`:""}`}function Y(t,e){let i=e.find((s)=>s.id===t.rack_id);if(!i||t.row==null||t.col==null)return"Da sistemare";return`${i.name} · mensola ${t.row+1}, posto ${t.col+1}`}function qt(t){if(t.drink_from&&t.drink_until)return`${t.drink_from}–${t.drink_until}`;if(t.drink_until)return`entro il ${t.drink_until}`;if(t.drink_from)return`dal ${t.drink_from}`;return""}function Dt(t){return t.normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase()}function jt(t,e){if(!e)return!0;let i=Dt([t.name,t.producer,t.vintage,t.region,t.country,t.grape,t.notes,t.code].filter(Boolean).join(" "));return Dt(e).split(/\s+/).every((s)=>i.includes(s))}var Q="#ffe2b0",K=["#4fc3f7","#81c784","#e0525f","#ffb74d","#ba68c8","#f48fb1","#4db6ac","#fff176"];var x=v`
   :host {
     --tb-accent: #9b2c3f;
     --tb-accent-2: #6b1424;
@@ -310,53 +314,53 @@ function t(t,e,i,s){var a,o=arguments.length,r=o<3?e:null===s?s=Object.getOwnPro
   .stars.edit .star:hover {
     transform: scale(1.15);
   }
-`,wt={red:{shape:"bordeaux",glass:"tb-glass-red",clear:!1,foil:"tb-foil-wine"},white:{shape:"burgundy",glass:"tb-wine-white",clear:!0,foil:"tb-foil-silver"},rose:{shape:"bordeaux",glass:"tb-wine-rose",clear:!0,foil:"tb-foil-rose"},sparkling:{shape:"champagne",glass:"tb-glass-green",clear:!1,foil:"tb-foil-gold"},dessert:{shape:"bordeaux",glass:"tb-glass-amber",clear:!1,foil:"tb-foil-gold"}},kt={bordeaux:{body:"M9.7 1h4.6v16.5c0 3.4 6.7 4.8 6.7 11.5v31.2c0 1.5-1.2 2.8-2.8 2.8H5.8C4.2 63 3 61.7 3 60.2V29c0-6.7 6.7-8.1 6.7-11.5z",foil:"M9.5 1.4c0-.8.5-1.4 1.3-1.4h2.4c.8 0 1.3.6 1.3 1.4V13H9.5z",label:[4.4,35,15.2,16.5],neckY:15,fillY:22},burgundy:{body:"M9.8 1h4.4v13c0 5 7 9 7 18v28.2c0 1.5-1.2 2.8-2.8 2.8H5.6c-1.6 0-2.8-1.3-2.8-2.8V32c0-9 7-13 7-18z",foil:"M9.6 1.4c0-.8.5-1.4 1.3-1.4h2.2c.8 0 1.3.6 1.3 1.4V12H9.6z",label:[4.2,36,15.6,16],neckY:13.5,fillY:19},champagne:{body:"M9.4 1h5.2v11c0 6 7.6 9.5 7.6 19v29.4c0 1.4-1.2 2.6-2.6 2.6H4.4C3 63 1.8 61.8 1.8 60.4V31c0-9.5 7.6-13 7.6-19z",foil:"M9 1.6C9 .7 9.7 0 10.6 0h2.8c.9 0 1.6.7 1.6 1.6V12c0 2.4 2.6 4.4 4.3 6.6l-14.6.1C6.4 16.4 9 14.4 9 12z",label:[3.6,37,16.8,13],neckY:20,fillY:20},half:{body:"M10 20h4v9c0 2.6 5.2 3.6 5.2 8.8v22.6c0 1.4-1.1 2.6-2.5 2.6H7.3c-1.4 0-2.5-1.2-2.5-2.6V37.8c0-5.2 5.2-6.2 5.2-8.8z",foil:"M9.8 20.9c0-.5.4-.9.9-.9h2.6c.5 0 .9.4.9.9V28H9.8z",label:[6,44,12,11],neckY:30,fillY:33}};function At(t,e){const i=wt[t]||wt.red,s=kt[i.shape],[a,o,r,n]=s.label,l=a+r/2;return V`<svg viewBox="0 0 24 64" aria-hidden="true">
+`;var Vt={red:{shape:"bordeaux",glass:"tb-glass-red",clear:!1,foil:"tb-foil-wine"},white:{shape:"burgundy",glass:"tb-wine-white",clear:!0,foil:"tb-foil-silver"},rose:{shape:"bordeaux",glass:"tb-wine-rose",clear:!0,foil:"tb-foil-rose"},sparkling:{shape:"champagne",glass:"tb-glass-green",clear:!1,foil:"tb-foil-gold"},dessert:{shape:"bordeaux",glass:"tb-glass-amber",clear:!1,foil:"tb-foil-gold"}},ct={bordeaux:{body:"M9.7 1h4.6v16.5c0 3.4 6.7 4.8 6.7 11.5v31.2c0 1.5-1.2 2.8-2.8 2.8H5.8C4.2 63 3 61.7 3 60.2V29c0-6.7 6.7-8.1 6.7-11.5z",foil:"M9.5 1.4c0-.8.5-1.4 1.3-1.4h2.4c.8 0 1.3.6 1.3 1.4V13H9.5z",label:[4.4,35,15.2,16.5],neckY:15,fillY:22},burgundy:{body:"M9.8 1h4.4v13c0 5 7 9 7 18v28.2c0 1.5-1.2 2.8-2.8 2.8H5.6c-1.6 0-2.8-1.3-2.8-2.8V32c0-9 7-13 7-18z",foil:"M9.6 1.4c0-.8.5-1.4 1.3-1.4h2.2c.8 0 1.3.6 1.3 1.4V12H9.6z",label:[4.2,36,15.6,16],neckY:13.5,fillY:19},champagne:{body:"M9.4 1h5.2v11c0 6 7.6 9.5 7.6 19v29.4c0 1.4-1.2 2.6-2.6 2.6H4.4C3 63 1.8 61.8 1.8 60.4V31c0-9.5 7.6-13 7.6-19z",foil:"M9 1.6C9 .7 9.7 0 10.6 0h2.8c.9 0 1.6.7 1.6 1.6V12c0 2.4 2.6 4.4 4.3 6.6l-14.6.1C6.4 16.4 9 14.4 9 12z",label:[3.6,37,16.8,13],neckY:20,fillY:20},half:{body:"M10 20h4v9c0 2.6 5.2 3.6 5.2 8.8v22.6c0 1.4-1.1 2.6-2.5 2.6H7.3c-1.4 0-2.5-1.2-2.5-2.6V37.8c0-5.2 5.2-6.2 5.2-8.8z",foil:"M9.8 20.9c0-.5.4-.9.9-.9h2.6c.5 0 .9.4.9.9V28H9.8z",label:[6,44,12,11],neckY:30,fillY:33}};function k(t,e){let i=Vt[t]||Vt.red,s=ct[i.shape],[r,o,l,n]=s.label,u=r+l/2;return S`<svg viewBox="0 0 24 64" aria-hidden="true">
     <ellipse cx="12" cy="63.2" rx="9.5" ry="1" fill="rgba(0,0,0,.55)" filter="url(#tb-soft)"/>
-    ${i.clear?V`<path d=${s.body} fill="url(#tb-glass-clear)"/>
+    ${i.clear?S`<path d=${s.body} fill="url(#tb-glass-clear)"/>
             <path d=${s.body} fill=${`url(#${i.glass})`} clip-path=${`url(#tb-fill-${i.shape})`}/>
-            <rect x="0" y=${s.fillY} width="24" height=".5" fill="rgba(255,255,255,.35)" clip-path=${`url(#tb-in-${i.shape})`}/>`:V`<path d=${s.body} fill=${`url(#${i.glass})`}/>`}
+            <rect x="0" y=${s.fillY} width="24" height=".5" fill="rgba(255,255,255,.35)" clip-path=${`url(#tb-in-${i.shape})`}/>`:S`<path d=${s.body} fill=${`url(#${i.glass})`}/>`}
     <path d=${s.body} fill="url(#tb-cylinder)"/>
     <path d=${s.body} fill="none" stroke="rgba(255,255,255,.18)" stroke-width=".35"/>
     <ellipse cx="12" cy="61.4" rx="6.5" ry="1.3" fill="rgba(0,0,0,.35)" clip-path=${`url(#tb-in-${i.shape})`}/>
     <g class="label-group">
-      <rect x=${a} y=${o} width=${r} height=${n} rx=".5" fill="url(#tb-paper)"/>
-      <rect x=${a} y=${o} width=${r} height=${n} rx=".5" fill="url(#tb-label-curve)"/>
-      <rect x=${a+.9} y=${o+.9} width=${r-1.8} height=${n-1.8} rx=".3" fill="none" stroke="rgba(120,90,50,.55)" stroke-width=".25"/>
-      <circle cx=${l} cy=${o+.3*n} r=${.12*Math.min(r,n)} fill="none" stroke="rgba(120,80,30,.8)" stroke-width=".3"/>
-      <rect x=${l-.3*r} y=${o+.55*n} width=${.6*r} height=".9" rx=".45" fill="rgba(40,20,15,.75)"/>
-      <rect x=${l-.22*r} y=${o+.7*n} width=${.44*r} height=".5" rx=".25" fill="rgba(40,20,15,.45)"/>
-      <rect x=${l-.15*r} y=${o+.8*n} width=${.3*r} height=".5" rx=".25" fill="rgba(40,20,15,.35)"/>
+      <rect x=${r} y=${o} width=${l} height=${n} rx=".5" fill="url(#tb-paper)"/>
+      <rect x=${r} y=${o} width=${l} height=${n} rx=".5" fill="url(#tb-label-curve)"/>
+      <rect x=${r+0.9} y=${o+0.9} width=${l-1.8} height=${n-1.8} rx=".3" fill="none" stroke="rgba(120,90,50,.55)" stroke-width=".25"/>
+      <circle cx=${u} cy=${o+n*0.3} r=${Math.min(l,n)*0.12} fill="none" stroke="rgba(120,80,30,.8)" stroke-width=".3"/>
+      <rect x=${u-l*0.3} y=${o+n*0.55} width=${l*0.6} height=".9" rx=".45" fill="rgba(40,20,15,.75)"/>
+      <rect x=${u-l*0.22} y=${o+n*0.7} width=${l*0.44} height=".5" rx=".25" fill="rgba(40,20,15,.45)"/>
+      <rect x=${u-l*0.15} y=${o+n*0.8} width=${l*0.3} height=".5" rx=".25" fill="rgba(40,20,15,.35)"/>
     </g>
     <path d=${s.foil} fill=${`url(#${i.foil})`}/>
     <path d=${s.foil} fill="url(#tb-cylinder)" opacity=".6"/>
     <path d="M5.4 30c.6-3.8 2.6-5.6 3.6-6.8V59.5H5.4z" fill="url(#tb-spec)" clip-path=${`url(#tb-in-${i.shape})`} opacity=".9"/>
     <rect x="17.6" y="31" width=".9" height="27" rx=".45" fill="rgba(255,255,255,.18)" clip-path=${`url(#tb-in-${i.shape})`}/>
-    ${e?function(t,e){const i="past"===e?"url(#tb-tag-past)":"url(#tb-tag-soon)";return V`<g class="tag">
+    ${e?de(s.neckY,e):d}
+  </svg>`}function de(t,e){let i=e==="past"?"url(#tb-tag-past)":"url(#tb-tag-soon)";return S`<g class="tag">
     <path d=${`M12 ${t}c3 .2 4.6 1 5.4 2.6`} fill="none" stroke="rgba(240,230,210,.85)" stroke-width=".35"/>
     <g transform=${`translate(16.4 ${t+2}) rotate(14)`}>
       <rect x="0" y="0" width="6.4" height="8.6" rx="1.1" fill=${i} stroke="rgba(0,0,0,.35)" stroke-width=".25"/>
       <circle cx="3.2" cy="1.4" r=".55" fill="rgba(0,0,0,.45)"/>
-      ${"past"===e?V`<path d="M3.2 3.3v2.6M3.2 7v.1" stroke="#fff" stroke-width=".8" stroke-linecap="round"/>`:V`<circle cx="3.2" cy="5.4" r="1.9" fill="none" stroke="#3b2200" stroke-width=".45"/>
+      ${e==="past"?S`<path d="M3.2 3.3v2.6M3.2 7v.1" stroke="#fff" stroke-width=".8" stroke-linecap="round"/>`:S`<circle cx="3.2" cy="5.4" r="1.9" fill="none" stroke="#3b2200" stroke-width=".45"/>
               <path d="M3.2 4.3v1.2l.8.6" fill="none" stroke="#3b2200" stroke-width=".45" stroke-linecap="round"/>`}
     </g>
-  </g>`}(s.neckY,e):W}
-  </svg>`}const Et=V`<svg viewBox="0 0 24 64" aria-hidden="true">
-  <path d=${kt.bordeaux.body} fill="rgba(255,255,255,.03)" stroke="rgba(255,255,255,.16)" stroke-width=".45" stroke-dasharray="1.4 1.2"/>
-</svg>`,St=(t,e)=>V`<linearGradient id=${t} x1="0" x2="1" y1="0" y2="0">
-  ${e.map(([t,e])=>V`<stop offset=${t} stop-color=${e}/>`)}
-</linearGradient>`,Ct=V`<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
-  <filter id="tb-soft" x="-20%" y="-200%" width="140%" height="500%"><feGaussianBlur stdDeviation=".6"/></filter>
-  ${["bordeaux","burgundy","champagne","half"].map(t=>{const e=kt[t];return V`
+  </g>`}var Wt=S`<svg viewBox="0 0 24 64" aria-hidden="true">
+  <path d=${ct.bordeaux.body} fill="rgba(255,255,255,.03)" stroke="rgba(255,255,255,.16)" stroke-width=".45" stroke-dasharray="1.4 1.2"/>
+</svg>`,ce=(t)=>{let e=ct[t];return S`
     <clipPath id=${`tb-in-${t}`}><path d=${e.body}/></clipPath>
-    <clipPath id=${`tb-fill-${t}`}><rect x="0" y=${e.fillY} width="24" height="64"/></clipPath>`})}
+    <clipPath id=${`tb-fill-${t}`}><rect x="0" y=${e.fillY} width="24" height="64"/></clipPath>`},A=(t,e)=>S`<linearGradient id=${t} x1="0" x2="1" y1="0" y2="0">
+  ${e.map(([i,s])=>S`<stop offset=${i} stop-color=${s}/>`)}
+</linearGradient>`,E=S`<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <filter id="tb-soft" x="-20%" y="-200%" width="140%" height="500%"><feGaussianBlur stdDeviation=".6"/></filter>
+  ${["bordeaux","burgundy","champagne","half"].map(ce)}
 
   <!-- glass and wine -->
-  ${St("tb-glass-red",[[0,"#060404"],[.18,"#1c0a0d"],[.42,"#3b0f18"],[.6,"#2a0a11"],[1,"#050303"]])}
-  ${St("tb-glass-green",[[0,"#030603"],[.2,"#0e2412"],[.42,"#1d4223"],[.62,"#12301a"],[1,"#020402"]])}
-  ${St("tb-glass-amber",[[0,"#160902"],[.2,"#5a2c08"],[.42,"#9c5714"],[.62,"#6e3a0c"],[1,"#120701"]])}
-  ${St("tb-wine-white",[[0,"#5a4a12"],[.2,"#b9a043"],[.42,"#ecd98e"],[.62,"#cdb158"],[1,"#4d3e0e"]])}
-  ${St("tb-wine-rose",[[0,"#b87a6d"],[.2,"#d9917c"],[.42,"#f0b3a0"],[.62,"#e39a83"],[1,"#c48a7c"]])}
-  ${St("tb-glass-clear",[[0,"rgba(190,215,200,.30)"],[.3,"rgba(230,245,235,.10)"],[.7,"rgba(230,245,235,.08)"],[1,"rgba(160,190,175,.35)"]])}
+  ${A("tb-glass-red",[[0,"#060404"],[0.18,"#1c0a0d"],[0.42,"#3b0f18"],[0.6,"#2a0a11"],[1,"#050303"]])}
+  ${A("tb-glass-green",[[0,"#030603"],[0.2,"#0e2412"],[0.42,"#1d4223"],[0.62,"#12301a"],[1,"#020402"]])}
+  ${A("tb-glass-amber",[[0,"#160902"],[0.2,"#5a2c08"],[0.42,"#9c5714"],[0.62,"#6e3a0c"],[1,"#120701"]])}
+  ${A("tb-wine-white",[[0,"#5a4a12"],[0.2,"#b9a043"],[0.42,"#ecd98e"],[0.62,"#cdb158"],[1,"#4d3e0e"]])}
+  ${A("tb-wine-rose",[[0,"#b87a6d"],[0.2,"#d9917c"],[0.42,"#f0b3a0"],[0.62,"#e39a83"],[1,"#c48a7c"]])}
+  ${A("tb-glass-clear",[[0,"rgba(190,215,200,.30)"],[0.3,"rgba(230,245,235,.10)"],[0.7,"rgba(230,245,235,.08)"],[1,"rgba(160,190,175,.35)"]])}
 
   <!-- light on a cylinder -->
   <linearGradient id="tb-cylinder" x1="0" x2="1">
@@ -375,10 +379,10 @@ function t(t,e,i,s){var a,o=arguments.length,r=o<3?e:null===s?s=Object.getOwnPro
   </linearGradient>
 
   <!-- capsules -->
-  ${St("tb-foil-wine",[[0,"#1d0508"],[.3,"#7a1d2b"],[.45,"#c4515f"],[.6,"#6a1523"],[1,"#150305"]])}
-  ${St("tb-foil-gold",[[0,"#5a3a08"],[.3,"#c9962e"],[.45,"#ffe7a1"],[.6,"#b88421"],[1,"#4a2f05"]])}
-  ${St("tb-foil-silver",[[0,"#3c3c3c"],[.3,"#a9a9a9"],[.45,"#f2f2f2"],[.6,"#9a9a9a"],[1,"#2e2e2e"]])}
-  ${St("tb-foil-rose",[[0,"#5e2d24"],[.3,"#c47e6c"],[.45,"#f6cdbd"],[.6,"#b46e5d"],[1,"#4d241c"]])}
+  ${A("tb-foil-wine",[[0,"#1d0508"],[0.3,"#7a1d2b"],[0.45,"#c4515f"],[0.6,"#6a1523"],[1,"#150305"]])}
+  ${A("tb-foil-gold",[[0,"#5a3a08"],[0.3,"#c9962e"],[0.45,"#ffe7a1"],[0.6,"#b88421"],[1,"#4a2f05"]])}
+  ${A("tb-foil-silver",[[0,"#3c3c3c"],[0.3,"#a9a9a9"],[0.45,"#f2f2f2"],[0.6,"#9a9a9a"],[1,"#2e2e2e"]])}
+  ${A("tb-foil-rose",[[0,"#5e2d24"],[0.3,"#c47e6c"],[0.45,"#f6cdbd"],[0.6,"#b46e5d"],[1,"#4d241c"]])}
 
   <!-- label paper -->
   <linearGradient id="tb-paper" x1="0" x2="0" y1="0" y2="1">
@@ -400,93 +404,27 @@ function t(t,e,i,s){var a,o=arguments.length,r=o<3?e:null===s?s=Object.getOwnPro
   <linearGradient id="tb-tag-past" x1="0" x2="1" y1="0" y2="1">
     <stop offset="0" stop-color="#ff7a6e"/><stop offset="1" stop-color="#b3201f"/>
   </linearGradient>
-</defs></svg>`;function zt(t,e,i){return B`
+</defs></svg>`;function ht(t,e,i){return a`
     <div class="form">
       <label class="field wide">
         Tipo
         <div class="types">
-          ${Object.entries(t.types).map(([t,s])=>B`<button type="button" class="chip ${e.type===t?"active":""}"
-              @click=${()=>i("type",t)}><span class="dot" style="background:${s.color}"></span>${s.label}</button>`)}
+          ${Object.entries(t.types).map(([s,r])=>a`<button type="button" class="chip ${e.type===s?"active":""}"
+              @click=${()=>i("type",s)}><span class="dot" style="background:${r.color}"></span>${r.label}</button>`)}
         </div>
       </label>
-      ${ft.map(t=>{const s="name"===t.key||"area"===t.kind,a=e[t.key]??"",o=e=>i(t.key,e.target.value);return B`<label class="field ${s?"wide":""}">
-          ${t.label}
-          ${"area"===t.kind?B`<textarea rows="2" .value=${a} @input=${o}></textarea>`:B`<input
-                type=${"text"===t.kind?"text":"number"}
-                inputmode=${"text"===t.kind?"text":"numeric"}
-                step=${"number"===t.kind?"0.01":"1"}
-                .value=${String(a)}
-                @input=${o}
+      ${G.map((s)=>{let r=s.key==="name"||s.kind==="area",o=e[s.key]??"",l=(n)=>i(s.key,n.target.value);return a`<label class="field ${r?"wide":""}">
+          ${s.label}
+          ${s.kind==="area"?a`<textarea rows="2" .value=${o} @input=${l}></textarea>`:a`<input
+                type=${s.kind==="text"?"text":"number"}
+                inputmode=${s.kind==="text"?"text":"numeric"}
+                step=${s.kind==="number"?"0.01":"1"}
+                .value=${String(o)}
+                @input=${l}
               />`}
         </label>`})}
     </div>
-  `}let Mt=class extends dt{constructor(){super(...arguments),this.rackId=null,this.row=null,this.col=null,this.mode="cellar",this.prefill=null,this.wishId=null,this._where="",this._wishNotes="",this._prefilled=!1,this._values={type:"red"},this._quantity=1,this._busy=!1,this._reading="",this._front="",this._back=""}_merge(t,e){const i={...this._values};for(const[s,a]of Object.entries(t))null!=a&&""!==a&&(e||void 0===i[s]||null===i[s]||""===String(i[s]).trim())&&(i[s]=a);this._values=i}async _photo(t,e){const i=t.target,s=i.files?.[0];if(i.value="",!s)return;const a=await async function(t,e=1280){const i=URL.createObjectURL(t);try{const t=new Image;t.src=i,await t.decode();const s=Math.min(1,e/Math.max(t.naturalWidth,t.naturalHeight)),a=document.createElement("canvas");return a.width=Math.round(t.naturalWidth*s),a.height=Math.round(t.naturalHeight*s),a.getContext("2d").drawImage(t,0,0,a.width,a.height),a.toDataURL("image/jpeg",.85)}finally{URL.revokeObjectURL(i)}}(s);"front"===e?this._front=a:this._back=a,this._front&&await this._read()}async _read(){this._reading=this._back?"Leggo fronte e retro…":"Leggo l'etichetta…";try{const t=await this.card.ws({type:"taponbon/ai_recognize",image:this._front,...this._back?{back_image:this._back}:{}});this._merge(t.wine,!0),this.card.toast(this._back?"Fronte e retro letti: controlla i dati":"Etichetta letta: controlla i dati")}catch{}finally{this._reading=""}}_slot(t){const e="front"===t?this._front:this._back,i="front"===t?"Fronte":"Retro",s=!!this._reading||"back"===t&&!this._front;return B`<label class="slot ${e?"has":""} ${s?"off":""}"
-        title=${"back"!==t||this._front?`Foto ${i.toLowerCase()}`:"Prima fotografa il fronte"}>
-      ${e?B`<img src=${e} alt=${i} />`:B`<span class="plus">📷</span>`}
-      <span class="slot-label">${i}${"back"!==t||e?W:B`<small>facoltativo</small>`}</span>
-      <input type="file" accept="image/*" capture="environment" ?disabled=${s}
-        @change=${e=>this._photo(e,t)} />
-    </label>`}async _fill(){if(String(this._values.name||"").trim()){this._reading="Completo i dati…";try{const t=await this.card.ws({type:"taponbon/ai_fill",wine:this._values});this._merge(t.wine,!1),this.card.toast("Dati completati")}catch{}finally{this._reading=""}}else this.card.toast("Scrivi almeno il nome del vino")}_renderAI(){return this.data.ai?B`<div class="ai">
-      <div class="slots">${this._slot("front")}${this._slot("back")}</div>
-      <div class="ai-side">
-        <div class="ai-title">✨ Compilazione automatica</div>
-        <div class="note">${this._reading||(this._front?"Fatto. Se in etichetta mancava qualcosa, aggiungi il retro.":"Fotografa il fronte dell'etichetta; il retro è facoltativo.")}</div>
-        <button class="btn small" style="margin-top:8px" ?disabled=${!!this._reading} @click=${this._fill}>Oppure completa dal nome</button>
-      </div>
-      ${this._reading?B`<div class="reading"></div>`:W}
-    </div>`:B`<div class="ai"><div>
-        <div class="ai-title">✨ Compilazione automatica</div>
-        <div class="note">Aggiungi una chiave Gemini (gratuita) in Impostazioni → Dispositivi e servizi → TaponBon → Configura per leggere le etichette con una foto.</div>
-      </div></div>`}willUpdate(){if(!this._prefilled&&this.prefill){this._prefilled=!0;const t=new Set(["id","added_at","source","where","wish_notes","rating"]);this._values={type:"red",...Object.fromEntries(Object.entries(this.prefill).filter(([e,i])=>!t.has(e)&&null!=i))}}}_close(){this.dispatchEvent(new CustomEvent("close"))}async _save(){if(String(this._values.name||"").trim())if("wish"!==this.mode){this._busy=!0;try{const t=(await this.card.ws({type:"taponbon/add_bottles",wine:this._values,quantity:this._quantity,rack_id:this.rackId,row:this.row,col:this.col,wish_id:this.wishId})).bottles,e=t.filter(t=>!t.rack_id).length;this.card.toast(e?`Aggiunte ${t.length} bottiglie, ${e} da sistemare: scaffale pieno`:t.length>1?`Aggiunte ${t.length} bottiglie`:"Bottiglia aggiunta"),this.wishId,this._close()}finally{this._busy=!1}}else{this._busy=!0;try{await this.card.ws({type:"taponbon/wishlist_add",wine:this._values,where:this._where,wish_notes:this._wishNotes}),this.card.toast("Aggiunto alla lista dei desideri"),this._close()}finally{this._busy=!1}}else this.card.toast("Scrivi almeno il nome del vino")}_renderWishFields(){return B`<div class="form" style="margin-top:10px">
-      <label class="field wide">
-        Dove l'hai assaggiato
-        <input type="text" maxlength="200" placeholder="Es. cena da Marco, Osteria del Ponte…" .value=${this._where}
-          @input=${t=>this._where=t.target.value} />
-      </label>
-      <label class="field wide">
-        Nota
-        <textarea rows="2" maxlength="1000" placeholder="Es. chiedere all'enoteca sotto casa, prezzo visto 25 €…"
-          .value=${this._wishNotes} @input=${t=>this._wishNotes=t.target.value}></textarea>
-      </label>
-    </div>`}render(){const t=this.data.racks.find(t=>t.id===this.rackId),e=t&&null!=this.row&&null!=this.col?`${t.name}, mensola ${this.row+1}, posto ${this.col+1}`:"nel primo posto libero";return B`
-      ${Ct}
-      <div class="overlay" @click=${this._close}>
-        <div class="dialog" @click=${t=>t.stopPropagation()}>
-          <div class="dialog-head">
-            <div style="display:flex;gap:16px;align-items:flex-end">
-              <div style="width:34px;flex:none;filter:drop-shadow(0 8px 10px rgba(0,0,0,.55))">${At(this._values.type||"red")}</div>
-              <div>
-                <div class="eyebrow">${"wish"===this.mode?"Lista dei desideri":this.wishId?"Comprato!":"Nuovo in cantina"}</div>
-                <div class="dialog-title">${String(this._values.name||"").trim()||"Aggiungi vino"}</div>
-              </div>
-            </div>
-            <button class="close" @click=${this._close}>✕</button>
-          </div>
-          <div class="dialog-body">
-            ${this._renderAI()}
-            ${zt(this.data,this._values,(t,e)=>this._values={...this._values,[t]:e})}
-            ${"wish"===this.mode?this._renderWishFields():B`            <div class="form" style="margin-top:10px">
-              <label class="field">
-                Quante bottiglie
-                <input type="number" min="1" max="100" .value=${String(this._quantity)}
-                  @input=${t=>this._quantity=Math.max(1,Math.min(100,Number(t.target.value)||1))} />
-              </label>
-              <div class="field">Dove<span style="color:var(--tb-ink);text-transform:none;letter-spacing:normal;font-size:1.3em">${e}${this._quantity>1?" e i successivi":""}</span></div>
-            </div>
-            ${this.data.settings.auto_labels?B`<p class="note">Per ogni bottiglia verrà richiesta la stampa dell'etichetta QR.</p>`:W}`}
-          </div>
-          <div class="dialog-foot">
-            <button class="btn" @click=${this._close}>Annulla</button>
-            <button class="btn primary" ?disabled=${this._busy} @click=${this._save}>
-              ${this._busy?"Salvo…":"wish"===this.mode?"♡ Aggiungi ai desideri":"Aggiungi "+(this._quantity>1?`${this._quantity} bottiglie`:"bottiglia")}
-            </button>
-          </div>
-        </div>
-      </div>
-    `}};function Rt(t,e,i=!1){const s=Number(t)||0;return B`<span class="stars ${i?"big":""} ${e?"edit":""}" role=${e?"radiogroup":W}
-    aria-label=${s?`${s} su 5`:"Nessun voto"}>
-    ${[1,2,3,4,5].map(t=>{const i=s>=t?"on":s>=t-.5?"half":"";return e?B`<button type="button" class="star ${i}" title="${t} su 5" @click=${()=>e(s===t?null:t)}>★</button>`:B`<span class="star ${i}">★</span>`})}
-  </span>`}function Pt(t){return t?t.toLocaleString("it-IT",{maximumFractionDigits:1}):""}Mt.styles=[xt,r`
+  `}class pt extends m{constructor(){super(...arguments);this.rackId=null;this.row=null;this.col=null;this.mode="cellar";this.prefill=null;this.wishId=null;this._where="";this._wishNotes="";this._prefilled=!1;this._values={type:"red"};this._quantity=1;this._busy=!1;this._reading="";this._front="";this._back=""}static styles=[x,v`
       .ai {
         display: grid;
         grid-template-columns: auto 1fr;
@@ -581,16 +519,85 @@ function t(t,e,i,s){var a,o=arguments.length,r=o<3?e:null===s?s=Object.getOwnPro
       input[type="file"] {
         display: none;
       }
-    `],t([bt({attribute:!1})],Mt.prototype,"card",void 0),t([bt({attribute:!1})],Mt.prototype,"data",void 0),t([bt({attribute:!1})],Mt.prototype,"rackId",void 0),t([bt({attribute:!1})],Mt.prototype,"row",void 0),t([bt({attribute:!1})],Mt.prototype,"col",void 0),t([bt({attribute:!1})],Mt.prototype,"mode",void 0),t([bt({attribute:!1})],Mt.prototype,"prefill",void 0),t([bt({attribute:!1})],Mt.prototype,"wishId",void 0),t([gt()],Mt.prototype,"_where",void 0),t([gt()],Mt.prototype,"_wishNotes",void 0),t([gt()],Mt.prototype,"_values",void 0),t([gt()],Mt.prototype,"_quantity",void 0),t([gt()],Mt.prototype,"_busy",void 0),t([gt()],Mt.prototype,"_reading",void 0),t([gt()],Mt.prototype,"_front",void 0),t([gt()],Mt.prototype,"_back",void 0),Mt=t([pt("tb-add-dialog")],Mt);let It=class extends dt{constructor(){super(...arguments),this._label=null,this._editing=!1,this._values={},this._sameWine=!0,this._otherReason=!1,this._busy=!1,this._rating=!1,this._stars=null,this._tasting="",this._reserving=!1,this._resFor="",this._resUntil=""}willUpdate(t){if(t.has("data")&&this._label&&this.data.settings.label_format!==this._label.label_format&&(this._label=null,this._loadLabel()),t.has("bottle")){const e=t.get("bottle");e?.id!==this.bottle.id&&(this._label=null,this._editing=!1,this._rating=!1,this._reserving=!1,this._loadLabel())}}async _loadLabel(){const t=this.bottle.id;try{const e=await this.card.hass.callWS({type:"taponbon/get_label",bottle_id:t});this.bottle.id===t&&(this._label=e)}catch{}}_close(){this.dispatchEvent(new CustomEvent("close"))}_sameWineCount(){const t=t=>`${(t.name||"").trim().toLowerCase()}|${(t.producer||"").trim().toLowerCase()}|${t.vintage||""}`;return this.data.bottles.filter(e=>t(e)===t(this.bottle)).length}async _remove(t,e=!1){this._busy=!0;try{const i={type:"taponbon/remove_bottle",bottle_id:this.bottle.id,reason:t};e&&(this._stars&&(i.rating=this._stars),this._tasting.trim()&&(i.tasting_notes=this._tasting.trim()));const s=await this.card.ws(i);if(s?.wishlisted)return this.card.toast(`${_t(this.bottle)} era l'ultima: l'ho messa nella lista dei desideri da ricomprare ♡`),void this._close();this.card.toast(e&&this._stars?`${_t(this.bottle)}: bevuta, voto ${this._stars}/5. Salute!`:`${_t(this.bottle)}: ${this.data.reasons[t]?.toLowerCase()||"tolta"}. La trovi nello storico.`),this._close()}finally{this._busy=!1}}async _saveReserve(t=!1){this._busy=!0;try{await this.card.ws({type:"taponbon/reserve_bottle",bottle_id:this.bottle.id,reserved_for:t?"":this._resFor.trim()||"Riservata",reserved_until:t?null:this._resUntil||null}),this.card.toast(t?"Riserva tolta":"Bottiglia riservata: non verrà proposta negli abbinamenti"),this._reserving=!1}finally{this._busy=!1}}async _saveEdit(){this._busy=!0;try{const t=await this.card.ws({type:"taponbon/update_bottle",bottle_id:this.bottle.id,changes:this._values,same_wine:this._sameWine});this.card.toast(t.updated>1?`Aggiornate ${t.updated} bottiglie`:"Bottiglia aggiornata"),this._editing=!1,this._label=null,this._loadLabel()}finally{this._busy=!1}}async _printOnPrinter(){const t=await this.card.ws({type:"taponbon/request_label",bottle_id:this.bottle.id});this.card.toast(t.printed?"Etichetta stampata":this.data.printer?"Stampa non riuscita: guarda le notifiche di Home Assistant":"Richiesta inviata. Per stampare da solo, scegli la stampante nelle opzioni di TaponBon.")}_printInBrowser(){if(!this._label)return;const t=window.open("","_blank","width=480,height=360");if(!t)return void this.card.toast("Il browser ha bloccato la finestra di stampa");const{width_mm:e,height_mm:i}=this._label;t.document.write(`<!doctype html><html><head><title>Etichetta ${this._label.code}</title>\n      <style>@page{size:${e}mm ${i}mm;margin:0}html,body{margin:0}img{width:${e}mm;height:${i}mm;display:block}</style></head>\n      <body><img src="data:image/png;base64,${this._label.png_base64}"\n      onload="setTimeout(function(){window.print();window.close();},150)"></body></html>`),t.document.close()}render(){const t=this.bottle,e=this.data.types[t.type];return B`
-      ${Ct}
+    `];_merge(t,e){let i={...this._values};for(let[s,r]of Object.entries(t)){if(r===null||r===void 0||r==="")continue;if(e||i[s]===void 0||i[s]===null||String(i[s]).trim()==="")i[s]=r}this._values=i}async _photo(t,e){let i=t.target,s=i.files?.[0];if(i.value="",!s)return;let r=await pe(s);if(e==="front")this._front=r;else this._back=r;if(this._front)await this._read()}async _read(){this._reading=this._back?"Leggo fronte e retro…":"Leggo l'etichetta…";try{let t=await this.card.ws({type:"taponbon/ai_recognize",image:this._front,...this._back?{back_image:this._back}:{}});this._merge(t.wine,!0),this.card.toast(this._back?"Fronte e retro letti: controlla i dati":"Etichetta letta: controlla i dati")}catch{}finally{this._reading=""}}_slot(t){let e=t==="front"?this._front:this._back,i=t==="front"?"Fronte":"Retro",s=!!this._reading||t==="back"&&!this._front;return a`<label class="slot ${e?"has":""} ${s?"off":""}"
+        title=${t==="back"&&!this._front?"Prima fotografa il fronte":`Foto ${i.toLowerCase()}`}>
+      ${e?a`<img src=${e} alt=${i} />`:a`<span class="plus">📷</span>`}
+      <span class="slot-label">${i}${t==="back"&&!e?a`<small>facoltativo</small>`:d}</span>
+      <input type="file" accept="image/*" capture="environment" ?disabled=${s}
+        @change=${(r)=>this._photo(r,t)} />
+    </label>`}async _fill(){if(!String(this._values.name||"").trim()){this.card.toast("Scrivi almeno il nome del vino");return}this._reading="Completo i dati…";try{let t=await this.card.ws({type:"taponbon/ai_fill",wine:this._values});this._merge(t.wine,!1),this.card.toast("Dati completati")}catch{}finally{this._reading=""}}_renderAI(){if(!this.data.ai)return a`<div class="ai"><div>
+        <div class="ai-title">✨ Compilazione automatica</div>
+        <div class="note">Aggiungi una chiave Gemini (gratuita) in Impostazioni → Dispositivi e servizi → TaponBon → Configura per leggere le etichette con una foto.</div>
+      </div></div>`;return a`<div class="ai">
+      <div class="slots">${this._slot("front")}${this._slot("back")}</div>
+      <div class="ai-side">
+        <div class="ai-title">✨ Compilazione automatica</div>
+        <div class="note">${this._reading||(this._front?"Fatto. Se in etichetta mancava qualcosa, aggiungi il retro.":"Fotografa il fronte dell'etichetta; il retro è facoltativo.")}</div>
+        <button class="btn small" style="margin-top:8px" ?disabled=${!!this._reading} @click=${this._fill}>Oppure completa dal nome</button>
+      </div>
+      ${this._reading?a`<div class="reading"></div>`:d}
+    </div>`}willUpdate(){if(!this._prefilled&&this.prefill){this._prefilled=!0;let t=new Set(["id","added_at","source","where","wish_notes","rating"]);this._values={type:"red",...Object.fromEntries(Object.entries(this.prefill).filter(([e,i])=>!t.has(e)&&i!=null))}}}_close(){this.dispatchEvent(new CustomEvent("close"))}async _save(){if(!String(this._values.name||"").trim()){this.card.toast("Scrivi almeno il nome del vino");return}if(this.mode==="wish"){this._busy=!0;try{await this.card.ws({type:"taponbon/wishlist_add",wine:this._values,where:this._where,wish_notes:this._wishNotes}),this.card.toast("Aggiunto alla lista dei desideri"),this._close()}finally{this._busy=!1}return}this._busy=!0;try{let e=(await this.card.ws({type:"taponbon/add_bottles",wine:this._values,quantity:this._quantity,rack_id:this.rackId,row:this.row,col:this.col,wish_id:this.wishId})).bottles,i=e.filter((s)=>!s.rack_id).length;this.card.toast(i?`Aggiunte ${e.length} bottiglie, ${i} da sistemare: scaffale pieno`:e.length>1?`Aggiunte ${e.length} bottiglie`:"Bottiglia aggiunta")+(this.wishId?" e tolta dai desideri":""),this._close()}finally{this._busy=!1}}_renderWishFields(){return a`<div class="form" style="margin-top:10px">
+      <label class="field wide">
+        Dove l'hai assaggiato
+        <input type="text" maxlength="200" placeholder="Es. cena da Marco, Osteria del Ponte…" .value=${this._where}
+          @input=${(t)=>this._where=t.target.value} />
+      </label>
+      <label class="field wide">
+        Nota
+        <textarea rows="2" maxlength="1000" placeholder="Es. chiedere all'enoteca sotto casa, prezzo visto 25 €…"
+          .value=${this._wishNotes} @input=${(t)=>this._wishNotes=t.target.value}></textarea>
+      </label>
+    </div>`}render(){let t=this.data.racks.find((i)=>i.id===this.rackId),e=t&&this.row!=null&&this.col!=null?`${t.name}, mensola ${this.row+1}, posto ${this.col+1}`:"nel primo posto libero";return a`
+      ${E}
       <div class="overlay" @click=${this._close}>
-        <div class="dialog" @click=${t=>t.stopPropagation()}>
+        <div class="dialog" @click=${(i)=>i.stopPropagation()}>
+          <div class="dialog-head">
+            <div style="display:flex;gap:16px;align-items:flex-end">
+              <div style="width:34px;flex:none;filter:drop-shadow(0 8px 10px rgba(0,0,0,.55))">${k(this._values.type||"red")}</div>
+              <div>
+                <div class="eyebrow">${this.mode==="wish"?"Lista dei desideri":this.wishId?"Comprato!":"Nuovo in cantina"}</div>
+                <div class="dialog-title">${String(this._values.name||"").trim()||"Aggiungi vino"}</div>
+              </div>
+            </div>
+            <button class="close" @click=${this._close}>✕</button>
+          </div>
+          <div class="dialog-body">
+            ${this._renderAI()}
+            ${ht(this.data,this._values,(i,s)=>this._values={...this._values,[i]:s})}
+            ${this.mode==="wish"?this._renderWishFields():a`            <div class="form" style="margin-top:10px">
+              <label class="field">
+                Quante bottiglie
+                <input type="number" min="1" max="100" .value=${String(this._quantity)}
+                  @input=${(i)=>this._quantity=Math.max(1,Math.min(100,Number(i.target.value)||1))} />
+              </label>
+              <div class="field">Dove<span style="color:var(--tb-ink);text-transform:none;letter-spacing:normal;font-size:1.3em">${e}${this._quantity>1?" e i successivi":""}</span></div>
+            </div>
+            ${this.data.settings.auto_labels?a`<p class="note">Per ogni bottiglia verrà richiesta la stampa dell'etichetta QR.</p>`:d}`}
+          </div>
+          <div class="dialog-foot">
+            <button class="btn" @click=${this._close}>Annulla</button>
+            <button class="btn primary" ?disabled=${this._busy} @click=${this._save}>
+              ${this._busy?"Salvo…":this.mode==="wish"?"♡ Aggiungi ai desideri":`Aggiungi ${this._quantity>1?`${this._quantity} bottiglie`:"bottiglia"}`}
+            </button>
+          </div>
+        </div>
+      </div>
+    `}}c([b({attribute:!1})],pt.prototype,"card",void 0),c([b({attribute:!1})],pt.prototype,"data",void 0),c([b({attribute:!1})],pt.prototype,"rackId",void 0),c([b({attribute:!1})],pt.prototype,"row",void 0),c([b({attribute:!1})],pt.prototype,"col",void 0),c([b({attribute:!1})],pt.prototype,"mode",void 0),c([b({attribute:!1})],pt.prototype,"prefill",void 0),c([b({attribute:!1})],pt.prototype,"wishId",void 0),c([h()],pt.prototype,"_where",void 0),c([h()],pt.prototype,"_wishNotes",void 0),c([h()],pt.prototype,"_values",void 0),c([h()],pt.prototype,"_quantity",void 0),c([h()],pt.prototype,"_busy",void 0),c([h()],pt.prototype,"_reading",void 0),c([h()],pt.prototype,"_front",void 0),c([h()],pt.prototype,"_back",void 0),pt=c([y("tb-add-dialog")],pt);async function pe(t,e=1280){let i=URL.createObjectURL(t);try{let s=new Image;s.src=i,await s.decode();let r=Math.min(1,e/Math.max(s.naturalWidth,s.naturalHeight)),o=document.createElement("canvas");return o.width=Math.round(s.naturalWidth*r),o.height=Math.round(s.naturalHeight*r),o.getContext("2d").drawImage(s,0,0,o.width,o.height),o.toDataURL("image/jpeg",0.85)}finally{URL.revokeObjectURL(i)}}function C(t,e,i=!1){let s=Number(t)||0;return a`<span class="stars ${i?"big":""} ${e?"edit":""}" role=${e?"radiogroup":d}
+    aria-label=${s?`${s} su 5`:"Nessun voto"}>
+    ${[1,2,3,4,5].map((r)=>{let o=s>=r?"on":s>=r-0.5?"half":"";return e?a`<button type="button" class="star ${o}" title="${r} su 5" @click=${()=>e(s===r?null:r)}>★</button>`:a`<span class="star ${o}">★</span>`})}
+  </span>`}function st(t){return t?t.toLocaleString("it-IT",{maximumFractionDigits:1}):""}class ut extends m{constructor(){super(...arguments);this._label=null;this._editing=!1;this._values={};this._sameWine=!0;this._otherReason=!1;this._busy=!1;this._rating=!1;this._stars=null;this._tasting="";this._reserving=!1;this._resFor="";this._resUntil=""}willUpdate(t){if(t.has("data")&&this._label&&this.data.settings.label_format!==this._label.label_format)this._label=null,this._loadLabel();if(t.has("bottle")){if(t.get("bottle")?.id!==this.bottle.id)this._label=null,this._editing=!1,this._rating=!1,this._reserving=!1,this._loadLabel()}}async _loadLabel(){let t=this.bottle.id;try{let e=await this.card.hass.callWS({type:"taponbon/get_label",bottle_id:t});if(this.bottle.id===t)this._label=e}catch{}}_close(){this.dispatchEvent(new CustomEvent("close"))}_sameWineCount(){let t=(e)=>`${(e.name||"").trim().toLowerCase()}|${(e.producer||"").trim().toLowerCase()}|${e.vintage||""}`;return this.data.bottles.filter((e)=>t(e)===t(this.bottle)).length}async _remove(t,e=!1){this._busy=!0;try{let i={type:"taponbon/remove_bottle",bottle_id:this.bottle.id,reason:t};if(e){if(this._stars)i.rating=this._stars;if(this._tasting.trim())i.tasting_notes=this._tasting.trim()}if((await this.card.ws(i))?.wishlisted){this.card.toast(`${f(this.bottle)} era l'ultima: l'ho messa nella lista dei desideri da ricomprare ♡`),this._close();return}this.card.toast(e&&this._stars?`${f(this.bottle)}: bevuta, voto ${this._stars}/5. Salute!`:`${f(this.bottle)}: ${this.data.reasons[t]?.toLowerCase()||"tolta"}. La trovi nello storico.`),this._close()}finally{this._busy=!1}}async _saveReserve(t=!1){this._busy=!0;try{await this.card.ws({type:"taponbon/reserve_bottle",bottle_id:this.bottle.id,reserved_for:t?"":this._resFor.trim()||"Riservata",reserved_until:t?null:this._resUntil||null}),this.card.toast(t?"Riserva tolta":"Bottiglia riservata: non verrà proposta negli abbinamenti"),this._reserving=!1}finally{this._busy=!1}}async _saveEdit(){this._busy=!0;try{let t=await this.card.ws({type:"taponbon/update_bottle",bottle_id:this.bottle.id,changes:this._values,same_wine:this._sameWine});this.card.toast(t.updated>1?`Aggiornate ${t.updated} bottiglie`:"Bottiglia aggiornata"),this._editing=!1,this._label=null,this._loadLabel()}finally{this._busy=!1}}async _printOnPrinter(){let t=await this.card.ws({type:"taponbon/request_label",bottle_id:this.bottle.id});this.card.toast(t.printed?"Etichetta stampata":this.data.printer?"Stampa non riuscita: guarda le notifiche di Home Assistant":"Richiesta inviata. Per stampare da solo, scegli la stampante nelle opzioni di TaponBon.")}_printInBrowser(){if(!this._label)return;let t=window.open("","_blank","width=480,height=360");if(!t){this.card.toast("Il browser ha bloccato la finestra di stampa");return}let{width_mm:e,height_mm:i}=this._label;t.document.write(`<!doctype html><html><head><title>Etichetta ${this._label.code}</title>
+      <style>@page{size:${e}mm ${i}mm;margin:0}html,body{margin:0}img{width:${e}mm;height:${i}mm;display:block}</style></head>
+      <body><img src="data:image/png;base64,${this._label.png_base64}"
+      onload="setTimeout(function(){window.print();window.close();},150)"></body></html>`),t.document.close()}render(){let t=this.bottle,e=this.data.types[t.type];return a`
+      ${E}
+      <div class="overlay" @click=${this._close}>
+        <div class="dialog" @click=${(i)=>i.stopPropagation()}>
           <div class="hero">
-            <div class="hero-bottle">${At(t.type,t.alert)}</div>
+            <div class="hero-bottle">${k(t.type,t.alert)}</div>
             <div class="hero-text">
               <div class="eyebrow">${e?.label||""}${t.region?` · ${t.region}`:""}</div>
               <div class="dialog-title">${t.name||"Vino"}</div>
-              ${t.producer?B`<div class="producer">${t.producer}</div>`:W}
+              ${t.producer?a`<div class="producer">${t.producer}</div>`:d}
               <div class="vintage">${t.vintage||"s.a."}</div>
             </div>
             <button class="close" @click=${this._close}>✕</button>
@@ -601,79 +608,79 @@ function t(t,e,i,s){var a,o=arguments.length,r=o<3?e:null===s?s=Object.getOwnPro
           ${this._rating?this._renderRateFoot():this._editing?this._renderEditFoot():this._renderViewFoot()}
         </div>
       </div>
-    `}_renderView(t,e){const i=function(t){return t.drink_from&&t.drink_until?`${t.drink_from}–${t.drink_until}`:t.drink_until?`entro il ${t.drink_until}`:t.drink_from?`dal ${t.drink_from}`:""}(t);return B`
+    `}_renderView(t,e){let i=qt(t);return a`
       <div class="badges">
-        ${"closing"===t.alert?B`<span class="badge warn">Da bere presto</span>`:W}
-        ${"past"===t.alert?B`<span class="badge bad">Oltre la finestra</span>`:W}
-        <span class="where">📍 ${$t(t,this.data.racks)}</span>
-        ${this._reserving?W:B`<button class="btn small res-btn" @click=${()=>{this._resFor=t.reserved_for||"",this._resUntil=t.reserved_until||"",this._reserving=!0}}>${t.reserved_for?"🔒 Modifica riserva":"🔒 Riserva"}</button>`}
+        ${t.alert==="closing"?a`<span class="badge warn">Da bere presto</span>`:d}
+        ${t.alert==="past"?a`<span class="badge bad">Oltre la finestra</span>`:d}
+        <span class="where">📍 ${Y(t,this.data.racks)}</span>
+        ${!this._reserving?a`<button class="btn small res-btn" @click=${()=>{this._resFor=t.reserved_for||"",this._resUntil=t.reserved_until||"",this._reserving=!0}}>${t.reserved_for?"\uD83D\uDD12 Modifica riserva":"\uD83D\uDD12 Riserva"}</button>`:d}
       </div>
-      ${t.reserved_for&&!this._reserving?B`<div class="reserved">🔒 <b>Riservata</b>: ${t.reserved_for}${t.reserved_until?B` · ${new Date(t.reserved_until+"T12:00").toLocaleDateString("it-IT",{day:"numeric",month:"long",year:"numeric"})}`:W}
-            <div class="note">Non viene proposta negli abbinamenti${t.reserved_until?"; quel giorno ti arriva un promemoria":""}.</div></div>`:W}
-      ${this._reserving?B`<div class="reserve-form">
+      ${t.reserved_for&&!this._reserving?a`<div class="reserved">🔒 <b>Riservata</b>: ${t.reserved_for}${t.reserved_until?a` · ${new Date(t.reserved_until+"T12:00").toLocaleDateString("it-IT",{day:"numeric",month:"long",year:"numeric"})}`:d}
+            <div class="note">Non viene proposta negli abbinamenti${t.reserved_until?"; quel giorno ti arriva un promemoria":""}.</div></div>`:d}
+      ${this._reserving?a`<div class="reserve-form">
             <div class="form">
               <label class="field">Per cosa
                 <input type="text" maxlength="200" placeholder="Es. anniversario, annata di nascita…" .value=${this._resFor}
-                  @input=${t=>this._resFor=t.target.value} /></label>
+                  @input=${(s)=>this._resFor=s.target.value} /></label>
               <label class="field">Quando (facoltativo)
                 <input type="date" .value=${this._resUntil}
-                  @input=${t=>this._resUntil=t.target.value} /></label>
+                  @input=${(s)=>this._resUntil=s.target.value} /></label>
             </div>
             <div class="row" style="justify-content:flex-end;margin-top:10px">
-              ${t.reserved_for?B`<button class="btn small" ?disabled=${this._busy} @click=${()=>this._saveReserve(!0)}>Togli riserva</button>`:W}
+              ${t.reserved_for?a`<button class="btn small" ?disabled=${this._busy} @click=${()=>this._saveReserve(!0)}>Togli riserva</button>`:d}
               <button class="btn small" @click=${()=>this._reserving=!1}>Annulla</button>
               <button class="btn small primary" ?disabled=${this._busy} @click=${()=>this._saveReserve()}>Salva</button>
             </div>
-          </div>`:W}
-      ${t.past_count||t.past_notes?B`<div class="past">
-            <span class="past-head">Già bevuto${t.past_count?B` ${1===t.past_count?"una volta":`${t.past_count} volte`}`:W}</span>
-            ${t.past_rating?B`${Rt(t.past_rating)} <b>${Pt(t.past_rating)}</b>`:W}
-            ${t.past_notes?B`<div class="past-notes">«${t.past_notes}»</div>`:W}
-          </div>`:W}
+          </div>`:d}
+      ${t.past_count||t.past_notes?a`<div class="past">
+            <span class="past-head">Già bevuto${t.past_count?a` ${t.past_count===1?"una volta":`${t.past_count} volte`}`:d}</span>
+            ${t.past_rating?a`${C(t.past_rating)} <b>${st(t.past_rating)}</b>`:d}
+            ${t.past_notes?a`<div class="past-notes">«${t.past_notes}»</div>`:d}
+          </div>`:d}
       <dl class="facts">
-        ${ft.filter(t=>!["name","producer","vintage","drink_from","drink_until"].includes(t.key)).map(e=>{const i=t[e.key];return null==i||""===i?W:B`<dt>${e.label}</dt><dd>${"price"===e.key?`${Number(i).toFixed(2)} €`:i}</dd>`})}
-        ${i?B`<dt>Finestra di beva</dt><dd>${i}</dd>`:W}
+        ${G.filter((s)=>!["name","producer","vintage","drink_from","drink_until"].includes(s.key)).map((s)=>{let r=t[s.key];if(r==null||r==="")return d;return a`<dt>${s.label}</dt><dd>${s.key==="price"?`${Number(r).toFixed(2)} €`:r}</dd>`})}
+        ${i?a`<dt>Finestra di beva</dt><dd>${i}</dd>`:d}
       </dl>
       <div class="label-box">
-        ${this._label?B`<img class="label ${this._label.label_format}" alt="Etichetta QR" src="data:image/png;base64,${this._label.png_base64}" />`:B`<div class="note">Preparo l'etichetta…</div>`}
+        ${this._label?a`<img class="label ${this._label.label_format}" alt="Etichetta QR" src="data:image/png;base64,${this._label.png_base64}" />`:a`<div class="note">Preparo l'etichetta…</div>`}
         <div class="note">Inquadra il QR con l'app Home Assistant quando prendi la bottiglia: verrà tolta dalla cantina.</div>
         <div class="row">
           <button class="btn small" @click=${this._printOnPrinter}>🖨️ Stampante etichette</button>
           <button class="btn small" ?disabled=${!this._label} @click=${this._printInBrowser}>Stampa dal browser</button>
         </div>
       </div>
-      ${this._otherReason?B`<div class="reasons">
-            ${Object.entries(this.data.reasons).filter(([t])=>"drank"!==t).map(([t,e])=>B`<button class="btn small ${"deleted"===t?"danger":""}" ?disabled=${this._busy}
-                @click=${()=>this._remove(t)}>${e}</button>`)}
-          </div>`:W}
-    `}_renderViewFoot(){return B`<div class="dialog-foot">
+      ${this._otherReason?a`<div class="reasons">
+            ${Object.entries(this.data.reasons).filter(([s])=>s!=="drank").map(([s,r])=>a`<button class="btn small ${s==="deleted"?"danger":""}" ?disabled=${this._busy}
+                @click=${()=>this._remove(s)}>${r}</button>`)}
+          </div>`:d}
+    `}_renderViewFoot(){return a`<div class="dialog-foot">
       <button class="btn" @click=${()=>this.dispatchEvent(new CustomEvent("move",{detail:{bottle:this.bottle}}))}>↔ Sposta</button>
-      <button class="btn" @click=${()=>{this._values=Object.fromEntries(["type",...ft.map(t=>t.key)].map(t=>[t,this.bottle[t]??""])),this._sameWine=!0,this._editing=!0}}>✏️ Modifica</button>
+      <button class="btn" @click=${()=>{this._values=Object.fromEntries(["type",...G.map((t)=>t.key)].map((t)=>[t,this.bottle[t]??""])),this._sameWine=!0,this._editing=!0}}>✏️ Modifica</button>
       <button class="btn" @click=${()=>this._otherReason=!this._otherReason}>Altro…</button>
       <button class="btn primary" ?disabled=${this._busy} @click=${()=>{this._stars=null,this._tasting="",this._rating=!0}}>🍷 Bevuta</button>
-    </div>`}_renderRate(){return B`<div class="rate">
-      ${this.bottle.reserved_for?B`<div class="note">🔒 Era riservata: «${this.bottle.reserved_for}»</div>`:W}
+    </div>`}_renderRate(){return a`<div class="rate">
+      ${this.bottle.reserved_for?a`<div class="note">🔒 Era riservata: «${this.bottle.reserved_for}»</div>`:d}
       <div class="rate-q">Com'era?</div>
-      ${Rt(this._stars,t=>this._stars=t,!0)}
+      ${C(this._stars,(t)=>this._stars=t,!0)}
       <div class="rate-hint">${["Tocca le stelle per votarla","Deludente","Così così","Buono","Molto buono","Eccezionale"][this._stars||0]}</div>
       <textarea class="tasting" rows="3" maxlength="1000"
         placeholder="Note di degustazione (facoltative): profumi, con cosa l'avete bevuta, se ricomprarla…"
-        .value=${this._tasting} @input=${t=>this._tasting=t.target.value}></textarea>
+        .value=${this._tasting} @input=${(t)=>this._tasting=t.target.value}></textarea>
       <div class="note">Il voto resta nello storico e aiuta gli abbinamenti a proporti i vini che ti sono piaciuti di più.</div>
-    </div>`}_renderRateFoot(){const t=!this._stars&&!this._tasting.trim();return B`<div class="dialog-foot">
+    </div>`}_renderRateFoot(){let t=!this._stars&&!this._tasting.trim();return a`<div class="dialog-foot">
       <button class="btn" ?disabled=${this._busy} @click=${()=>this._rating=!1}>Annulla</button>
       <button class="btn primary" ?disabled=${this._busy} @click=${()=>this._remove("drank",!0)}>
-        ${t?"Togli senza voto":"🍷 Salva e togli"}
+        ${t?"Togli senza voto":"\uD83C\uDF77 Salva e togli"}
       </button>
-    </div>`}_renderEdit(){const t=this._sameWineCount();return B`
-      ${zt(this.data,this._values,(t,e)=>this._values={...this._values,[t]:e})}
-      ${t>1?B`<label class="check"><input type="checkbox" .checked=${this._sameWine}
-            @change=${t=>this._sameWine=t.target.checked} />
-            Applica a tutte le ${t} bottiglie di questo vino</label>`:W}
-    `}_renderEditFoot(){return B`<div class="dialog-foot">
+    </div>`}_renderEdit(){let t=this._sameWineCount();return a`
+      ${ht(this.data,this._values,(e,i)=>this._values={...this._values,[e]:i})}
+      ${t>1?a`<label class="check"><input type="checkbox" .checked=${this._sameWine}
+            @change=${(e)=>this._sameWine=e.target.checked} />
+            Applica a tutte le ${t} bottiglie di questo vino</label>`:d}
+    `}_renderEditFoot(){return a`<div class="dialog-foot">
       <button class="btn" @click=${()=>this._editing=!1}>Annulla</button>
       <button class="btn primary" ?disabled=${this._busy} @click=${this._saveEdit}>Salva</button>
-    </div>`}};It.styles=[xt,r`
+    </div>`}static styles=[x,v`
       .res-btn {
         margin-left: auto;
       }
@@ -864,39 +871,39 @@ function t(t,e,i,s){var a,o=arguments.length,r=o<3?e:null===s?s=Object.getOwnPro
         margin-top: 12px;
         font-size: 0.9em;
       }
-    `],t([bt({attribute:!1})],It.prototype,"card",void 0),t([bt({attribute:!1})],It.prototype,"data",void 0),t([bt({attribute:!1})],It.prototype,"bottle",void 0),t([gt()],It.prototype,"_label",void 0),t([gt()],It.prototype,"_editing",void 0),t([gt()],It.prototype,"_values",void 0),t([gt()],It.prototype,"_sameWine",void 0),t([gt()],It.prototype,"_otherReason",void 0),t([gt()],It.prototype,"_busy",void 0),t([gt()],It.prototype,"_rating",void 0),t([gt()],It.prototype,"_stars",void 0),t([gt()],It.prototype,"_tasting",void 0),t([gt()],It.prototype,"_reserving",void 0),t([gt()],It.prototype,"_resFor",void 0),t([gt()],It.prototype,"_resUntil",void 0),It=t([pt("tb-bottle-dialog")],It);let Tt=class extends dt{constructor(){super(...arguments),this._drafts={},this._open=null}_close(){this.dispatchEvent(new CustomEvent("close"))}_draft(t){return this._drafts[t.id]||{name:t.name,shelves:[...vt(t)]}}_edit(t,e){const i=this._draft(t),s={name:i.name,shelves:[...i.shelves]};e(s),this._drafts={...this._drafts,[t.id]:s}}_setShelfCount(t,e){this._edit(t,t=>{e=Math.max(1,Math.min(30,e));const i=t.shelves[t.shelves.length-1]||6;for(;t.shelves.length<e;)t.shelves.push(i);t.shelves.length=e})}_setShelf(t,e,i){this._edit(t,t=>t.shelves[e]=Math.max(1,Math.min(30,i)))}_setAll(t,e){this._edit(t,t=>t.shelves=t.shelves.map(()=>Math.max(1,Math.min(30,e))))}_count(t){return this.data.bottles.filter(e=>e.rack_id===t).length}async _save(t){const e=this._draft(t),i=await this.card.ws({type:"taponbon/save_rack",rack:{id:t.id,name:e.name,shelves:e.shelves}}),s={...this._drafts};delete s[t.id],this._drafts=s,this.card.toast(i.displaced?`Salvato. ${i.displaced} bottiglie sono finite in "Da sistemare".`:"Scaffale salvato")}async _delete(t){const e=this._count(t.id);confirm(`Eliminare "${t.name}"?${e?` Le sue ${e} bottiglie restano in cantina, in "Da sistemare".`:""}`)&&(await this.card.ws({type:"taponbon/delete_rack",rack_id:t.id}),this.card.toast("Scaffale eliminato"))}async _add(){const t=await this.card.ws({type:"taponbon/save_rack",rack:{name:`Scaffale ${this.data.racks.length+1}`,shelves:[8,8,8,8,8]}});this._open=t.rack.id}async _setting(t,e){await this.card.ws({type:"taponbon/update_settings",[t]:e})}_stepper(t,e){return B`<span class="stepper">
+    `]}c([b({attribute:!1})],ut.prototype,"card",void 0),c([b({attribute:!1})],ut.prototype,"data",void 0),c([b({attribute:!1})],ut.prototype,"bottle",void 0),c([h()],ut.prototype,"_label",void 0),c([h()],ut.prototype,"_editing",void 0),c([h()],ut.prototype,"_values",void 0),c([h()],ut.prototype,"_sameWine",void 0),c([h()],ut.prototype,"_otherReason",void 0),c([h()],ut.prototype,"_busy",void 0),c([h()],ut.prototype,"_rating",void 0),c([h()],ut.prototype,"_stars",void 0),c([h()],ut.prototype,"_tasting",void 0),c([h()],ut.prototype,"_reserving",void 0),c([h()],ut.prototype,"_resFor",void 0),c([h()],ut.prototype,"_resUntil",void 0),ut=c([y("tb-bottle-dialog")],ut);var gt=30;class bt extends m{constructor(){super(...arguments);this._drafts={};this._open=null}_close(){this.dispatchEvent(new CustomEvent("close"))}_draft(t){return this._drafts[t.id]||{name:t.name,shelves:[...V(t)]}}_edit(t,e){let i=this._draft(t),s={name:i.name,shelves:[...i.shelves]};e(s),this._drafts={...this._drafts,[t.id]:s}}_setShelfCount(t,e){this._edit(t,(i)=>{e=Math.max(1,Math.min(gt,e));let s=i.shelves[i.shelves.length-1]||6;while(i.shelves.length<e)i.shelves.push(s);i.shelves.length=e})}_setShelf(t,e,i){this._edit(t,(s)=>s.shelves[e]=Math.max(1,Math.min(gt,i)))}_setAll(t,e){this._edit(t,(i)=>i.shelves=i.shelves.map(()=>Math.max(1,Math.min(gt,e))))}_count(t){return this.data.bottles.filter((e)=>e.rack_id===t).length}async _save(t){let e=this._draft(t),i=await this.card.ws({type:"taponbon/save_rack",rack:{id:t.id,name:e.name,shelves:e.shelves}}),s={...this._drafts};delete s[t.id],this._drafts=s,this.card.toast(i.displaced?`Salvato. ${i.displaced} bottiglie sono finite in "Da sistemare".`:"Scaffale salvato")}async _delete(t){let e=this._count(t.id);if(!confirm(`Eliminare "${t.name}"?${e?` Le sue ${e} bottiglie restano in cantina, in "Da sistemare".`:""}`))return;await this.card.ws({type:"taponbon/delete_rack",rack_id:t.id}),this.card.toast("Scaffale eliminato")}async _add(){let t=await this.card.ws({type:"taponbon/save_rack",rack:{name:`Scaffale ${this.data.racks.length+1}`,shelves:[8,8,8,8,8]}});this._open=t.rack.id}async _setting(t,e){await this.card.ws({type:"taponbon/update_settings",[t]:e})}_stepper(t,e){return a`<span class="stepper">
       <button @click=${()=>e(t-1)} aria-label="meno">−</button>
       <span>${t}</span>
       <button @click=${()=>e(t+1)} aria-label="più">+</button>
-    </span>`}_preview(t){const e=Math.max(...t);return B`<div class="preview">
-      ${t.map(t=>B`<div class="pv-shelf">
-        <div class="pv-row" style="grid-template-columns: repeat(${t}, 1fr); width: ${t/e*100}%">
-          ${Array.from({length:t},()=>B`<i></i>`)}
+    </span>`}_preview(t){let e=Math.max(...t);return a`<div class="preview">
+      ${t.map((i)=>a`<div class="pv-shelf">
+        <div class="pv-row" style="grid-template-columns: repeat(${i}, 1fr); width: ${i/e*100}%">
+          ${Array.from({length:i},()=>a`<i></i>`)}
         </div>
         <div class="pv-board"></div>
       </div>`)}
-    </div>`}_renderRack(t){const e=this._draft(t),i=!!this._drafts[t.id],s=this._open===t.id||i,a=e.shelves.every(t=>t===e.shelves[0]),o=e.shelves.reduce((t,e)=>t+e,0);return B`<div class="rack ${s?"open":""}">
+    </div>`}_renderRack(t){let e=this._draft(t),i=!!this._drafts[t.id],s=this._open===t.id||i,r=e.shelves.every((l)=>l===e.shelves[0]),o=e.shelves.reduce((l,n)=>l+n,0);return a`<div class="rack ${s?"open":""}">
       <button class="rack-sum" @click=${()=>this._open=s&&!i?null:t.id}>
         <span class="rack-name">${e.name}</span>
         <span class="note">${e.shelves.length} mensole · ${o} posti · ${this._count(t.id)} bottiglie</span>
         <span class="chev">${s?"▴":"▾"}</span>
       </button>
-      ${s?B`<div class="rack-edit">
+      ${s?a`<div class="rack-edit">
             <div class="cols">
               <div class="controls">
                 <label class="field">Nome
-                  <input .value=${e.name} @input=${e=>this._edit(t,t=>t.name=e.target.value)} />
+                  <input .value=${e.name} @input=${(l)=>this._edit(t,(n)=>n.name=l.target.value)} />
                 </label>
-                <div class="line"><span>Mensole</span>${this._stepper(e.shelves.length,e=>this._setShelfCount(t,e))}</div>
+                <div class="line"><span>Mensole</span>${this._stepper(e.shelves.length,(l)=>this._setShelfCount(t,l))}</div>
                 <div class="line">
-                  <span>Bottiglie per mensola${a?"":B` <em class="note">(diverse)</em>`}</span>
-                  ${this._stepper(a?e.shelves[0]:Math.max(...e.shelves),e=>this._setAll(t,e))}
+                  <span>Bottiglie per mensola${r?"":a` <em class="note">(diverse)</em>`}</span>
+                  ${this._stepper(r?e.shelves[0]:Math.max(...e.shelves),(l)=>this._setAll(t,l))}
                 </div>
-                <details ?open=${!a}>
+                <details ?open=${!r}>
                   <summary>Personalizza ogni mensola</summary>
-                  ${e.shelves.map((i,s)=>B`<div class="line small">
-                    <span>Mensola ${s+1}${0===s?" (in alto)":s===e.shelves.length-1?" (in basso)":""}</span>
-                    ${this._stepper(i,e=>this._setShelf(t,s,e))}
+                  ${e.shelves.map((l,n)=>a`<div class="line small">
+                    <span>Mensola ${n+1}${n===0?" (in alto)":n===e.shelves.length-1?" (in basso)":""}</span>
+                    ${this._stepper(l,(u)=>this._setShelf(t,n,u))}
                   </div>`)}
                 </details>
               </div>
@@ -905,14 +912,14 @@ function t(t,e,i,s){var a,o=arguments.length,r=o<3?e:null===s?s=Object.getOwnPro
             <div class="rack-foot">
               <button class="btn small danger" @click=${()=>this._delete(t)}>Elimina scaffale</button>
               <span>
-                ${i?B`<button class="btn small" @click=${()=>{const e={...this._drafts};delete e[t.id],this._drafts=e}}>Annulla</button>`:W}
+                ${i?a`<button class="btn small" @click=${()=>{let l={...this._drafts};delete l[t.id],this._drafts=l}}>Annulla</button>`:d}
                 <button class="btn small primary" ?disabled=${!i} @click=${()=>this._save(t)}>Salva</button>
               </span>
             </div>
-          </div>`:W}
-    </div>`}async _inventory(t){await this.card.ws({type:"taponbon/inventory_start",rack_id:t}),this.card.toast("Inventario avviato: scansiona le bottiglie"),this._close()}render(){const t=this.data.settings,e=this.data.racks.reduce((t,e)=>t+mt(e),0);return B`
+          </div>`:d}
+    </div>`}async _inventory(t){await this.card.ws({type:"taponbon/inventory_start",rack_id:t}),this.card.toast("Inventario avviato: scansiona le bottiglie"),this._close()}render(){let t=this.data.settings,e=this.data.racks.reduce((i,s)=>i+W(s),0);return a`
       <div class="overlay" @click=${this._close}>
-        <div class="dialog" @click=${t=>t.stopPropagation()}>
+        <div class="dialog" @click=${(i)=>i.stopPropagation()}>
           <div class="dialog-head">
             <div>
               <div class="eyebrow">La tua cantina</div>
@@ -922,17 +929,17 @@ function t(t,e,i,s){var a,o=arguments.length,r=o<3?e:null===s?s=Object.getOwnPro
           </div>
           <div class="dialog-body">
             <div class="section" style="margin-top:4px">Scaffali · ${e} posti</div>
-            ${this.data.racks.map(t=>this._renderRack(t))}
+            ${this.data.racks.map((i)=>this._renderRack(i))}
             <button class="btn" @click=${this._add}>＋ Nuovo scaffale</button>
 
             <div class="section">Etichette</div>
             <div class="types" style="margin-bottom:12px">
-              ${[["qr","Solo QR · 23 × 23 mm"],["qr30","Solo QR · 30 × 30 mm"],["full","QR e dati del vino · 50 × 30 mm"]].map(([e,i])=>B`<button class="chip ${t.label_format===e?"active":""}"
-                  @click=${()=>this._setting("label_format",e)}>${i}</button>`)}
+              ${[["qr","Solo QR · 23 × 23 mm"],["qr30","Solo QR · 30 × 30 mm"],["full","QR e dati del vino · 50 × 30 mm"]].map(([i,s])=>a`<button class="chip ${t.label_format===i?"active":""}"
+                  @click=${()=>this._setting("label_format",i)}>${s}</button>`)}
             </div>
             <label class="check">
               <input type="checkbox" .checked=${t.auto_labels}
-                @change=${t=>this._setting("auto_labels",t.target.checked)} />
+                @change=${(i)=>this._setting("auto_labels",i.target.checked)} />
               Stampa l'etichetta QR quando aggiungo una bottiglia
             </label>
 
@@ -943,20 +950,20 @@ function t(t,e,i,s){var a,o=arguments.length,r=o<3?e:null===s?s=Object.getOwnPro
             </div>
             <div class="types" style="margin-bottom:12px">
               <button class="chip" @click=${()=>this._inventory(null)}>Tutta la cantina</button>
-              ${this.data.racks.length>1?this.data.racks.map(t=>B`<button class="chip" @click=${()=>this._inventory(t.id)}>Solo ${t.name}</button>`):W}
+              ${this.data.racks.length>1?this.data.racks.map((i)=>a`<button class="chip" @click=${()=>this._inventory(i.id)}>Solo ${i.name}</button>`):d}
             </div>
 
             <div class="section">Finestra di beva</div>
             <div class="note" style="margin-bottom:8px">Avvisami prima che si chiuda:</div>
             <div class="types">
-              ${[[90,"3 mesi"],[180,"6 mesi"],[365,"1 anno"]].map(([e,i])=>B`<button class="chip ${t.alert_days===e?"active":""}"
-                  @click=${()=>this._setting("alert_days",e)}>${i}</button>`)}
+              ${[[90,"3 mesi"],[180,"6 mesi"],[365,"1 anno"]].map(([i,s])=>a`<button class="chip ${t.alert_days===i?"active":""}"
+                  @click=${()=>this._setting("alert_days",i)}>${s}</button>`)}
             </div>
           </div>
           <div class="dialog-foot"><button class="btn" @click=${this._close}>Chiudi</button></div>
         </div>
       </div>
-    `}};Tt.styles=[xt,r`
+    `}static styles=[x,v`
       .rack {
         border: 1px solid var(--tb-line);
         border-radius: 16px;
@@ -1071,44 +1078,44 @@ function t(t,e,i,s){var a,o=arguments.length,r=o<3?e:null===s?s=Object.getOwnPro
           grid-template-columns: 1fr;
         }
       }
-    `],t([bt({attribute:!1})],Tt.prototype,"card",void 0),t([bt({attribute:!1})],Tt.prototype,"data",void 0),t([gt()],Tt.prototype,"_drafts",void 0),t([gt()],Tt.prototype,"_open",void 0),Tt=t([pt("tb-racks-dialog")],Tt);let Ot=class extends dt{constructor(){super(...arguments),this._items=null,this._editing=null,this._stars=null,this._tasting=""}connectedCallback(){super.connectedCallback(),this._load()}async _load(){const t=await this.card.ws({type:"taponbon/get_history"});this._items=t.history}_close(){this.dispatchEvent(new CustomEvent("close"))}async _restore(t){const e=await this.card.ws({type:"taponbon/restore",history_id:t.history_id});this.card.toast(e.bottle.rack_id?"Rimessa al suo posto":'Rimessa in cantina, in "Da sistemare"'),this._load()}_edit(t){this._editing=this._editing===t.history_id?null:t.history_id,this._stars=t.rating??null,this._tasting=t.tasting_notes||""}async _saveRating(t){const e=await this.card.ws({type:"taponbon/rate_history",history_id:t.history_id,rating:this._stars,tasting_notes:this._tasting.trim()});this._editing=null,this.card.toast(e?.wishlisted?"Voto salvato. Era l'ultima: messa nei desideri da ricomprare ♡":"Voto salvato"),this._load()}render(){return B`
-      ${Ct}
+    `]}c([b({attribute:!1})],bt.prototype,"card",void 0),c([b({attribute:!1})],bt.prototype,"data",void 0),c([h()],bt.prototype,"_drafts",void 0),c([h()],bt.prototype,"_open",void 0),bt=c([y("tb-racks-dialog")],bt);class mt extends m{constructor(){super(...arguments);this._items=null;this._editing=null;this._stars=null;this._tasting=""}connectedCallback(){super.connectedCallback(),this._load()}async _load(){let t=await this.card.ws({type:"taponbon/get_history"});this._items=t.history}_close(){this.dispatchEvent(new CustomEvent("close"))}async _restore(t){let e=await this.card.ws({type:"taponbon/restore",history_id:t.history_id});this.card.toast(e.bottle.rack_id?"Rimessa al suo posto":'Rimessa in cantina, in "Da sistemare"'),this._load()}_edit(t){this._editing=this._editing===t.history_id?null:t.history_id,this._stars=t.rating??null,this._tasting=t.tasting_notes||""}async _saveRating(t){let e=await this.card.ws({type:"taponbon/rate_history",history_id:t.history_id,rating:this._stars,tasting_notes:this._tasting.trim()});this._editing=null,this.card.toast(e?.wishlisted?"Voto salvato. Era l'ultima: messa nei desideri da ricomprare ♡":"Voto salvato"),this._load()}render(){return a`
+      ${E}
       <div class="overlay" @click=${this._close}>
-        <div class="dialog" @click=${t=>t.stopPropagation()}>
+        <div class="dialog" @click=${(t)=>t.stopPropagation()}>
           <div class="dialog-head">
             <div><div class="eyebrow">Bottiglie stappate e non solo</div><div class="dialog-title">Storico</div></div>
             <button class="close" @click=${this._close}>✕</button>
           </div>
           <div class="dialog-body">
-            ${null===this._items?B`<div class="note">Carico…</div>`:this._items.length?this._items.map(t=>this._renderItem(t)):B`<div class="note">Ancora nessuna bottiglia tolta dalla cantina.</div>`}
+            ${this._items===null?a`<div class="note">Carico…</div>`:!this._items.length?a`<div class="note">Ancora nessuna bottiglia tolta dalla cantina.</div>`:this._items.map((t)=>this._renderItem(t))}
           </div>
           <div class="dialog-foot"><button class="btn" @click=${this._close}>Chiudi</button></div>
         </div>
       </div>
-    `}_renderItem(t){const e="drank"===t.reason,i=this._editing===t.history_id;return B`<div class="item ${i?"open":""}">
+    `}_renderItem(t){let e=t.reason==="drank",i=this._editing===t.history_id;return a`<div class="item ${i?"open":""}">
       <div class="line">
-        <span class="mini">${At(t.type)}</span>
+        <span class="mini">${k(t.type)}</span>
         <div class="text">
-          <div>${_t(t)}</div>
+          <div>${f(t)}</div>
           <div class="note">${this.data.reasons[t.reason]||t.reason} · ${new Date(t.removed_at).toLocaleDateString("it-IT")}
-            ${t.producer?B` · ${t.producer}`:W}</div>
-          ${e&&!i?B`<button class="vote" @click=${()=>this._edit(t)} title="Vota o scrivi una nota">
-                ${t.rating?Rt(t.rating):B`<span class="add-vote">☆ Vota</span>`}
-                ${t.tasting_notes?B`<span class="tn">«${t.tasting_notes}»</span>`:W}
-              </button>`:W}
+            ${t.producer?a` · ${t.producer}`:d}</div>
+          ${e&&!i?a`<button class="vote" @click=${()=>this._edit(t)} title="Vota o scrivi una nota">
+                ${t.rating?C(t.rating):a`<span class="add-vote">☆ Vota</span>`}
+                ${t.tasting_notes?a`<span class="tn">«${t.tasting_notes}»</span>`:d}
+              </button>`:d}
         </div>
         <button class="btn small" @click=${()=>this._restore(t)}>Rimetti</button>
       </div>
-      ${i?B`<div class="editor">
-            ${Rt(this._stars,t=>this._stars=t,!0)}
+      ${i?a`<div class="editor">
+            ${C(this._stars,(s)=>this._stars=s,!0)}
             <textarea rows="2" maxlength="1000" placeholder="Note di degustazione…" .value=${this._tasting}
-              @input=${t=>this._tasting=t.target.value}></textarea>
+              @input=${(s)=>this._tasting=s.target.value}></textarea>
             <div class="row">
               <button class="btn small" @click=${()=>this._editing=null}>Annulla</button>
               <button class="btn small primary" @click=${()=>this._saveRating(t)}>Salva</button>
             </div>
-          </div>`:W}
-    </div>`}};Ot.styles=[xt,r`
+          </div>`:d}
+    </div>`}static styles=[x,v`
       .item {
         padding: 8px 0;
         border-bottom: 1px solid var(--divider-color);
@@ -1183,84 +1190,88 @@ function t(t,e,i,s){var a,o=arguments.length,r=o<3?e:null===s?s=Object.getOwnPro
       .item {
         border-bottom-color: var(--tb-line) !important;
       }
-    `],t([bt({attribute:!1})],Ot.prototype,"card",void 0),t([bt({attribute:!1})],Ot.prototype,"data",void 0),t([gt()],Ot.prototype,"_items",void 0),t([gt()],Ot.prototype,"_editing",void 0),t([gt()],Ot.prototype,"_stars",void 0),t([gt()],Ot.prototype,"_tasting",void 0),Ot=t([pt("tb-history-dialog")],Ot);const Ut=["Antipasto","Primo","Secondo","Dolce"],Nt=["Brasato","Pesce al forno","Crudi di mare","Pizza","Formaggi stagionati","Risotto ai funghi","Dolce"];let Dt=class extends dt{constructor(){super(...arguments),this._dish="",this._busy=!1,this._result=null,this._asked="",this._mode="dish",this._courses=["","","",""]}firstUpdated(){this.renderRoot.querySelector("input")?.focus()}_close(){this.dispatchEvent(new CustomEvent("close"))}async _ask(t=this._dish){if((t=t.trim())&&!this._busy){this._dish=t,this._busy=!0,this._result=null;try{this._result=await this.card.ws({type:"taponbon/pair",dish:t}),this._asked=t}catch{}finally{this._busy=!1}}}async _askMenu(){const t=this._courses.map(t=>t.trim()).filter(Boolean);if(t.length&&!this._busy){this._busy=!0,this._result=null;try{this._result=await this.card.ws({type:"taponbon/pair",courses:t}),this._asked=t.join(" · ")}catch{}finally{this._busy=!1}}}_setMode(t){this._mode!==t&&(this._mode=t,this._result=null)}_open(t){this.dispatchEvent(new CustomEvent("open-bottle",{detail:{bottleId:t.bottle_ids[0]}}))}render(){const t=this._result;return B`
-      ${Ct}
+    `]}c([b({attribute:!1})],mt.prototype,"card",void 0),c([b({attribute:!1})],mt.prototype,"data",void 0),c([h()],mt.prototype,"_items",void 0),c([h()],mt.prototype,"_editing",void 0),c([h()],mt.prototype,"_stars",void 0),c([h()],mt.prototype,"_tasting",void 0),mt=c([y("tb-history-dialog")],mt);var he=["Antipasto","Primo","Secondo","Dolce"],ue=["Brasato","Pesce al forno","Crudi di mare","Pizza","Formaggi stagionati","Risotto ai funghi","Dolce"];class vt extends m{constructor(){super(...arguments);this._dish="";this._busy=!1;this._result=null;this._asked="";this._mode="dish";this._courses=["","","",""]}firstUpdated(){this.renderRoot.querySelector("input")?.focus()}_close(){this.dispatchEvent(new CustomEvent("close"))}async _ask(t=this._dish){if(t=t.trim(),!t||this._busy)return;this._dish=t,this._busy=!0,this._result=null;try{this._result=await this.card.ws({type:"taponbon/pair",dish:t}),this._asked=t}catch{}finally{this._busy=!1}}async _askMenu(){let t=this._courses.map((e)=>e.trim()).filter(Boolean);if(!t.length||this._busy)return;this._busy=!0,this._result=null;try{this._result=await this.card.ws({type:"taponbon/pair",courses:t}),this._asked=t.join(" · ")}catch{}finally{this._busy=!1}}_setMode(t){if(this._mode===t)return;this._mode=t,this._result=null}async _light(t,e){if(!t.length)return;await this.card.ws({type:"taponbon/highlight",source:e,query:this._asked,groups:t}),this.card.toast("Illuminate sullo scaffale: si spengono quando ne prendi una"),this._close()}_open(t){this.dispatchEvent(new CustomEvent("open-bottle",{detail:{bottleId:t.bottle_ids[0]}}))}render(){let t=this._result;return a`
+      ${E}
       <div class="overlay" @click=${this._close}>
-        <div class="dialog" @click=${t=>t.stopPropagation()}>
+        <div class="dialog" @click=${(e)=>e.stopPropagation()}>
           <div class="dialog-head">
             <div><div class="eyebrow">Dalla tua cantina</div><div class="dialog-title">Cosa si mangia?</div></div>
             <button class="close" @click=${this._close}>✕</button>
           </div>
           <div class="dialog-body">
             <div class="modes">
-              <button class="chip ${"dish"===this._mode?"active":""}" @click=${()=>this._setMode("dish")}>Un piatto</button>
-              <button class="chip ${"menu"===this._mode?"active":""}" @click=${()=>this._setMode("menu")}>Menu della serata</button>
+              <button class="chip ${this._mode==="dish"?"active":""}" @click=${()=>this._setMode("dish")}>Un piatto</button>
+              <button class="chip ${this._mode==="menu"?"active":""}" @click=${()=>this._setMode("menu")}>Menu della serata</button>
             </div>
-            ${"dish"===this._mode?this._renderDishForm(t):this._renderMenuForm()}
-            ${this._busy?B`<div class="note waiting">Il sommelier sta guardando gli scaffali…</div>`:W}
-            ${t?t.courses?this._renderMenuResult(t):this._renderResult(t):W}
+            ${this._mode==="dish"?this._renderDishForm(t):this._renderMenuForm()}
+            ${this._busy?a`<div class="note waiting">Il sommelier sta guardando gli scaffali…</div>`:d}
+            ${t?t.courses?this._renderMenuResult(t):this._renderResult(t):d}
           </div>
           <div class="dialog-foot"><button class="btn" @click=${this._close}>Chiudi</button></div>
         </div>
       </div>
-    `}_renderDishForm(t){return B`
-      <form class="ask" @submit=${t=>{t.preventDefault(),this._ask()}}>
+    `}_renderDishForm(t){return a`
+      <form class="ask" @submit=${(e)=>{e.preventDefault(),this._ask()}}>
         <input class="dish" type="text" placeholder="Es. tagliata al rosmarino, spaghetti alle vongole…"
           .value=${this._dish} maxlength="300"
-          @input=${t=>this._dish=t.target.value} />
+          @input=${(e)=>this._dish=e.target.value} />
         <button class="btn primary" type="submit" ?disabled=${this._busy||!this._dish.trim()}>
           ${this._busy?"Ci penso…":"Consiglia"}
         </button>
       </form>
-      ${t||this._busy?W:B`<div class="quick">
-            ${Nt.map(t=>B`<button class="chip" @click=${()=>this._ask(t)}>${t}</button>`)}
-          </div>`}
-    `}_renderMenuForm(){const t=(t,e)=>this._courses=this._courses.map((i,s)=>s===t?e:i),e=this._courses.some(t=>t.trim());return B`
-      <form class="menu" @submit=${t=>{t.preventDefault(),this._askMenu()}}>
-        ${this._courses.map((e,i)=>B`<div class="course">
-          <span class="num">${i+1}</span>
-          <input class="dish" type="text" maxlength="200" .value=${e}
-            placeholder=${`${Ut[i]||"Portata"}${0===i?", es. crudi di mare":1===i?", es. risotto ai funghi":2===i?", es. brasato":", es. crostata"}`}
-            @input=${e=>t(i,e.target.value)} />
-          ${this._courses.length>1?B`<button type="button" class="close mini-x" title="Togli portata"
-                @click=${()=>this._courses=this._courses.filter((t,e)=>e!==i)}>✕</button>`:W}
+      ${!t&&!this._busy?a`<div class="quick">
+            ${ue.map((e)=>a`<button class="chip" @click=${()=>this._ask(e)}>${e}</button>`)}
+          </div>`:d}
+    `}_renderMenuForm(){let t=(i,s)=>this._courses=this._courses.map((r,o)=>o===i?s:r),e=this._courses.some((i)=>i.trim());return a`
+      <form class="menu" @submit=${(i)=>{i.preventDefault(),this._askMenu()}}>
+        ${this._courses.map((i,s)=>a`<div class="course">
+          <span class="num">${s+1}</span>
+          <input class="dish" type="text" maxlength="200" .value=${i}
+            placeholder=${`${he[s]||"Portata"}${s===0?", es. crudi di mare":s===1?", es. risotto ai funghi":s===2?", es. brasato":", es. crostata"}`}
+            @input=${(r)=>t(s,r.target.value)} />
+          ${this._courses.length>1?a`<button type="button" class="close mini-x" title="Togli portata"
+                @click=${()=>this._courses=this._courses.filter((r,o)=>o!==s)}>✕</button>`:d}
         </div>`)}
         <div class="menu-actions">
-          ${this._courses.length<8?B`<button type="button" class="btn small" @click=${()=>this._courses=[...this._courses,""]}>＋ Portata</button>`:B`<span></span>`}
+          ${this._courses.length<8?a`<button type="button" class="btn small" @click=${()=>this._courses=[...this._courses,""]}>＋ Portata</button>`:a`<span></span>`}
           <button class="btn primary" type="submit" ?disabled=${this._busy||!e}>
             ${this._busy?"Ci penso…":"Componi i vini"}
           </button>
         </div>
         <div class="note">Lascia vuote le portate che non ci sono.</div>
       </form>
-    `}_wineCard(t,e={}){const i={closing:"Da bere presto",past:"Oltre la finestra",wait:"Ancora giovane"},s=e.reason??t.reason;return B`<button class="pick ${e.best?"best":""} ${e.compact?"compact":""}" @click=${()=>this._open(t)}>
-      <span class="mini">${At(t.type,"closing"===t.status||"past"===t.status?t.status:null)}</span>
+    `}_wineCard(t,e={}){let i={closing:"Da bere presto",past:"Oltre la finestra",wait:"Ancora giovane"},s=e.reason??t.reason;return a`<button class="pick ${e.best?"best":""} ${e.compact?"compact":""}" @click=${()=>this._open(t)}>
+      <span class="mini">${k(t.type,t.status==="closing"||t.status==="past"?t.status:null)}</span>
       <div class="text">
         <div class="wine">
-          ${e.best?B`<span class="badge">Il migliore</span>`:W}
-          ${_t(t)}
-          ${i[t.status]?B`<span class="state ${t.status}">${i[t.status]}</span>`:W}
+          ${e.best?a`<span class="badge">Il migliore</span>`:d}
+          ${f(t)}
+          ${i[t.status]?a`<span class="state ${t.status}">${i[t.status]}</span>`:d}
         </div>
-        ${t.producer||t.rating?B`<div class="note">${t.producer||""}${t.rating?B`<span class="your">${t.producer?" · ":""}il tuo voto ${Rt(t.rating)} ${Pt(t.rating)}</span>`:W}</div>`:W}
-        ${s?B`<div class="reason">${s}</div>`:W}
-        <div class="where">📍 ${t.locations[0]}${t.bottles>1?B` · ${t.bottles} bottiglie`:W}</div>
+        ${t.producer||t.rating?a`<div class="note">${t.producer||""}${t.rating?a`<span class="your">${t.producer?" · ":""}il tuo voto ${C(t.rating)} ${st(t.rating)}</span>`:d}</div>`:d}
+        ${s?a`<div class="reason">${s}</div>`:d}
+        <div class="where">📍 ${t.locations[0]}${t.bottles>1?a` · ${t.bottles} bottiglie`:d}</div>
       </div>
       <span class="go">›</span>
-    </button>`}_renderMenuResult(t){const e=t.courses||[];return B`
+    </button>`}_renderMenuResult(t){let e=t.courses||[];return a`
       <div class="eyebrow small">Il percorso</div>
       <div class="path">
-        ${e.map((t,e)=>B`<div class="step">
-          <div class="step-head"><span class="num">${e+1}</span>${t.course.charAt(0).toUpperCase()+t.course.slice(1)}</div>
-          ${t.wine?this._wineCard(t.wine,{compact:!0,reason:t.reason}):B`<div class="note nothing">Nessun vino della cantina è adatto a questa portata.</div>`}
+        ${e.map((i,s)=>a`<div class="step">
+          <div class="step-head"><span class="num" style="--c:${K[s%K.length]}">${s+1}</span>${i.course.charAt(0).toUpperCase()+i.course.slice(1)}</div>
+          ${i.wine?this._wineCard(i.wine,{compact:!0,reason:i.reason}):a`<div class="note nothing">Nessun vino della cantina è adatto a questa portata.</div>`}
         </div>`)}
       </div>
-      ${t.one?B`<div class="eyebrow small">Oppure un vino per tutta la cena</div>${this._wineCard(t.one,{best:!0})}`:W}
-      ${t.advice?B`<div class="advice ${t.source}">${"ai"===t.source?"🍷 ":"ℹ️ "}${t.advice}</div>`:W}
-    `}_renderResult(t){return B`
-      ${(t.picks||[]).length?B`<div class="eyebrow small">Per «${this._asked}»</div>`:B`<div class="note">Nessun vino della cantina è davvero adatto a «${this._asked}».</div>`}
-      ${(t.picks||[]).map((t,e)=>this._wineCard(t,{best:0===e}))}
-      ${t.advice?B`<div class="advice ${t.source}">${"ai"===t.source?"🍷 ":"ℹ️ "}${t.advice}</div>`:W}
-    `}};Dt.styles=[xt,r`
+      ${e.some((i)=>i.wine)?a`<button class="btn primary light" @click=${()=>this._light(e.map((i,s)=>({label:i.course,color:K[s%K.length],bottle_ids:i.wine?.bottle_ids||[]})).filter((i)=>i.bottle_ids.length),"menu")}>💡 Illumina il percorso sullo scaffale</button>`:d}
+      ${t.one?a`<div class="eyebrow small">Oppure un vino per tutta la cena</div>${this._wineCard(t.one,{best:!0})}
+            <button class="btn small light" @click=${()=>this._light([{label:"Tutta la cena",color:Q,bottle_ids:t.one.bottle_ids}],"pair")}>💡 Illumina questo</button>`:d}
+      ${t.advice?a`<div class="advice ${t.source}">${t.source==="ai"?"\uD83C\uDF77 ":"ℹ️ "}${t.advice}</div>`:d}
+    `}_renderResult(t){return a`
+      ${!(t.picks||[]).length?a`<div class="note">Nessun vino della cantina è davvero adatto a «${this._asked}».</div>`:a`<div class="eyebrow small">Per «${this._asked}»</div>`}
+      ${(t.picks||[]).map((e,i)=>this._wineCard(e,{best:i===0}))}
+      ${(t.picks||[]).length?a`<button class="btn primary light" @click=${()=>this._light([{label:this._asked,color:Q,bottle_ids:(t.picks||[]).flatMap((e)=>e.bottle_ids)}],"pair")}>
+            💡 Illumina sullo scaffale</button>`:d}
+      ${t.advice?a`<div class="advice ${t.source}">${t.source==="ai"?"\uD83C\uDF77 ":"ℹ️ "}${t.advice}</div>`:d}
+    `}static styles=[x,v`
       .ask {
         display: flex;
         gap: 8px;
@@ -1290,6 +1301,15 @@ function t(t,e,i,s){var a,o=arguments.length,r=o<3?e:null===s?s=Object.getOwnPro
         display: flex;
         align-items: center;
         gap: 8px;
+      }
+      .light {
+        display: block;
+        margin: 4px 0 12px auto;
+      }
+      .step-head .num {
+        background: color-mix(in srgb, var(--c) 22%, transparent);
+        color: var(--c);
+        box-shadow: 0 0 10px -2px var(--c);
       }
       .num {
         flex: none;
@@ -1448,21 +1468,21 @@ function t(t,e,i,s){var a,o=arguments.length,r=o<3?e:null===s?s=Object.getOwnPro
       .advice.local {
         color: var(--secondary-text-color);
       }
-    `],t([bt({attribute:!1})],Dt.prototype,"card",void 0),t([bt({attribute:!1})],Dt.prototype,"data",void 0),t([gt()],Dt.prototype,"_dish",void 0),t([gt()],Dt.prototype,"_busy",void 0),t([gt()],Dt.prototype,"_result",void 0),t([gt()],Dt.prototype,"_asked",void 0),t([gt()],Dt.prototype,"_mode",void 0),t([gt()],Dt.prototype,"_courses",void 0),Dt=t([pt("tb-pair-dialog")],Dt);let jt=class extends dt{_close(){this.dispatchEvent(new CustomEvent("close"))}async _remove(t){await this.card.ws({type:"taponbon/wishlist_remove",wish_id:t.id}),this.card.toast(`${_t(t)} tolto dai desideri`)}render(){const t=this.data.wishlist||[];return B`
-      ${Ct}
+    `]}c([b({attribute:!1})],vt.prototype,"card",void 0),c([b({attribute:!1})],vt.prototype,"data",void 0),c([h()],vt.prototype,"_dish",void 0),c([h()],vt.prototype,"_busy",void 0),c([h()],vt.prototype,"_result",void 0),c([h()],vt.prototype,"_asked",void 0),c([h()],vt.prototype,"_mode",void 0),c([h()],vt.prototype,"_courses",void 0),vt=c([y("tb-pair-dialog")],vt);class ft extends m{constructor(){super(...arguments)}_close(){this.dispatchEvent(new CustomEvent("close"))}async _remove(t){await this.card.ws({type:"taponbon/wishlist_remove",wish_id:t.id}),this.card.toast(`${f(t)} tolto dai desideri`)}render(){let t=this.data.wishlist||[];return a`
+      ${E}
       <div class="overlay" @click=${this._close}>
-        <div class="dialog" @click=${t=>t.stopPropagation()}>
+        <div class="dialog" @click=${(e)=>e.stopPropagation()}>
           <div class="dialog-head">
             <div><div class="eyebrow">Da comprare</div><div class="dialog-title">Lista dei desideri</div></div>
             <button class="close" @click=${this._close}>✕</button>
           </div>
           <div class="dialog-body">
-            ${t.length?t.map(t=>this._renderWish(t)):B`<div class="empty-wish">
+            ${!t.length?a`<div class="empty-wish">
                   <div class="big">♡</div>
                   <div>Ancora vuota.</div>
                   <div class="note">Aggiungi i vini assaggiati al ristorante o da amici: basta una foto dell'etichetta.
                     Anche quando finisci l'ultima bottiglia di un vino a cui hai dato 4 o 5 stelle, finisce qui da solo.</div>
-                </div>`}
+                </div>`:t.map((e)=>this._renderWish(e))}
           </div>
           <div class="dialog-foot">
             <button class="btn" @click=${this._close}>Chiudi</button>
@@ -1470,24 +1490,24 @@ function t(t,e,i,s){var a,o=arguments.length,r=o<3?e:null===s?s=Object.getOwnPro
           </div>
         </div>
       </div>
-    `}_renderWish(t){const e=this.data.types[t.type];return B`<div class="wish">
-      <span class="mini">${At(t.type)}</span>
+    `}_renderWish(t){let e=this.data.types[t.type];return a`<div class="wish">
+      <span class="mini">${k(t.type)}</span>
       <div class="text">
         <div class="title">
-          ${_t(t)}
-          ${"rebuy"===t.source?B`<span class="tag">Da ricomprare</span>`:W}
+          ${f(t)}
+          ${t.source==="rebuy"?a`<span class="tag">Da ricomprare</span>`:d}
         </div>
         <div class="note">${[t.producer,e?.label,t.region].filter(Boolean).join(" · ")}</div>
-        ${t.rating?B`<div class="note">Il tuo voto ${Rt(t.rating)}</div>`:W}
-        ${t.where?B`<div class="note">📍 ${t.where}</div>`:W}
-        ${t.wish_notes?B`<div class="note italic">${t.wish_notes}</div>`:W}
+        ${t.rating?a`<div class="note">Il tuo voto ${C(t.rating)}</div>`:d}
+        ${t.where?a`<div class="note">📍 ${t.where}</div>`:d}
+        ${t.wish_notes?a`<div class="note italic">${t.wish_notes}</div>`:d}
       </div>
       <div class="acts">
         <button class="btn small primary" title="L'ho comprato: mettilo in cantina"
           @click=${()=>this.dispatchEvent(new CustomEvent("buy",{detail:{wish:t}}))}>🛒 Comprato</button>
         <button class="btn small" title="Togli dalla lista" @click=${()=>this._remove(t)}>✕</button>
       </div>
-    </div>`}};jt.styles=[xt,r`
+    </div>`}static styles=[x,v`
       .wish {
         display: flex;
         align-items: center;
@@ -1542,47 +1562,47 @@ function t(t,e,i,s){var a,o=arguments.length,r=o<3?e:null===s?s=Object.getOwnPro
         font-size: 2.4em;
         color: #e3b341;
       }
-    `],t([bt({attribute:!1})],jt.prototype,"card",void 0),t([bt({attribute:!1})],jt.prototype,"data",void 0),jt=t([pt("tb-wishlist-dialog")],jt);let Ht=class extends dt{constructor(){super(...arguments),this._history=[],this._done=new Set,this._busy=!1}connectedCallback(){super.connectedCallback(),this.report?.found_taken.length&&this.card.ws({type:"taponbon/get_history"}).then(t=>this._history=t.history)}_close(){this.dispatchEvent(new CustomEvent("close"))}async _removeMissing(t){this._busy=!0;try{const e=await this.card.ws({type:"taponbon/remove_bottles",bottle_ids:t,reason:"missing"});t.forEach(t=>this._done.add(t)),this._done=new Set(this._done),this.card.toast(`${e.removed} bottiglie tolte come "non trovate": le ritrovi nello storico`)}finally{this._busy=!1}}async _restore(t){this._busy=!0;try{for(const e of t)await this.card.ws({type:"taponbon/restore",history_id:e});t.forEach(t=>this._done.add(t)),this._done=new Set(this._done),this.card.toast(t.length>1?`${t.length} bottiglie rimesse in cantina`:"Rimessa in cantina")}finally{this._busy=!1}}render(){const t=this.report,e=new Map(this.data.bottles.map(t=>[t.id,t])),i=t.missing.filter(t=>!this._done.has(t)).map(t=>e.get(t)).filter(Boolean),s=t.misplaced.map(t=>e.get(t)).filter(Boolean),a=t.found_taken.filter(t=>!this._done.has(t)).map(t=>this._history.find(e=>e.history_id===t)).filter(Boolean),o=this.data.racks.find(e=>e.id===t.rack_id),r=!(i.length||s.length||t.found_taken.length||t.unknown);return B`
-      ${Ct}
+    `]}c([b({attribute:!1})],ft.prototype,"card",void 0),c([b({attribute:!1})],ft.prototype,"data",void 0),ft=c([y("tb-wishlist-dialog")],ft);class _t extends m{constructor(){super(...arguments);this._history=[];this._done=new Set;this._busy=!1}connectedCallback(){if(super.connectedCallback(),this.report?.found_taken.length)this.card.ws({type:"taponbon/get_history"}).then((t)=>this._history=t.history)}_close(){this.dispatchEvent(new CustomEvent("close"))}async _removeMissing(t){this._busy=!0;try{let e=await this.card.ws({type:"taponbon/remove_bottles",bottle_ids:t,reason:"missing"});t.forEach((i)=>this._done.add(i)),this._done=new Set(this._done),this.card.toast(`${e.removed} bottiglie tolte come "non trovate": le ritrovi nello storico`)}finally{this._busy=!1}}async _restore(t){this._busy=!0;try{for(let e of t)await this.card.ws({type:"taponbon/restore",history_id:e});t.forEach((e)=>this._done.add(e)),this._done=new Set(this._done),this.card.toast(t.length>1?`${t.length} bottiglie rimesse in cantina`:"Rimessa in cantina")}finally{this._busy=!1}}render(){let t=this.report,e=new Map(this.data.bottles.map((n)=>[n.id,n])),i=t.missing.filter((n)=>!this._done.has(n)).map((n)=>e.get(n)).filter(Boolean),s=t.misplaced.map((n)=>e.get(n)).filter(Boolean),r=t.found_taken.filter((n)=>!this._done.has(n)).map((n)=>this._history.find((u)=>u.history_id===n)).filter(Boolean),o=this.data.racks.find((n)=>n.id===t.rack_id),l=!i.length&&!s.length&&!t.found_taken.length&&!t.unknown;return a`
+      ${E}
       <div class="overlay" @click=${this._close}>
-        <div class="dialog" @click=${t=>t.stopPropagation()}>
+        <div class="dialog" @click=${(n)=>n.stopPropagation()}>
           <div class="dialog-head">
             <div><div class="eyebrow">Inventario${o?` · ${o.name}`:""}</div>
               <div class="dialog-title">${t.seen} su ${t.total} trovate</div></div>
             <button class="close" @click=${this._close}>✕</button>
           </div>
           <div class="dialog-body">
-            ${r?B`<div class="ok">✓ Tutto in ordine: la cantina corrisponde all'app.</div>`:W}
+            ${l?a`<div class="ok">✓ Tutto in ordine: la cantina corrisponde all'app.</div>`:d}
 
-            ${i.length?B`<div class="section">Non trovate (${i.length})</div>
+            ${i.length?a`<div class="section">Non trovate (${i.length})</div>
                   <div class="note">Sono nell'app ma non le hai scansionate. Se sono davvero sparite, toglile.</div>
-                  ${i.map(t=>this._row(t,$t(t,this.data.racks)))}
-                  <button class="btn small danger" ?disabled=${this._busy} @click=${()=>this._removeMissing(i.map(t=>t.id))}>
-                    Togli tutte le ${i.length} come "non trovate"</button>`:W}
+                  ${i.map((n)=>this._row(n,Y(n,this.data.racks)))}
+                  <button class="btn small danger" ?disabled=${this._busy} @click=${()=>this._removeMissing(i.map((n)=>n.id))}>
+                    Togli tutte le ${i.length} come "non trovate"</button>`:d}
 
-            ${a.length?B`<div class="section">Risultavano già tolte (${a.length})</div>
+            ${r.length?a`<div class="section">Risultavano già tolte (${r.length})</div>
                   <div class="note">Le hai scansionate, quindi sono ancora in cantina: rimettile.</div>
-                  ${a.map(t=>this._row(t,`Tolta il ${new Date(t.removed_at).toLocaleDateString("it-IT")}`))}
+                  ${r.map((n)=>this._row(n,`Tolta il ${new Date(n.removed_at).toLocaleDateString("it-IT")}`))}
                   <button class="btn small primary" ?disabled=${this._busy}
-                    @click=${()=>this._restore(a.map(t=>t.history_id))}>Rimetti in cantina</button>`:W}
+                    @click=${()=>this._restore(r.map((n)=>n.history_id))}>Rimetti in cantina</button>`:d}
 
-            ${s.length?B`<div class="section">Fuori posto (${s.length})</div>
+            ${s.length?a`<div class="section">Fuori posto (${s.length})</div>
                   <div class="note">Trovate in ${o?.name||"questo scaffale"}, ma registrate altrove. Tocca per aprirle e spostarle.</div>
-                  ${s.map(t=>this._row(t,`Registrata in: ${$t(t,this.data.racks)}`,!0))}`:W}
+                  ${s.map((n)=>this._row(n,`Registrata in: ${Y(n,this.data.racks)}`,!0))}`:d}
 
-            ${t.unknown?B`<div class="section">Codici sconosciuti</div>
-                  <div class="note">${t.unknown} QR non corrispondono a nessuna bottiglia: forse etichette vecchie da sostituire.</div>`:W}
+            ${t.unknown?a`<div class="section">Codici sconosciuti</div>
+                  <div class="note">${t.unknown} QR non corrispondono a nessuna bottiglia: forse etichette vecchie da sostituire.</div>`:d}
           </div>
           <div class="dialog-foot"><button class="btn" @click=${this._close}>Chiudi</button></div>
         </div>
       </div>
-    `}_row(t,e,i=!1){return B`<div class="row ${i?"link":""}"
+    `}_row(t,e,i=!1){return a`<div class="row ${i?"link":""}"
       @click=${i?()=>this.dispatchEvent(new CustomEvent("open-bottle",{detail:{bottleId:t.id}})):null}>
-      <span class="mini">${At(t.type)}</span>
-      <div class="text"><div>${_t(t)}${t.producer?B` <span class="note">· ${t.producer}</span>`:W}</div>
+      <span class="mini">${k(t.type)}</span>
+      <div class="text"><div>${f(t)}${t.producer?a` <span class="note">· ${t.producer}</span>`:d}</div>
         <div class="note">${e}</div></div>
-      ${i?B`<span class="go">›</span>`:W}
-    </div>`}};Ht.styles=[xt,r`
+      ${i?a`<span class="go">›</span>`:d}
+    </div>`}static styles=[x,v`
       .ok {
         padding: 14px;
         border-radius: 12px;
@@ -1621,20 +1641,20 @@ function t(t,e,i,s){var a,o=arguments.length,r=o<3?e:null===s?s=Object.getOwnPro
       .row + .btn {
         margin-top: 10px;
       }
-    `],t([bt({attribute:!1})],Ht.prototype,"card",void 0),t([bt({attribute:!1})],Ht.prototype,"data",void 0),t([bt({attribute:!1})],Ht.prototype,"report",void 0),t([gt()],Ht.prototype,"_history",void 0),t([gt()],Ht.prototype,"_done",void 0),t([gt()],Ht.prototype,"_busy",void 0),Ht=t([pt("tb-inventory-dialog")],Ht);let Lt=class extends dt{constructor(){super(...arguments),this._config={type:"custom:taponbon-card"},this._data=null,this._error="",this._typeFilter="",this._query="",this._dialog=null,this._moving=null,this._toast="",this._subscribing=!1,this._startMove=t=>{this._moving=t.detail.bottle,this._dialog=null}}setConfig(t){this._config={...t}}static getStubConfig(){return{type:"custom:taponbon-card"}}getCardSize(){return 8}getGridOptions(){return{columns:"full",min_columns:6}}connectedCallback(){super.connectedCallback(),this.hass&&this._subscribe()}disconnectedCallback(){super.disconnectedCallback(),this._unsub?.(),this._unsub=void 0}updated(t){t.has("hass")&&this.hass&&!this._unsub&&!this._subscribing&&this._subscribe()}async _subscribe(){if(!this._unsub&&!this._subscribing&&this.hass?.connection){this._subscribing=!0;try{this._unsub=await this.hass.connection.subscribeMessage(t=>{this._data=t,this._error=""},{type:"taponbon/subscribe"})}catch(t){this._error="unknown_command"===t?.code?"L'integrazione TaponBon non è installata: aggiungila da Impostazioni → Dispositivi e servizi.":`Impossibile caricare la cantina: ${t?.message||t}`}finally{this._subscribing=!1}}}async ws(t){try{return await this.hass.callWS(t)}catch(t){throw this.toast(t?.message||"Operazione non riuscita"),t}}toast(t){this._toast=t,clearTimeout(this._toastTimer),this._toastTimer=window.setTimeout(()=>this._toast="",3500)}_onCell(t,e,i,s){if(this._data?.inventory)s&&this.ws({type:"taponbon/take_code",code:`taponbon-${s.code}`});else{if(this._moving){const a=this._moving;if(this._moving=null,s?.id===a.id)return;return void this.ws({type:"taponbon/move_bottle",bottle_id:a.id,rack_id:t.id,row:e,col:i}).then(()=>this.toast(s?"Bottiglie scambiate di posto":"Bottiglia spostata"))}this._dialog=s?{kind:"bottle",bottleId:s.id}:{kind:"add",rackId:t.id,row:e,col:i}}}render(){const t=this._data;return B`
+    `]}c([b({attribute:!1})],_t.prototype,"card",void 0),c([b({attribute:!1})],_t.prototype,"data",void 0),c([b({attribute:!1})],_t.prototype,"report",void 0),c([h()],_t.prototype,"_history",void 0),c([h()],_t.prototype,"_done",void 0),c([h()],_t.prototype,"_busy",void 0),_t=c([y("tb-inventory-dialog")],_t);class yt extends m{constructor(){super(...arguments);this._config={type:"custom:taponbon-card"};this._data=null;this._error="";this._typeFilter="";this._query="";this._dialog=null;this._moving=null;this._toast="";this._subscribing=!1;this._startMove=(t)=>{this._moving=t.detail.bottle,this._dialog=null}}setConfig(t){this._config={...t}}static getStubConfig(){return{type:"custom:taponbon-card"}}getCardSize(){return 8}getGridOptions(){return{columns:"full",min_columns:6}}connectedCallback(){if(super.connectedCallback(),this.hass)this._subscribe()}disconnectedCallback(){super.disconnectedCallback(),this._unsub?.(),this._unsub=void 0}updated(t){if(t.has("hass")&&this.hass&&!this._unsub&&!this._subscribing)this._subscribe()}async _subscribe(){if(this._unsub||this._subscribing||!this.hass?.connection)return;this._subscribing=!0;try{this._unsub=await this.hass.connection.subscribeMessage((t)=>{this._data=t,this._error=""},{type:"taponbon/subscribe"})}catch(t){this._error=t?.code==="unknown_command"?"L'integrazione TaponBon non è installata: aggiungila da Impostazioni → Dispositivi e servizi.":`Impossibile caricare la cantina: ${t?.message||t}`}finally{this._subscribing=!1}}async ws(t){try{return await this.hass.callWS(t)}catch(e){throw this.toast(e?.message||"Operazione non riuscita"),e}}toast(t){this._toast=t,clearTimeout(this._toastTimer),this._toastTimer=window.setTimeout(()=>this._toast="",3500)}_onCell(t,e,i,s){if(this._data?.inventory){if(s)this.ws({type:"taponbon/take_code",code:`taponbon-${s.code}`});return}if(this._moving){let r=this._moving;if(this._moving=null,s?.id===r.id)return;this.ws({type:"taponbon/move_bottle",bottle_id:r.id,rack_id:t.id,row:e,col:i}).then(()=>this.toast(s?"Bottiglie scambiate di posto":"Bottiglia spostata"));return}this._dialog=s?{kind:"bottle",bottleId:s.id}:{kind:"add",rackId:t.id,row:e,col:i}}render(){let t=this._data;return a`
       <ha-card>
-        ${Ct}
-        ${this._error?B`<div class="empty">${this._error}</div>`:t?this._renderBody(t):B`<div class="empty">Carico la cantina…</div>`}
-        ${this._toast?B`<div class="toast">${this._toast}</div>`:W}
+        ${E}
+        ${this._error?a`<div class="empty">${this._error}</div>`:!t?a`<div class="empty">Carico la cantina…</div>`:this._renderBody(t)}
+        ${this._toast?a`<div class="toast">${this._toast}</div>`:d}
       </ha-card>
-      ${t?this._renderDialog(t):W}
-    `}_renderBody(t){const e=t.bottles.length,i=t.racks.reduce((t,e)=>t+mt(e),0),s=t.bottles.filter(t=>"closing"===t.alert).length,a=t.bottles.filter(t=>"past"===t.alert).length,o=t.bottles.filter(t=>!t.rack_id),r=Object.fromEntries(Object.keys(t.types).map(e=>[e,t.bottles.filter(t=>t.type===e).length])),n=Math.round(Number(this._config.columns))||0,l=n?Math.max(1,Math.min(6,n,t.racks.length||1)):0;return B`
+      ${t?this._renderDialog(t):d}
+    `}_renderBody(t){let e=t.bottles.length,i=t.racks.reduce((g,p)=>g+W(p),0),s=t.bottles.filter((g)=>g.alert==="closing").length,r=t.bottles.filter((g)=>g.alert==="past").length,o=t.bottles.filter((g)=>!g.rack_id),l=Object.fromEntries(Object.keys(t.types).map((g)=>[g,t.bottles.filter((p)=>p.type===g).length])),n=Math.round(Number(this._config.columns))||0,u=n?Math.max(1,Math.min(6,n,t.racks.length||1)):0;return a`
       <div class="header">
         <div class="title">
           <span class="logo">🍷</span>
           <div>
             <div class="name">${this._config.title||"TaponBon"}</div>
-            <div class="sub">${e} bottiglie · ${i-t.racks.reduce((e,i)=>e+this._inRack(t,i).length,0)} posti liberi${this._renderValue(t)}</div>
+            <div class="sub">${e} bottiglie · ${i-t.racks.reduce((g,p)=>g+this._inRack(t,p).length,0)} posti liberi${this._renderValue(t)}</div>
           </div>
         </div>
         ${this._renderClimate(t)}
@@ -1644,89 +1664,102 @@ function t(t,e,i,s){var a,o=arguments.length,r=o<3?e:null===s?s=Object.getOwnPro
           </button>
           <button class="btn" title="Che vino apro con questo piatto?" @click=${()=>this._dialog={kind:"pair"}}>🍽 Abbina</button>
           <button class="btn" title="Lista dei desideri" @click=${()=>this._dialog={kind:"wishlist"}}>
-            ♡ Desideri${t.wishlist?.length?B` <span class="count">${t.wishlist.length}</span>`:W}
+            ♡ Desideri${t.wishlist?.length?a` <span class="count">${t.wishlist.length}</span>`:d}
           </button>
           <button class="btn" title="Storico" @click=${()=>this._dialog={kind:"history"}}>🕓 Storico</button>
           <button class="btn" title="Scaffali e impostazioni" @click=${()=>this._dialog={kind:"racks"}}>⚙︎</button>
         </div>
       </div>
 
-      ${s||a?B`<div class="banner">
-            ${s?B`<span>🍷 <b>${s}</b> da bere presto</span>`:W}
-            ${a?B`<span>⚠️ <b>${a}</b> oltre la finestra di beva</span>`:W}
+      ${s||r?a`<div class="banner">
+            ${s?a`<span>🍷 <b>${s}</b> da bere presto</span>`:d}
+            ${r?a`<span>⚠️ <b>${r}</b> oltre la finestra di beva</span>`:d}
             <span class="hint">cartellino dorato: da bere presto · rosso: oltre la finestra</span>
-          </div>`:W}
+          </div>`:d}
 
-      ${t.inventory?this._renderInventoryBanner(t,t.inventory):W}
+      ${t.inventory?this._renderInventoryBanner(t,t.inventory):d}
 
-      ${this._moving?B`<div class="banner moving">
-            Tocca la nuova posizione per <b>${_t(this._moving)}</b>
+      ${this._moving?a`<div class="banner moving">
+            Tocca la nuova posizione per <b>${f(this._moving)}</b>
             <button class="btn small" @click=${()=>this._moving=null}>Annulla</button>
-          </div>`:W}
+          </div>`:d}
 
       <div class="filters">
         <button class="chip ${this._typeFilter?"":"active"}" @click=${()=>this._typeFilter=""}>Tutti ${e}</button>
-        ${Object.entries(t.types).map(([t,e])=>B`<button
-            class="chip ${this._typeFilter===t?"active":""}"
-            @click=${()=>this._typeFilter=this._typeFilter===t?"":t}
-          ><span class="dot" style="background:${e.color}"></span>${e.label} ${r[t]||0}</button>`)}
+        ${Object.entries(t.types).map(([g,p])=>a`<button
+            class="chip ${this._typeFilter===g?"active":""}"
+            @click=${()=>this._typeFilter=this._typeFilter===g?"":g}
+          ><span class="dot" style="background:${p.color}"></span>${p.label} ${l[g]||0}</button>`)}
         <input class="search" type="search" placeholder="Cerca vino, produttore, annata…"
-          .value=${this._query} @input=${t=>this._query=t.target.value} />
+          .value=${this._query} @input=${(g)=>this._query=g.target.value} />
+        ${this._renderLightButton(t)}
       </div>
 
-      <div class="racks ${l?"fixed":""}" style=${l?`--tb-columns:${l}`:""}>
-        ${t.racks.map(e=>this._renderRack(t,e))}
+      ${t.highlight?.groups.length?this._renderLitBanner(t):d}
+
+      <div class="racks ${u?"fixed":""}" style=${u?`--tb-columns:${u}`:""}>
+        ${t.racks.map((g)=>this._renderRack(t,g))}
       </div>
 
-      ${o.length?B`<div class="unplaced">
+      ${o.length?a`<div class="unplaced">
             <div class="section-title">Da sistemare (${o.length})</div>
             <div class="list">
-              ${o.map(e=>B`<button class="list-item ${this._dims(e)?"dim":""}"
-                  @click=${()=>this._dialog={kind:"bottle",bottleId:e.id}}>
-                  <span class="dot" style="background:${t.types[e.type]?.color}"></span>${_t(e)}
+              ${o.map((g)=>a`<button class="list-item ${this._dims(g)?"dim":""}"
+                  @click=${()=>this._dialog={kind:"bottle",bottleId:g.id}}>
+                  <span class="dot" style="background:${t.types[g.type]?.color}"></span>${f(g)}
                 </button>`)}
             </div>
-          </div>`:W}
-      ${t.racks.length?W:B`<div class="empty">Nessuno scaffale: creane uno da ⚙︎.</div>`}
-    `}_renderInventoryBanner(t,e){const i=t.racks.find(t=>t.id===e.rack_id),s=e.last;return B`<div class="banner inventory">
+          </div>`:d}
+      ${!t.racks.length?a`<div class="empty">Nessuno scaffale: creane uno da ⚙︎.</div>`:d}
+    `}_renderLightButton(t){if(!this._query.trim()&&!this._typeFilter)return d;let e=t.bottles.filter((s)=>!this._dims(s));if(!e.length||t.inventory)return d;let i=[this._typeFilter?t.types[this._typeFilter]?.label:"",this._query.trim()].filter(Boolean).join(" · ");return a`<button class="btn small light-btn" title="Evidenzia sullo scaffale finché non ne prendi una"
+      @click=${async()=>{await this.ws({type:"taponbon/highlight",source:"search",query:i,groups:[{label:i,color:Q,bottle_ids:e.map((s)=>s.id)}]}),this._query="",this._typeFilter=""}}>💡 Illumina ${e.length}</button>`}_renderLitBanner(t){let e=t.highlight;return a`<div class="banner lit">
+      <span>💡</span>
+      <div class="legend">
+        ${e.groups.map((i)=>a`<span class="lg"><span class="lgdot" style="--hl:${i.color}"></span>${i.label||"Selezione"}
+          <span class="muted">${i.bottle_ids.length}</span></span>`)}
+      </div>
+      <span class="hint">restano accese finché non ne prendi una</span>
+      <button class="btn small" @click=${()=>this.ws({type:"taponbon/highlight_clear"})}>Spegni</button>
+    </div>`}_renderInventoryBanner(t,e){let i=t.racks.find((o)=>o.id===e.rack_id),s=e.last,r={ok:"✓",again:"↺ già contata",misplaced:"⚠ fuori posto",found_taken:"↩ risultava già tolta",unknown:"? codice sconosciuto"};return a`<div class="banner inventory">
       <div class="inv-text">
         <b>📋 Inventario${i?` · ${i.name}`:""}</b>
         <span class="inv-count">${e.seen}/${e.total} trovate</span>
-        ${s?B`<span class="hint">Ultima: ${s.name?`${s.name}${s.vintage?` ${s.vintage}`:""} `:""}${{ok:"✓",again:"↺ già contata",misplaced:"⚠ fuori posto",found_taken:"↩ risultava già tolta",unknown:"? codice sconosciuto"}[s.result]||""}</span>`:B`<span class="hint">Scansiona i QR, o tocca le bottiglie che vedi</span>`}
+        ${s?a`<span class="hint">Ultima: ${s.name?`${s.name}${s.vintage?` ${s.vintage}`:""} `:""}${r[s.result]||""}</span>`:a`<span class="hint">Scansiona i QR, o tocca le bottiglie che vedi</span>`}
       </div>
       <div class="inv-progress"><span style="width:${e.total?Math.round(e.seen/e.total*100):0}%"></span></div>
       <div class="inv-actions">
         <button class="btn small" @click=${()=>this.ws({type:"taponbon/inventory_stop"}).then(()=>this.toast("Inventario annullato"))}>Annulla</button>
-        <button class="btn small primary" @click=${async()=>{const t=await this.ws({type:"taponbon/inventory_stop"});this._dialog={kind:"inventory",report:t.inventory}}}>Fine: vedi risultato</button>
+        <button class="btn small primary" @click=${async()=>{let o=await this.ws({type:"taponbon/inventory_stop"});this._dialog={kind:"inventory",report:o.inventory}}}>Fine: vedi risultato</button>
       </div>
-    </div>`}_renderValue(t){const e=t.value;if(!e||!e.priced)return W;const i=e.total.toLocaleString("it-IT",{style:"currency",currency:"EUR",maximumFractionDigits:0}),s=e.bottles-e.priced;return B` · <span class="value" title=${s?`Valore delle ${e.priced} bottiglie con prezzo (${s} senza prezzo)`:"Valore della cantina"}>${i}${s?"*":""}</span>`}_renderClimate(t){const e=t.climate;if(!e||!e.temperature_entity&&!e.humidity_entity)return W;const i=(t,e,i,s,a,o)=>{if(!t)return W;const r=this.hass?.states?.[t],n=r?Number(r.state):NaN,l=!isNaN(n),d=l?n<s?"low":n>a?"high":"ok":"na",c=l?n.toLocaleString("it-IT",{maximumFractionDigits:1}):"—";return B`<button class="climate ${d}" title=${"ok"===d?`${o} ideale (${s}–${a} ${i})`:"na"===d?`${o} non disponibile`:`${o} troppo ${"low"===d?"bassa":"alta"}: ideale ${s}–${a} ${i}`}
-        @click=${()=>this.dispatchEvent(new CustomEvent("hass-more-info",{detail:{entityId:t},bubbles:!0,composed:!0}))}>
-        <span class="ci">${e}</span><b>${c}</b><span class="cu">${i}</span>
-      </button>`};return B`<div class="climates">
-      ${i(e.temperature_entity,"🌡","°C",e.temperature_min,e.temperature_max,"Temperatura")}
-      ${i(e.humidity_entity,"💧","%",e.humidity_min,e.humidity_max,"Umidità")}
-    </div>`}_invClass(t,e){const i=t.inventory;return!i||i.rack_id&&e.rack_id!==i.rack_id?"":i.missing.includes(e.id)?"unseen":"seen"}_inRack(t,e){return t.bottles.filter(t=>t.rack_id===e.id&&null!=t.row&&null!=t.col)}_dims(t){return this._typeFilter&&t.type!==this._typeFilter||!function(t,e){if(!e)return!0;const i=yt([t.name,t.producer,t.vintage,t.region,t.country,t.grape,t.notes,t.code].filter(Boolean).join(" "));return yt(e).split(/\s+/).every(t=>i.includes(t))}(t,this._query)}_renderRack(t,e){const i=this._inRack(t,e),s=new Map(i.map(t=>[`${t.row}:${t.col}`,t])),a=vt(e);return B`
-      <div class="rack">
-        <div class="rack-head"><span>${e.name}</span><span class="muted">${i.length}/${mt(e)}</span></div>
+    </div>`}_renderValue(t){let e=t.value;if(!e||!e.priced)return d;let i=e.total.toLocaleString("it-IT",{style:"currency",currency:"EUR",maximumFractionDigits:0}),s=e.bottles-e.priced;return a` · <span class="value" title=${s?`Valore delle ${e.priced} bottiglie con prezzo (${s} senza prezzo)`:"Valore della cantina"}>${i}${s?"*":""}</span>`}_renderClimate(t){let e=t.climate;if(!e||!e.temperature_entity&&!e.humidity_entity)return d;let i=(s,r,o,l,n,u)=>{if(!s)return d;let g=this.hass?.states?.[s],p=g?Number(g.state):NaN,_=!isNaN(p),w=!_?"na":p<l?"low":p>n?"high":"ok",R=_?p.toLocaleString("it-IT",{maximumFractionDigits:1}):"—",Gt=w==="ok"?`${u} ideale (${l}–${n} ${o})`:w==="na"?`${u} non disponibile`:`${u} troppo ${w==="low"?"bassa":"alta"}: ideale ${l}–${n} ${o}`;return a`<button class="climate ${w}" title=${Gt}
+        @click=${()=>this.dispatchEvent(new CustomEvent("hass-more-info",{detail:{entityId:s},bubbles:!0,composed:!0}))}>
+        <span class="ci">${r}</span><b>${R}</b><span class="cu">${o}</span>
+      </button>`};return a`<div class="climates">
+      ${i(e.temperature_entity,"\uD83C\uDF21","°C",e.temperature_min,e.temperature_max,"Temperatura")}
+      ${i(e.humidity_entity,"\uD83D\uDCA7","%",e.humidity_min,e.humidity_max,"Umidità")}
+    </div>`}_invClass(t,e){let i=t.inventory;if(!i||i.rack_id&&e.rack_id!==i.rack_id)return"";return i.missing.includes(e.id)?"unseen":"seen"}_inRack(t,e){return t.bottles.filter((i)=>i.rack_id===e.id&&i.row!=null&&i.col!=null)}_dims(t){return this._typeFilter&&t.type!==this._typeFilter||!jt(t,this._query)}_renderRack(t,e){let i=this._inRack(t,e),s=new Map(i.map((l)=>[`${l.row}:${l.col}`,l])),r=V(e),o=new Map;for(let l of t.highlight?.groups||[])for(let n of l.bottle_ids)if(!o.has(n))o.set(n,l.color);return a`
+      <div class="rack ${o.size?"lighting":""}">
+        <div class="rack-head"><span>${e.name}</span><span class="muted">${i.length}/${W(e)}</span></div>
         <div class="shelves">
-          ${a.map((i,a)=>B`<div class="shelf">
-            <div class="grid" style="grid-template-columns: repeat(${i}, minmax(0, 34px))">
-              ${Array.from({length:i},(i,o)=>{const r=s.get(`${a}:${o}`);return B`<button
-                  class="cell ${r?"full":"free"} ${r&&this._dims(r)?"dim":""} ${r&&this._moving?.id===r.id?"moving":""} ${r?.reserved_for?"reserved":""} ${r?this._invClass(t,r):""}"
-                  title=${r?`${_t(r)}${r.producer?` · ${r.producer}`:""}${r.reserved_for?` · 🔒 ${r.reserved_for}`:""}`:`Mensola ${a+1}, posto ${o+1}: libero`}
-                  @click=${()=>this._onCell(e,a,o,r)}
-                >${r?At(r.type,r.alert):Et}</button>`})}
+          ${r.map((l,n)=>a`<div class="shelf">
+            <div class="grid" style="grid-template-columns: repeat(${l}, minmax(0, 34px))">
+              ${Array.from({length:l},(u,g)=>{let p=s.get(`${n}:${g}`);return a`<button
+                  class="cell ${p?"full":"free"} ${p&&this._dims(p)?"dim":""} ${p&&this._moving?.id===p.id?"moving":""} ${p?.reserved_for?"reserved":""} ${p?this._invClass(t,p):""} ${p&&o.has(p.id)?"lit":""}"
+                  style=${p&&o.has(p.id)?`--hl:${o.get(p.id)}`:""}
+                  title=${p?`${f(p)}${p.producer?` · ${p.producer}`:""}${p.reserved_for?` · \uD83D\uDD12 ${p.reserved_for}`:""}`:`Mensola ${n+1}, posto ${g+1}: libero`}
+                  @click=${()=>this._onCell(e,n,g,p)}
+                >${p?k(p.type,p.alert):Wt}</button>`})}
             </div>
             <div class="board"></div>
           </div>`)}
         </div>
       </div>
-    `}_renderDialog(t){const e=this._dialog;if(!e)return W;const i=()=>this._dialog=null;switch(e.kind){case"add":return B`<tb-add-dialog .card=${this} .data=${t} .rackId=${e.rackId} .row=${e.row} .col=${e.col}
-          .mode=${e.mode||"cellar"} .prefill=${e.prefill||null} .wishId=${e.wishId||null} @close=${i}></tb-add-dialog>`;case"wishlist":return B`<tb-wishlist-dialog .card=${this} .data=${t} @close=${i}
+    `}_renderDialog(t){let e=this._dialog;if(!e)return d;let i=()=>this._dialog=null;switch(e.kind){case"add":return a`<tb-add-dialog .card=${this} .data=${t} .rackId=${e.rackId} .row=${e.row} .col=${e.col}
+          .mode=${e.mode||"cellar"} .prefill=${e.prefill||null} .wishId=${e.wishId||null} @close=${i}></tb-add-dialog>`;case"wishlist":return a`<tb-wishlist-dialog .card=${this} .data=${t} @close=${i}
           @add-wish=${()=>this._dialog={kind:"add",rackId:null,row:null,col:null,mode:"wish"}}
-          @buy=${t=>this._dialog={kind:"add",rackId:null,row:null,col:null,mode:"cellar",prefill:t.detail.wish,wishId:t.detail.wish.id}}></tb-wishlist-dialog>`;case"inventory":return B`<tb-inventory-dialog .card=${this} .data=${t} .report=${e.report} @close=${i}
-          @open-bottle=${t=>this._dialog={kind:"bottle",bottleId:t.detail.bottleId}}></tb-inventory-dialog>`;case"bottle":{const s=t.bottles.find(t=>t.id===e.bottleId);return s?B`<tb-bottle-dialog .card=${this} .data=${t} .bottle=${s} @close=${i} @move=${this._startMove}></tb-bottle-dialog>`:W}case"racks":return B`<tb-racks-dialog .card=${this} .data=${t} @close=${i}></tb-racks-dialog>`;case"pair":return B`<tb-pair-dialog .card=${this} .data=${t} @close=${i}
-          @open-bottle=${t=>this._dialog={kind:"bottle",bottleId:t.detail.bottleId}}></tb-pair-dialog>`;case"history":return B`<tb-history-dialog .card=${this} .data=${t} @close=${i}></tb-history-dialog>`}}};Lt.styles=[xt,r`
+          @buy=${(s)=>this._dialog={kind:"add",rackId:null,row:null,col:null,mode:"cellar",prefill:s.detail.wish,wishId:s.detail.wish.id}}></tb-wishlist-dialog>`;case"inventory":return a`<tb-inventory-dialog .card=${this} .data=${t} .report=${e.report} @close=${i}
+          @open-bottle=${(s)=>this._dialog={kind:"bottle",bottleId:s.detail.bottleId}}></tb-inventory-dialog>`;case"bottle":{let s=t.bottles.find((r)=>r.id===e.bottleId);if(!s)return d;return a`<tb-bottle-dialog .card=${this} .data=${t} .bottle=${s} @close=${i} @move=${this._startMove}></tb-bottle-dialog>`}case"racks":return a`<tb-racks-dialog .card=${this} .data=${t} @close=${i}></tb-racks-dialog>`;case"pair":return a`<tb-pair-dialog .card=${this} .data=${t} @close=${i}
+          @open-bottle=${(s)=>this._dialog={kind:"bottle",bottleId:s.detail.bottleId}}></tb-pair-dialog>`;case"history":return a`<tb-history-dialog .card=${this} .data=${t} @close=${i}></tb-history-dialog>`}}static styles=[x,v`
       :host {
         display: block;
         min-width: 0;
@@ -1946,6 +1979,56 @@ function t(t,e,i,s){var a,o=arguments.length,r=o<3?e:null===s?s=Object.getOwnPro
         0%, 100% { transform: rotate(0deg); }
         50% { transform: rotate(-4deg); }
       }
+      .light-btn {
+        flex: none;
+      }
+      .banner.lit {
+        background: rgba(255, 226, 176, 0.08);
+        border: 1px solid rgba(255, 226, 176, 0.18);
+      }
+      .legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px 14px;
+        flex: 1;
+      }
+      .lg {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .lgdot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--hl);
+        box-shadow: 0 0 8px 2px var(--hl);
+      }
+      .rack.lighting .cell.full:not(.lit) {
+        opacity: 0.35;
+      }
+      .cell.lit {
+        z-index: 1;
+        filter: drop-shadow(0 0 5px var(--hl)) drop-shadow(0 0 12px var(--hl));
+        animation: tb-glow 2.2s ease-in-out infinite;
+      }
+      .cell.lit::before {
+        content: "";
+        position: absolute;
+        left: -40%;
+        right: -40%;
+        bottom: -10px;
+        height: 14px;
+        border-radius: 50%;
+        background: radial-gradient(closest-side, var(--hl), transparent);
+        opacity: 0.85;
+        pointer-events: none;
+      }
+      @keyframes tb-glow {
+        50% {
+          filter: drop-shadow(0 0 3px var(--hl)) drop-shadow(0 0 7px var(--hl));
+        }
+      }
       .cell.reserved::after {
         content: "🔒";
         position: absolute;
@@ -2077,4 +2160,4 @@ function t(t,e,i,s){var a,o=arguments.length,r=o<3?e:null===s?s=Object.getOwnPro
         font-size: 0.9em;
         z-index: 2;
       }
-    `],t([bt({attribute:!1})],Lt.prototype,"hass",void 0),t([gt()],Lt.prototype,"_config",void 0),t([gt()],Lt.prototype,"_data",void 0),t([gt()],Lt.prototype,"_error",void 0),t([gt()],Lt.prototype,"_typeFilter",void 0),t([gt()],Lt.prototype,"_query",void 0),t([gt()],Lt.prototype,"_dialog",void 0),t([gt()],Lt.prototype,"_moving",void 0),t([gt()],Lt.prototype,"_toast",void 0),Lt=t([pt("taponbon-card")],Lt),window.customCards=window.customCards||[],window.customCards.push({type:"taponbon-card",name:"TaponBon",description:"La tua cantina: scaffali, bottiglie, QR e finestre di beva",preview:!1});export{Lt as TaponBonCard};
+    `]}c([b({attribute:!1})],yt.prototype,"hass",void 0),c([h()],yt.prototype,"_config",void 0),c([h()],yt.prototype,"_data",void 0),c([h()],yt.prototype,"_error",void 0),c([h()],yt.prototype,"_typeFilter",void 0),c([h()],yt.prototype,"_query",void 0),c([h()],yt.prototype,"_dialog",void 0),c([h()],yt.prototype,"_moving",void 0),c([h()],yt.prototype,"_toast",void 0),yt=c([y("taponbon-card")],yt);window.customCards=window.customCards||[];window.customCards.push({type:"taponbon-card",name:"TaponBon",description:"La tua cantina: scaffali, bottiglie, QR e finestre di beva",preview:!1});export{yt as TaponBonCard};

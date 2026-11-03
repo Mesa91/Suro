@@ -1,6 +1,6 @@
 import { LitElement, html, css, nothing, PropertyValues } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
-import { Bottle, CardConfig, HistoryEntry, InventoryReport, Rack, Snapshot, Wish, capacityOf, matches, shelvesOf, wineTitle } from "./types";
+import { Bottle, CardConfig, HistoryEntry, InventoryReport, Rack, SEARCH_COLOR, Snapshot, Wish, capacityOf, matches, shelvesOf, wineTitle } from "./types";
 import { sharedStyles } from "./styles";
 import { BOTTLE_DEFS, EMPTY_SVG, bottleSvg } from "./bottle";
 import "./bottle-dialog";
@@ -206,7 +206,10 @@ export class TaponBonCard extends LitElement {
         )}
         <input class="search" type="search" placeholder="Cerca vino, produttore, annata…"
           .value=${this._query} @input=${(e: Event) => (this._query = (e.target as HTMLInputElement).value)} />
+        ${this._renderLightButton(d)}
       </div>
+
+      ${d.highlight?.groups.length ? this._renderLitBanner(d) : nothing}
 
       <div class="racks ${columns ? "fixed" : ""}" style=${columns ? `--tb-columns:${columns}` : ""}>
         ${d.racks.map((rack) => this._renderRack(d, rack))}
@@ -225,6 +228,33 @@ export class TaponBonCard extends LitElement {
         : nothing}
       ${!d.racks.length ? html`<div class="empty">Nessuno scaffale: creane uno da ⚙︎.</div>` : nothing}
     `;
+  }
+
+  private _renderLightButton(d: Snapshot) {
+    if (!this._query.trim() && !this._typeFilter) return nothing;
+    const found = d.bottles.filter((b) => !this._dims(b));
+    if (!found.length || d.inventory) return nothing;
+    const label = [this._typeFilter ? d.types[this._typeFilter]?.label : "", this._query.trim()].filter(Boolean).join(" · ");
+    return html`<button class="btn small light-btn" title="Evidenzia sullo scaffale finché non ne prendi una"
+      @click=${async () => {
+        await this.ws({ type: "taponbon/highlight", source: "search", query: label,
+          groups: [{ label, color: SEARCH_COLOR, bottle_ids: found.map((b) => b.id) }] });
+        this._query = "";
+        this._typeFilter = "";
+      }}>💡 Illumina ${found.length}</button>`;
+  }
+
+  private _renderLitBanner(d: Snapshot) {
+    const hl = d.highlight!;
+    return html`<div class="banner lit">
+      <span>💡</span>
+      <div class="legend">
+        ${hl.groups.map((g) => html`<span class="lg"><span class="lgdot" style="--hl:${g.color}"></span>${g.label || "Selezione"}
+          <span class="muted">${g.bottle_ids.length}</span></span>`)}
+      </div>
+      <span class="hint">restano accese finché non ne prendi una</span>
+      <button class="btn small" @click=${() => this.ws({ type: "taponbon/highlight_clear" })}>Spegni</button>
+    </div>`;
   }
 
   private _renderInventoryBanner(d: Snapshot, inv: InventoryReport) {
@@ -302,8 +332,10 @@ export class TaponBonCard extends LitElement {
     const inRack = this._inRack(d, rack);
     const at = new Map(inRack.map((b) => [`${b.row}:${b.col}`, b]));
     const shelves = shelvesOf(rack);
+    const lit = new Map<string, string>();
+    for (const g of d.highlight?.groups || []) for (const id of g.bottle_ids) if (!lit.has(id)) lit.set(id, g.color);
     return html`
-      <div class="rack">
+      <div class="rack ${lit.size ? "lighting" : ""}">
         <div class="rack-head"><span>${rack.name}</span><span class="muted">${inRack.length}/${capacityOf(rack)}</span></div>
         <div class="shelves">
           ${shelves.map((n, r) => html`<div class="shelf">
@@ -311,7 +343,8 @@ export class TaponBonCard extends LitElement {
               ${Array.from({ length: n }, (_, c) => {
                 const b = at.get(`${r}:${c}`);
                 return html`<button
-                  class="cell ${b ? "full" : "free"} ${b && this._dims(b) ? "dim" : ""} ${b && this._moving?.id === b.id ? "moving" : ""} ${b?.reserved_for ? "reserved" : ""} ${b ? this._invClass(d, b) : ""}"
+                  class="cell ${b ? "full" : "free"} ${b && this._dims(b) ? "dim" : ""} ${b && this._moving?.id === b.id ? "moving" : ""} ${b?.reserved_for ? "reserved" : ""} ${b ? this._invClass(d, b) : ""} ${b && lit.has(b.id) ? "lit" : ""}"
+                  style=${b && lit.has(b.id) ? `--hl:${lit.get(b.id)}` : ""}
                   title=${b ? `${wineTitle(b)}${b.producer ? ` · ${b.producer}` : ""}${b.reserved_for ? ` · 🔒 ${b.reserved_for}` : ""}` : `Mensola ${r + 1}, posto ${c + 1}: libero`}
                   @click=${() => this._onCell(rack, r, c, b)}
                 >${b ? bottleSvg(b.type, b.alert) : EMPTY_SVG}</button>`;
@@ -576,6 +609,56 @@ export class TaponBonCard extends LitElement {
       @keyframes tb-sway {
         0%, 100% { transform: rotate(0deg); }
         50% { transform: rotate(-4deg); }
+      }
+      .light-btn {
+        flex: none;
+      }
+      .banner.lit {
+        background: rgba(255, 226, 176, 0.08);
+        border: 1px solid rgba(255, 226, 176, 0.18);
+      }
+      .legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px 14px;
+        flex: 1;
+      }
+      .lg {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .lgdot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--hl);
+        box-shadow: 0 0 8px 2px var(--hl);
+      }
+      .rack.lighting .cell.full:not(.lit) {
+        opacity: 0.35;
+      }
+      .cell.lit {
+        z-index: 1;
+        filter: drop-shadow(0 0 5px var(--hl)) drop-shadow(0 0 12px var(--hl));
+        animation: tb-glow 2.2s ease-in-out infinite;
+      }
+      .cell.lit::before {
+        content: "";
+        position: absolute;
+        left: -40%;
+        right: -40%;
+        bottom: -10px;
+        height: 14px;
+        border-radius: 50%;
+        background: radial-gradient(closest-side, var(--hl), transparent);
+        opacity: 0.85;
+        pointer-events: none;
+      }
+      @keyframes tb-glow {
+        50% {
+          filter: drop-shadow(0 0 3px var(--hl)) drop-shadow(0 0 7px var(--hl));
+        }
       }
       .cell.reserved::after {
         content: "🔒";
