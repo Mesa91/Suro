@@ -282,4 +282,38 @@ export const sharedStyles = css`
       padding-right: 16px;
     }
   }
+  .stars {
+    display: inline-flex;
+    gap: 1px;
+    line-height: 1;
+    vertical-align: -1px;
+  }
+  .star {
+    color: rgba(255, 255, 255, 0.18);
+    font-size: 0.95em;
+    background: none;
+    border: none;
+    padding: 0;
+    font-family: inherit;
+  }
+  .star.on {
+    color: #e3b341;
+  }
+  .star.half {
+    background: linear-gradient(90deg, #e3b341 50%, rgba(255, 255, 255, 0.18) 50%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .stars.big .star {
+    font-size: 2.1em;
+    padding: 0 3px;
+  }
+  .stars.edit .star {
+    cursor: pointer;
+    transition: transform 0.12s ease;
+  }
+  .stars.edit .star:hover {
+    transform: scale(1.15);
+  }
 `;

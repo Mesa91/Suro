@@ -30,10 +30,15 @@
     let pos = 0;
     for (const [name, producer, vintage, type, f, u, q] of seed) for (let i = 0; i < q; i++, pos++)
       db.bottles.push({ id: id("b"), code: "k7m2xq9" + pos, name, producer, vintage, type, drink_from: f, drink_until: u,
-        rack_id: "rack-a", row: Math.floor(pos / 10), col: pos % 10, added_at: new Date().toISOString() });
+        rack_id: "rack-a", row: Math.floor(pos / 10), col: pos % 10, added_at: new Date().toISOString(), price: [38, 55, 16, 29, 12, null][seed.findIndex((x) => x[0] === name)] });
+    db.history.push({ ...db.bottles[0], id: "old1", history_id: "h0", removed_at: "2026-09-12T20:00:00Z", reason: "drank", rating: 5, tasting_notes: "Splendido con il brasato, ricomprare" });
     const alertOf = (b) => { if (!b.drink_until) return null; const days = (new Date(b.drink_until, 11, 31) - new Date()) / 864e5;
       return days < 0 ? "past" : days <= db.settings.alert_days ? "closing" : null; };
-    const snap = () => ({ racks: db.racks, bottles: db.bottles.map((b) => ({ ...b, alert: alertOf(b) })), settings: db.settings,
+    const wk = (b) => b.name + "|" + b.vintage;
+    const past = (b) => { const hs = db.history.filter((h) => wk(h) === wk(b) && (h.rating || h.tasting_notes)); if (!hs.length) return {};
+      const r = hs.filter((h) => h.rating); return { past_rating: r.length ? r.reduce((a, h) => a + h.rating, 0) / r.length : null, past_count: r.length, past_notes: (hs[hs.length - 1].tasting_notes || "") }; };
+    const value = () => { const p = db.bottles.filter((b) => b.price > 0); return { total: p.reduce((a, b) => a + b.price, 0), priced: p.length, bottles: db.bottles.length }; };
+    const snap = () => ({ racks: db.racks, bottles: db.bottles.map((b) => ({ ...b, alert: alertOf(b), ...past(b) })), settings: db.settings, value: value(),
       types, reasons, history_count: db.history.length, ai: true, printer: false,
       climate: { temperature_entity: "sensor.cantina_temperatura", humidity_entity: "sensor.cantina_umidita",
         temperature_min: 10, temperature_max: 16, humidity_min: 60, humidity_max: 80 } });
@@ -50,7 +55,8 @@
             rack_id: s ? rack.id : null, row: s ? s[0] : null, col: s ? s[1] : null, added_at: new Date().toISOString() };
           db.bottles.push(b); added.push(b); } changed(); return { bottles: added }; },
       "taponbon/remove_bottle": (m) => { const i = db.bottles.findIndex((b) => b.id === m.bottle_id); const [b] = db.bottles.splice(i, 1);
-        db.history.push({ ...b, history_id: id("h"), removed_at: new Date().toISOString(), reason: m.reason }); changed(); return {}; },
+        db.history.push({ ...b, history_id: id("h"), removed_at: new Date().toISOString(), reason: m.reason, rating: m.rating, tasting_notes: m.tasting_notes }); changed(); return {}; },
+      "taponbon/rate_history": (m) => { const h = db.history.find((x) => x.history_id === m.history_id); h.rating = m.rating || undefined; h.tasting_notes = m.tasting_notes || undefined; changed(); return { entry: h }; },
       "taponbon/move_bottle": (m) => { const b = db.bottles.find((x) => x.id === m.bottle_id);
         const o = db.bottles.find((x) => x.rack_id === m.rack_id && x.row === m.row && x.col === m.col);
         if (o) Object.assign(o, { rack_id: b.rack_id, row: b.row, col: b.col }); Object.assign(b, { rack_id: m.rack_id, row: m.row, col: m.col }); changed(); return {}; },
@@ -70,7 +76,13 @@
         region: "Sicilia DOC", country: "Italia", grape: "Nero d'Avola", alcohol: "12,5%", drink_from: 2024, drink_until: 2026,
         description: "Rosato tenue e floreale, con note di fragolina e agrumi. Fresco e sapido.", food_pairings: "crudi di pesce, couscous, pizza bianca" } }),
       "taponbon/pair": (m) => { const ws = []; const seen = {}; for (const b of db.bottles) { const k = b.name + "|" + b.vintage; if (!seen[k]) { seen[k] = { key: k, name: b.name, producer: b.producer || "", vintage: b.vintage, type: b.type, status: (alertOf(b) || "ready"), bottles: 0, bottle_ids: [], locations: ["Scaffale · mensola " + ((b.row ?? 0) + 1) + ", posto " + ((b.col ?? 0) + 1)] }; ws.push(seen[k]); } seen[k].bottles++; seen[k].bottle_ids.push(b.id); }
+        ws.forEach((w) => { const p = past(db.bottles.find((b) => b.id === w.bottle_ids[0])); w.rating = p.past_rating || null; });
         const reds = ws.filter((w) => w.type === "red").slice(0, 2);
+        if (m.courses) { const by = (t) => ws.find((w) => w.type === t) || null;
+          const plan = [by("sparkling"), by("white"), reds[0], by("dessert")];
+          return new Promise((ok) => setTimeout(() => ok({ source: "ai", advice: "Apri il Barolo un'ora prima; bollicine e bianco in frigo dal pomeriggio.",
+            courses: m.courses.map((c, i) => ({ course: c, wine: plan[i] ? { ...plan[i], reason: "" } : null, reason: plan[i] ? "Accompagna bene " + c.toLowerCase() + "." : "" })),
+            one: { ...ws.find((w) => w.type === "sparkling"), reason: "Le bollicine reggono tutto il menu, dall'antipasto al dolce." } }), 600)); }
         return new Promise((ok) => setTimeout(() => ok({ source: "ai", advice: "Servilo a 18 °C dopo mezz'ora di decanter.", picks: reds.map((w, i) => ({ ...w, reason: i ? "Più leggero, regge comunque il sugo." : "Tannino e struttura reggono la lunga cottura del " + m.dish.toLowerCase() + "." })) }), 600)); },
       "taponbon/ai_fill": (m) => ({ wine: { producer: "Brezza", region: "Barolo DOCG", country: "Italia", grape: "Nebbiolo", drink_from: 2024, drink_until: 2036 } }),
     };

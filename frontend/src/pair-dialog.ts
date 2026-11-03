@@ -3,6 +3,7 @@ import { customElement, property, state } from "lit/decorators.js";
 import { Snapshot, wineTitle } from "./types";
 import { sharedStyles } from "./styles";
 import { BOTTLE_DEFS, bottleSvg } from "./bottle";
+import { ratingText, renderStars } from "./rating";
 
 interface Pick {
   key: string;
@@ -15,13 +16,18 @@ interface Pick {
   bottle_ids: string[];
   locations: string[];
   reason: string;
+  rating?: number | null;
 }
 
 interface PairResult {
   source: "ai" | "local";
   advice: string;
-  picks: Pick[];
+  picks?: Pick[];
+  courses?: { course: string; wine: Pick | null; reason: string }[];
+  one?: Pick | null;
 }
+
+const COURSE_HINTS = ["Antipasto", "Primo", "Secondo", "Dolce"];
 
 const QUICK = ["Brasato", "Pesce al forno", "Crudi di mare", "Pizza", "Formaggi stagionati", "Risotto ai funghi", "Dolce"];
 
@@ -33,6 +39,8 @@ export class PairDialog extends LitElement {
   @state() private _busy = false;
   @state() private _result: PairResult | null = null;
   @state() private _asked = "";
+  @state() private _mode: "dish" | "menu" = "dish";
+  @state() private _courses: string[] = ["", "", "", ""];
 
   firstUpdated() {
     (this.renderRoot.querySelector("input") as HTMLInputElement | null)?.focus();
@@ -58,6 +66,27 @@ export class PairDialog extends LitElement {
     }
   }
 
+  private async _askMenu() {
+    const courses = this._courses.map((c) => c.trim()).filter(Boolean);
+    if (!courses.length || this._busy) return;
+    this._busy = true;
+    this._result = null;
+    try {
+      this._result = await this.card.ws({ type: "taponbon/pair", courses });
+      this._asked = courses.join(" · ");
+    } catch {
+      /* toast already shown */
+    } finally {
+      this._busy = false;
+    }
+  }
+
+  private _setMode(mode: "dish" | "menu") {
+    if (this._mode === mode) return;
+    this._mode = mode;
+    this._result = null;
+  }
+
   private _open(p: Pick) {
     this.dispatchEvent(new CustomEvent("open-bottle", { detail: { bottleId: p.bottle_ids[0] } }));
   }
@@ -73,21 +102,13 @@ export class PairDialog extends LitElement {
             <button class="close" @click=${this._close}>✕</button>
           </div>
           <div class="dialog-body">
-            <form class="ask" @submit=${(e: Event) => { e.preventDefault(); this._ask(); }}>
-              <input class="dish" type="text" placeholder="Es. tagliata al rosmarino, spaghetti alle vongole…"
-                .value=${this._dish} maxlength="300"
-                @input=${(e: Event) => (this._dish = (e.target as HTMLInputElement).value)} />
-              <button class="btn primary" type="submit" ?disabled=${this._busy || !this._dish.trim()}>
-                ${this._busy ? "Ci penso…" : "Consiglia"}
-              </button>
-            </form>
-            ${!r && !this._busy
-              ? html`<div class="quick">
-                  ${QUICK.map((q) => html`<button class="chip" @click=${() => this._ask(q)}>${q}</button>`)}
-                </div>`
-              : nothing}
+            <div class="modes">
+              <button class="chip ${this._mode === "dish" ? "active" : ""}" @click=${() => this._setMode("dish")}>Un piatto</button>
+              <button class="chip ${this._mode === "menu" ? "active" : ""}" @click=${() => this._setMode("menu")}>Menu della serata</button>
+            </div>
+            ${this._mode === "dish" ? this._renderDishForm(r) : this._renderMenuForm()}
             ${this._busy ? html`<div class="note waiting">Il sommelier sta guardando gli scaffali…</div>` : nothing}
-            ${r ? this._renderResult(r) : nothing}
+            ${r ? (r.courses ? this._renderMenuResult(r) : this._renderResult(r)) : nothing}
           </div>
           <div class="dialog-foot"><button class="btn" @click=${this._close}>Chiudi</button></div>
         </div>
@@ -95,28 +116,100 @@ export class PairDialog extends LitElement {
     `;
   }
 
-  private _renderResult(r: PairResult) {
-    const status: Record<string, string> = { closing: "Da bere presto", past: "Oltre la finestra", wait: "Ancora giovane" };
+  private _renderDishForm(r: PairResult | null) {
     return html`
-      ${!r.picks.length
+      <form class="ask" @submit=${(e: Event) => { e.preventDefault(); this._ask(); }}>
+        <input class="dish" type="text" placeholder="Es. tagliata al rosmarino, spaghetti alle vongole…"
+          .value=${this._dish} maxlength="300"
+          @input=${(e: Event) => (this._dish = (e.target as HTMLInputElement).value)} />
+        <button class="btn primary" type="submit" ?disabled=${this._busy || !this._dish.trim()}>
+          ${this._busy ? "Ci penso…" : "Consiglia"}
+        </button>
+      </form>
+      ${!r && !this._busy
+        ? html`<div class="quick">
+            ${QUICK.map((q) => html`<button class="chip" @click=${() => this._ask(q)}>${q}</button>`)}
+          </div>`
+        : nothing}
+    `;
+  }
+
+  private _renderMenuForm() {
+    const set = (i: number, v: string) => (this._courses = this._courses.map((c, j) => (j === i ? v : c)));
+    const filled = this._courses.some((c) => c.trim());
+    return html`
+      <form class="menu" @submit=${(e: Event) => { e.preventDefault(); this._askMenu(); }}>
+        ${this._courses.map((c, i) => html`<div class="course">
+          <span class="num">${i + 1}</span>
+          <input class="dish" type="text" maxlength="200" .value=${c}
+            placeholder=${`${COURSE_HINTS[i] || "Portata"}${i === 0 ? ", es. crudi di mare" : i === 1 ? ", es. risotto ai funghi" : i === 2 ? ", es. brasato" : ", es. crostata"}`}
+            @input=${(e: Event) => set(i, (e.target as HTMLInputElement).value)} />
+          ${this._courses.length > 1
+            ? html`<button type="button" class="close mini-x" title="Togli portata"
+                @click=${() => (this._courses = this._courses.filter((_, j) => j !== i))}>✕</button>`
+            : nothing}
+        </div>`)}
+        <div class="menu-actions">
+          ${this._courses.length < 8
+            ? html`<button type="button" class="btn small" @click=${() => (this._courses = [...this._courses, ""])}>＋ Portata</button>`
+            : html`<span></span>`}
+          <button class="btn primary" type="submit" ?disabled=${this._busy || !filled}>
+            ${this._busy ? "Ci penso…" : "Componi i vini"}
+          </button>
+        </div>
+        <div class="note">Lascia vuote le portate che non ci sono.</div>
+      </form>
+    `;
+  }
+
+  private _wineCard(p: Pick, opts: { best?: boolean; reason?: string; compact?: boolean } = {}) {
+    const status: Record<string, string> = { closing: "Da bere presto", past: "Oltre la finestra", wait: "Ancora giovane" };
+    const reason = opts.reason ?? p.reason;
+    return html`<button class="pick ${opts.best ? "best" : ""} ${opts.compact ? "compact" : ""}" @click=${() => this._open(p)}>
+      <span class="mini">${bottleSvg(p.type, p.status === "closing" || p.status === "past" ? (p.status as any) : null)}</span>
+      <div class="text">
+        <div class="wine">
+          ${opts.best ? html`<span class="badge">Il migliore</span>` : nothing}
+          ${wineTitle(p)}
+          ${status[p.status] ? html`<span class="state ${p.status}">${status[p.status]}</span>` : nothing}
+        </div>
+        ${p.producer || p.rating
+          ? html`<div class="note">${p.producer || ""}${p.rating
+              ? html`<span class="your">${p.producer ? " · " : ""}il tuo voto ${renderStars(p.rating)} ${ratingText(p.rating)}</span>`
+              : nothing}</div>`
+          : nothing}
+        ${reason ? html`<div class="reason">${reason}</div>` : nothing}
+        <div class="where">📍 ${p.locations[0]}${p.bottles > 1 ? html` · ${p.bottles} bottiglie` : nothing}</div>
+      </div>
+      <span class="go">›</span>
+    </button>`;
+  }
+
+  private _renderMenuResult(r: PairResult) {
+    const courses = r.courses || [];
+    return html`
+      <div class="eyebrow small">Il percorso</div>
+      <div class="path">
+        ${courses.map((c, i) => html`<div class="step">
+          <div class="step-head"><span class="num">${i + 1}</span>${c.course.charAt(0).toUpperCase() + c.course.slice(1)}</div>
+          ${c.wine
+            ? this._wineCard(c.wine, { compact: true, reason: c.reason })
+            : html`<div class="note nothing">Nessun vino della cantina è adatto a questa portata.</div>`}
+        </div>`)}
+      </div>
+      ${r.one
+        ? html`<div class="eyebrow small">Oppure un vino per tutta la cena</div>${this._wineCard(r.one, { best: true })}`
+        : nothing}
+      ${r.advice ? html`<div class="advice ${r.source}">${r.source === "ai" ? "🍷 " : "ℹ️ "}${r.advice}</div>` : nothing}
+    `;
+  }
+
+  private _renderResult(r: PairResult) {
+    return html`
+      ${!(r.picks || []).length
         ? html`<div class="note">Nessun vino della cantina è davvero adatto a «${this._asked}».</div>`
         : html`<div class="eyebrow small">Per «${this._asked}»</div>`}
-      ${r.picks.map(
-        (p, i) => html`<button class="pick ${i === 0 ? "best" : ""}" @click=${() => this._open(p)}>
-          <span class="mini">${bottleSvg(p.type, p.status === "closing" || p.status === "past" ? (p.status as any) : null)}</span>
-          <div class="text">
-            <div class="wine">
-              ${i === 0 ? html`<span class="badge">Il migliore</span>` : nothing}
-              ${wineTitle(p)}
-              ${status[p.status] ? html`<span class="state ${p.status}">${status[p.status]}</span>` : nothing}
-            </div>
-            ${p.producer ? html`<div class="note">${p.producer}</div>` : nothing}
-            ${p.reason ? html`<div class="reason">${p.reason}</div>` : nothing}
-            <div class="where">📍 ${p.locations[0]}${p.bottles > 1 ? html` · ${p.bottles} bottiglie` : nothing}</div>
-          </div>
-          <span class="go">›</span>
-        </button>`,
-      )}
+      ${(r.picks || []).map((p, i) => this._wineCard(p, { best: i === 0 }))}
       ${r.advice ? html`<div class="advice ${r.source}">${r.source === "ai" ? "🍷 " : "ℹ️ "}${r.advice}</div>` : nothing}
     `;
   }
@@ -138,6 +231,70 @@ export class PairDialog extends LitElement {
         background: rgba(255, 255, 255, 0.04);
         color: var(--primary-text-color);
         font: inherit;
+      }
+      .modes {
+        display: flex;
+        gap: 6px;
+        margin-bottom: 12px;
+      }
+      .menu {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .course {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .num {
+        flex: none;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        display: inline-grid;
+        place-items: center;
+        font-size: 0.8em;
+        font-weight: 600;
+        background: rgba(227, 179, 65, 0.16);
+        color: #e3b341;
+      }
+      .mini-x {
+        flex: none;
+        width: 30px;
+        height: 30px;
+        font-size: 0.8em;
+      }
+      .menu-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+        margin-top: 4px;
+      }
+      .path {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        margin-bottom: 8px;
+      }
+      .step-head {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 600;
+        margin: 6px 0;
+      }
+      .pick.compact {
+        margin-left: 32px;
+        width: calc(100% - 32px);
+        margin-bottom: 4px;
+      }
+      .nothing {
+        margin-left: 32px;
+      }
+      .your {
+        white-space: nowrap;
       }
       .quick {
         display: flex;

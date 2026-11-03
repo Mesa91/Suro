@@ -67,3 +67,16 @@ def test_pairing_prompt_lists_wines():
                                             "grape": "", "region": "", "food_pairings": "brasato",
                                             "status": "closing", "bottles": 2}])
     assert "brasato" in prompt and "da bere presto" in prompt and '"id": 0' in prompt
+
+
+def test_parse_menu():
+    out = ai.parse_menu(_payload({"courses": [{"n": 1, "id": 0, "reason": "ok"}, {"n": 0, "id": None},
+                                              {"n": 7, "id": 1}], "one": {"id": "1", "reason": "tutto"},
+                                  "advice": "Apri prima il bianco"}), 2, 2)
+    assert out["courses"] == [{"index": None, "reason": ""}, {"index": 0, "reason": "ok"}]
+    assert out["one"] == {"index": 1, "reason": "tutto"} and out["advice"] == "Apri prima il bianco"
+    assert ai.parse_menu(_payload({"courses": []}), 1, 1)["one"] is None
+    prompt = ai.menu_prompt(["Crudi", "Brasato"], [{"name": "Barolo", "vintage": 2016, "producer": "", "type": "red",
+                            "grape": "", "region": "", "food_pairings": "", "status": "ready", "bottles": 1,
+                            "rating": 4.5}])
+    assert "Brasato" in prompt and "4.5/5" in prompt

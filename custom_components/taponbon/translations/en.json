@@ -21,6 +21,9 @@
       },
       "drink_soon": {
         "name": "Drink soon"
+      },
+      "value": {
+        "name": "Cellar value"
       }
     }
   },

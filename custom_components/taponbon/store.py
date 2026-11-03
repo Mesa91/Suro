@@ -203,14 +203,24 @@ class TaponBonStore:
         bottle.update(rack_id=rack_id, row=row, col=col)
         return True
 
-    def remove_bottle(self, bottle_id: str, reason: str = "drank") -> dict[str, Any] | None:
+    def remove_bottle(self, bottle_id: str, reason: str = "drank", rating: int | None = None,
+                      tasting_notes: str | None = None) -> dict[str, Any] | None:
         """Take a bottle out of the cellar; it goes to the history."""
         bottle = self.get_bottle(bottle_id)
         if bottle is None:
             return None
         self.bottles.remove(bottle)
         entry = {**bottle, "history_id": new_id("h"), "removed_at": _now(), "reason": reason}
+        _apply_rating(entry, rating, tasting_notes)
         self.history.append(entry)
+        return entry
+
+    def rate_history(self, history_id: str, rating: int | None, tasting_notes: str | None) -> dict[str, Any] | None:
+        """Set (or clear) the vote and tasting notes of a bottle already drunk."""
+        entry = next((h for h in self.history if h.get("history_id") == history_id), None)
+        if entry is None:
+            return None
+        _apply_rating(entry, rating, tasting_notes, clear=True)
         return entry
 
     def restore(self, history_id: str) -> dict[str, Any] | None:
@@ -219,7 +229,7 @@ class TaponBonStore:
         if entry is None:
             return None
         self.history.remove(entry)
-        bottle = {k: v for k, v in entry.items() if k not in ("history_id", "removed_at", "reason")}
+        bottle = {k: v for k, v in entry.items() if k not in HISTORY_ONLY}
         rack = self.get_rack(bottle.get("rack_id"))
         slot_ok = (
             rack is not None and slot_exists(rack, bottle.get("row"), bottle.get("col"))
@@ -275,3 +285,22 @@ class TaponBonStore:
 
     def free_count(self) -> int:
         return sum(rack_capacity(r) - len(occupied(self.bottles, r["id"])) for r in self.racks)
+
+
+HISTORY_ONLY = ("history_id", "removed_at", "reason", "rating", "tasting_notes")
+
+
+def _apply_rating(entry: dict[str, Any], rating: Any, notes: Any, clear: bool = False) -> None:
+    try:
+        value = int(rating) if rating not in (None, "") else None
+    except (TypeError, ValueError):
+        value = None
+    if value is not None and 1 <= value <= 5:
+        entry["rating"] = value
+    elif clear:
+        entry.pop("rating", None)
+    text = str(notes or "").strip()[:1000]
+    if text:
+        entry["tasting_notes"] = text
+    elif clear:
+        entry.pop("tasting_notes", None)

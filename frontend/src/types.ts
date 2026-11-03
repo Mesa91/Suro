@@ -38,12 +38,18 @@ export interface Bottle {
   col: number | null;
   added_at: string;
   alert?: "closing" | "past" | null;
+  /** Average vote of bottles of the same wine already drunk. */
+  past_rating?: number | null;
+  past_count?: number;
+  past_notes?: string;
 }
 
 export interface HistoryEntry extends Bottle {
   history_id: string;
   removed_at: string;
   reason: string;
+  rating?: number | null;
+  tasting_notes?: string;
 }
 
 export interface Snapshot {
@@ -53,6 +59,7 @@ export interface Snapshot {
   types: Record<string, { label: string; color: string }>;
   reasons: Record<string, string>;
   history_count: number;
+  value?: { total: number; priced: number; bottles: number };
   ai: boolean;
   printer: boolean;
   climate: {

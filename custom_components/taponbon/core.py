@@ -112,7 +112,8 @@ async def async_take_scanned(hass: HomeAssistant, raw: str, source: str) -> dict
     _notify(
         hass,
         f"Prelevata **{wine_title(bottle)}** ({location}). Ne restano {remaining}. "
-        "Se è stato un errore, la ritrovi nello storico e puoi rimetterla a posto.",
+        "Dopo averla bevuta puoi darle un voto dallo storico (🕓); se è stato un errore, "
+        "da lì puoi anche rimetterla a posto.",
         "TaponBon: bottiglia prelevata", f"{DOMAIN}_scan",
     )
     return {"result": "taken", "bottle": bottle, "location": location, "remaining": remaining}

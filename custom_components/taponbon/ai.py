@@ -118,25 +118,85 @@ def _json_from(payload: dict[str, Any]) -> Any:
     return data
 
 
+def _wine_listing(wines: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    status = {"wait": "ancora giovane", "ready": "pronto", "closing": "da bere presto", "past": "oltre la finestra"}
+    listing = []
+    for i, w in enumerate(wines):
+        item = {"id": i, "vino": " ".join(str(p) for p in (w["name"], w["vintage"]) if p), "produttore": w["producer"],
+                "tipo": w["type"], "vitigno": w["grape"], "zona": w["region"], "abbinamenti": w["food_pairings"],
+                "stato": status.get(w["status"], ""), "bottiglie": w["bottles"]}
+        if w.get("rating"):
+            item["voto_mio"] = f"{w['rating']}/5"
+        if w.get("tasting_notes"):
+            item["mie_note"] = w["tasting_notes"][:200]
+        listing.append(item)
+    return listing
+
+
+_PREFS = """A parità, preferisci i vini "da bere presto" e quelli con "voto_mio" alto
+(sono i voti che ho dato a bottiglie dello stesso vino già bevute); evita quelli
+"ancora giovane" se ce ne sono di pronti."""
+
+
 def pairing_prompt(dish: str, wines: list[dict[str, Any]], today: date | None = None) -> str:
     year = (today or date.today()).year
-    status = {"wait": "ancora giovane", "ready": "pronto", "closing": "da bere presto", "past": "oltre la finestra"}
-    listing = [
-        {"id": i, "vino": " ".join(str(p) for p in (w["name"], w["vintage"]) if p), "produttore": w["producer"],
-         "tipo": w["type"], "vitigno": w["grape"], "zona": w["region"], "abbinamenti": w["food_pairings"],
-         "stato": status.get(w["status"], ""), "bottiglie": w["bottles"]}
-        for i, w in enumerate(wines)
-    ]
     return f"""Sei un sommelier. Stasera si mangia: "{dish}".
 Questi sono TUTTI i vini disponibili in cantina (l'anno corrente è {year}):
-{json.dumps(listing, ensure_ascii=False)}
+{json.dumps(_wine_listing(wines), ensure_ascii=False)}
 Scegli SOLO tra questi vini i migliori abbinamenti per il piatto (da 1 a 3, il
-migliore per primo; meglio meno vini che un abbinamento forzato). A parità,
-preferisci i vini "da bere presto"; evita quelli "ancora giovane" se ce ne sono
-di pronti. Restituisci SOLO un oggetto JSON:
+migliore per primo; meglio meno vini che un abbinamento forzato). {_PREFS}
+Restituisci SOLO un oggetto JSON:
 {{"picks": [{{"id": <id del vino>, "reason": "1-2 frasi in italiano sul perché"}}],
   "advice": "una frase in italiano: se nessun vino è davvero adatto, che stile
              comprare; altrimenti un consiglio di servizio (temperatura, decanter)"}}"""
+
+
+def menu_prompt(courses: list[str], wines: list[dict[str, Any]], today: date | None = None) -> str:
+    year = (today or date.today()).year
+    menu = [{"n": i, "portata": c} for i, c in enumerate(courses)]
+    return f"""Sei un sommelier. Stasera c'è questo menu, nell'ordine:
+{json.dumps(menu, ensure_ascii=False)}
+Questi sono TUTTI i vini disponibili in cantina (l'anno corrente è {year}):
+{json.dumps(_wine_listing(wines), ensure_ascii=False)}
+Proponi SOLO vini di questa lista:
+1. un percorso: per ogni portata il vino migliore, seguendo una progressione
+   sensata (dal più leggero al più strutturato, il dolce per ultimo). Lo stesso
+   vino può accompagnare più portate se ha senso; se per una portata nessun vino
+   è adatto usa "id": null.
+2. in alternativa, l'unico vino che regge meglio l'intera cena.
+{_PREFS}
+Restituisci SOLO un oggetto JSON:
+{{"courses": [{{"n": <numero portata>, "id": <id del vino o null>, "reason": "1 frase in italiano"}}],
+  "one": {{"id": <id del vino o null>, "reason": "1-2 frasi in italiano"}},
+  "advice": "una frase in italiano su servizio e ordine di apertura delle bottiglie"}}"""
+
+
+def _index(value: Any, count: int) -> int | None:
+    try:
+        index = int(value)
+    except (TypeError, ValueError):
+        return None
+    return index if 0 <= index < count else None
+
+
+def parse_menu(payload: dict[str, Any], courses: int, count: int) -> dict[str, Any]:
+    """{"courses": [{"index"|None, "reason"} per course], "one": {...}|None, "advice"}."""
+    data = _json_from(payload)
+    data = data if isinstance(data, dict) else {}
+    out = [{"index": None, "reason": ""} for _ in range(courses)]
+    for item in data.get("courses") or []:
+        if not isinstance(item, dict):
+            continue
+        n = _index(item.get("n"), courses)
+        if n is not None:
+            out[n] = {"index": _index(item.get("id"), count), "reason": str(item.get("reason") or "").strip()}
+    one = data.get("one") if isinstance(data.get("one"), dict) else {}
+    one_index = _index(one.get("id"), count)
+    return {
+        "courses": out,
+        "one": {"index": one_index, "reason": str(one.get("reason") or "").strip()} if one_index is not None else None,
+        "advice": str(data.get("advice") or "").strip(),
+    }
 
 
 def parse_pairing(payload: dict[str, Any], count: int) -> dict[str, Any]:

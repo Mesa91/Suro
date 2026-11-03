@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components.sensor import SensorEntity, SensorStateClass
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -15,7 +15,7 @@ from .const import DOMAIN, EVENT_UPDATED, NAME, WINE_TYPES
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback) -> None:
-    entities = [BottlesSensor(hass, entry), FreeSlotsSensor(hass, entry), DrinkSoonSensor(hass, entry)]
+    entities = [BottlesSensor(hass, entry), FreeSlotsSensor(hass, entry), DrinkSoonSensor(hass, entry), ValueSensor(hass, entry)]
     async_add_entities(entities)
 
     @callback
@@ -106,3 +106,33 @@ class DrinkSoonSensor(_Base):
             ]
 
         return {"presto": brief(groups.get("closing", [])), "oltre": brief(groups.get("past", []))}
+
+
+class ValueSensor(_Base):
+    """What the bottles in the cellar cost (only those with a price)."""
+
+    _attr_icon = "mdi:cash"
+    _attr_device_class = SensorDeviceClass.MONETARY
+    _attr_state_class = SensorStateClass.TOTAL
+
+    def __init__(self, hass, entry) -> None:
+        super().__init__(hass, entry, "value")
+
+    @property
+    def native_unit_of_measurement(self) -> str:
+        return self.hass.config.currency or "EUR"
+
+    @property
+    def native_value(self) -> float:
+        from .logic import cellar_value
+
+        return cellar_value(self._store.bottles)["total"] if self._store else 0
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        from .logic import cellar_value
+
+        if not self._store:
+            return {}
+        v = cellar_value(self._store.bottles)
+        return {"bottiglie_con_prezzo": v["priced"], "bottiglie_senza_prezzo": v["bottles"] - v["priced"]}

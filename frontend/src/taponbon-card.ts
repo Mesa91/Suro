@@ -152,7 +152,7 @@ export class TaponBonCard extends LitElement {
           <span class="logo">🍷</span>
           <div>
             <div class="name">${this._config.title || "TaponBon"}</div>
-            <div class="sub">${total} bottiglie · ${capacity - d.racks.reduce((s, r) => s + this._inRack(d, r).length, 0)} posti liberi</div>
+            <div class="sub">${total} bottiglie · ${capacity - d.racks.reduce((s, r) => s + this._inRack(d, r).length, 0)} posti liberi${this._renderValue(d)}</div>
           </div>
         </div>
         ${this._renderClimate(d)}
@@ -210,6 +210,16 @@ export class TaponBonCard extends LitElement {
         : nothing}
       ${!d.racks.length ? html`<div class="empty">Nessuno scaffale: creane uno da ⚙︎.</div>` : nothing}
     `;
+  }
+
+  private _renderValue(d: Snapshot) {
+    const v = d.value;
+    if (!v || !v.priced) return nothing;
+    const euro = v.total.toLocaleString("it-IT", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
+    const missing = v.bottles - v.priced;
+    return html` · <span class="value" title=${missing
+      ? `Valore delle ${v.priced} bottiglie con prezzo (${missing} senza prezzo)`
+      : "Valore della cantina"}>${euro}${missing ? "*" : ""}</span>`;
   }
 
   private _renderClimate(d: Snapshot) {
@@ -328,6 +338,10 @@ export class TaponBonCard extends LitElement {
         font-size: 1.55em;
         font-weight: 600;
         letter-spacing: 0.01em;
+      }
+      .value {
+        color: #e3b341;
+        font-variant-numeric: tabular-nums;
       }
       .sub,
       .muted {

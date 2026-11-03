@@ -65,3 +65,23 @@ def test_shelves_with_different_sizes():
     assert st.move_bottle(added[0]["id"], rack["id"], 1, 4)
     _, displaced = st.save_rack({"id": rack["id"], "name": "Mobile", "shelves": [3, 2]})
     assert displaced == 1 and st.free_count() == 2
+
+
+def test_rating_on_remove_and_later():
+    from tb.logic import cellar_value, wine_ratings
+    st = load(None)
+    rack = st.racks[0]["id"]
+    a, b, c = st.add_bottles({"name": "Barolo", "vintage": 2016, "type": "red", "price": 38}, 3, rack, 0, 0)
+    assert cellar_value(st.bottles) == {"total": 114.0, "priced": 3, "bottles": 3}
+    e1 = st.remove_bottle(a["id"], "drank", 5, "  Splendido  ")
+    assert (e1["rating"], e1["tasting_notes"]) == (5, "Splendido")
+    e2 = st.remove_bottle(b["id"], "drank", 9, "")
+    assert "rating" not in e2
+    st.rate_history(e2["history_id"], 3, "un po' chiuso")
+    r = wine_ratings(st.history)
+    (only,) = r.values()
+    assert only["rating"] == 4.0 and only["count"] == 2
+    st.rate_history(e2["history_id"], None, "")
+    assert "rating" not in e2 and "tasting_notes" not in e2
+    back = st.restore(e1["history_id"])
+    assert "rating" not in back and "tasting_notes" not in back

@@ -4,6 +4,7 @@ import { Bottle, Snapshot, WINE_FIELDS, locationText, windowText, wineTitle } fr
 import { sharedStyles } from "./styles";
 import { renderWineForm } from "./add-dialog";
 import { BOTTLE_DEFS, bottleSvg } from "./bottle";
+import { ratingText, renderStars } from "./rating";
 
 interface Label {
   code: string;
@@ -24,6 +25,9 @@ export class BottleDialog extends LitElement {
   @state() private _sameWine = true;
   @state() private _otherReason = false;
   @state() private _busy = false;
+  @state() private _rating = false;
+  @state() private _stars: number | null = null;
+  @state() private _tasting = "";
 
   protected willUpdate(changed: PropertyValues) {
     if (changed.has("data") && this._label && this.data.settings.label_format !== this._label.label_format) {
@@ -35,6 +39,7 @@ export class BottleDialog extends LitElement {
       if (previous?.id !== this.bottle.id) {
         this._label = null;
         this._editing = false;
+        this._rating = false;
         this._loadLabel();
       }
     }
@@ -59,11 +64,18 @@ export class BottleDialog extends LitElement {
     return this.data.bottles.filter((b) => key(b) === key(this.bottle)).length;
   }
 
-  private async _remove(reason: string) {
+  private async _remove(reason: string, rated = false) {
     this._busy = true;
     try {
-      await this.card.ws({ type: "taponbon/remove_bottle", bottle_id: this.bottle.id, reason });
-      this.card.toast(`${wineTitle(this.bottle)}: ${this.data.reasons[reason]?.toLowerCase() || "tolta"}. La trovi nello storico.`);
+      const msg: Record<string, unknown> = { type: "taponbon/remove_bottle", bottle_id: this.bottle.id, reason };
+      if (rated) {
+        if (this._stars) msg.rating = this._stars;
+        if (this._tasting.trim()) msg.tasting_notes = this._tasting.trim();
+      }
+      await this.card.ws(msg);
+      this.card.toast(rated && this._stars
+        ? `${wineTitle(this.bottle)}: bevuta, voto ${this._stars}/5. Salute!`
+        : `${wineTitle(this.bottle)}: ${this.data.reasons[reason]?.toLowerCase() || "tolta"}. La trovi nello storico.`);
       this._close();
     } finally {
       this._busy = false;
@@ -128,9 +140,9 @@ export class BottleDialog extends LitElement {
             <button class="close" @click=${this._close}>✕</button>
           </div>
           <div class="dialog-body">
-            ${this._editing ? this._renderEdit() : this._renderView(b, t)}
+            ${this._rating ? this._renderRate() : this._editing ? this._renderEdit() : this._renderView(b, t)}
           </div>
-          ${this._editing ? this._renderEditFoot() : this._renderViewFoot()}
+          ${this._rating ? this._renderRateFoot() : this._editing ? this._renderEditFoot() : this._renderViewFoot()}
         </div>
       </div>
     `;
@@ -144,6 +156,13 @@ export class BottleDialog extends LitElement {
         ${b.alert === "past" ? html`<span class="badge bad">Oltre la finestra</span>` : nothing}
         <span class="where">📍 ${locationText(b, this.data.racks)}</span>
       </div>
+      ${b.past_count || b.past_notes
+        ? html`<div class="past">
+            <span class="past-head">Già bevuto${b.past_count ? html` ${b.past_count === 1 ? "una volta" : `${b.past_count} volte`}` : nothing}</span>
+            ${b.past_rating ? html`${renderStars(b.past_rating)} <b>${ratingText(b.past_rating)}</b>` : nothing}
+            ${b.past_notes ? html`<div class="past-notes">«${b.past_notes}»</div>` : nothing}
+          </div>`
+        : nothing}
       <dl class="facts">
         ${WINE_FIELDS.filter((f) => !["name", "producer", "vintage", "drink_from", "drink_until"].includes(f.key as string)).map((f) => {
           const v = b[f.key];
@@ -182,7 +201,33 @@ export class BottleDialog extends LitElement {
         this._editing = true;
       }}>✏️ Modifica</button>
       <button class="btn" @click=${() => (this._otherReason = !this._otherReason)}>Altro…</button>
-      <button class="btn primary" ?disabled=${this._busy} @click=${() => this._remove("drank")}>🍷 Bevuta</button>
+      <button class="btn primary" ?disabled=${this._busy} @click=${() => {
+        this._stars = null;
+        this._tasting = "";
+        this._rating = true;
+      }}>🍷 Bevuta</button>
+    </div>`;
+  }
+
+  private _renderRate() {
+    return html`<div class="rate">
+      <div class="rate-q">Com'era?</div>
+      ${renderStars(this._stars, (v) => (this._stars = v), true)}
+      <div class="rate-hint">${["Tocca le stelle per votarla", "Deludente", "Così così", "Buono", "Molto buono", "Eccezionale"][this._stars || 0]}</div>
+      <textarea class="tasting" rows="3" maxlength="1000"
+        placeholder="Note di degustazione (facoltative): profumi, con cosa l'avete bevuta, se ricomprarla…"
+        .value=${this._tasting} @input=${(e: Event) => (this._tasting = (e.target as HTMLTextAreaElement).value)}></textarea>
+      <div class="note">Il voto resta nello storico e aiuta gli abbinamenti a proporti i vini che ti sono piaciuti di più.</div>
+    </div>`;
+  }
+
+  private _renderRateFoot() {
+    const empty = !this._stars && !this._tasting.trim();
+    return html`<div class="dialog-foot">
+      <button class="btn" ?disabled=${this._busy} @click=${() => (this._rating = false)}>Annulla</button>
+      <button class="btn primary" ?disabled=${this._busy} @click=${() => this._remove("drank", true)}>
+        ${empty ? "Togli senza voto" : "🍷 Salva e togli"}
+      </button>
     </div>`;
   }
 
@@ -208,6 +253,54 @@ export class BottleDialog extends LitElement {
   static styles = [
     sharedStyles,
     css`
+      .past {
+        margin: 2px 0 14px;
+        padding: 10px 12px;
+        border-radius: 12px;
+        background: rgba(227, 179, 65, 0.08);
+        border: 1px solid rgba(227, 179, 65, 0.22);
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.92em;
+      }
+      .past-head {
+        color: var(--secondary-text-color);
+      }
+      .past-notes {
+        width: 100%;
+        font-style: italic;
+        color: var(--secondary-text-color);
+      }
+      .rate {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        text-align: center;
+        padding: 4px 0;
+      }
+      .rate-q {
+        font-family: "Playfair Display", Georgia, serif;
+        font-size: 1.35em;
+      }
+      .rate-hint {
+        min-height: 1.2em;
+        color: #e3b341;
+        font-size: 0.9em;
+      }
+      .tasting {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 10px 12px;
+        border-radius: 12px;
+        border: 1px solid var(--tb-line, var(--divider-color));
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--primary-text-color);
+        font: inherit;
+        resize: vertical;
+      }
       .hero {
         display: flex;
         gap: 18px;

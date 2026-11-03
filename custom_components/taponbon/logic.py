@@ -266,8 +266,10 @@ def climate_status(value: Any, low: float, high: float) -> str | None:
 # ── Food pairing ──────────────────────────────────────────────────────────────
 
 def cellar_wines(bottles: Iterable[dict[str, Any]], racks: list[dict[str, Any]],
-                 today: date, lead_days: int) -> list[dict[str, Any]]:
+                 today: date, lead_days: int,
+                 ratings: dict[str, dict[str, Any]] | None = None) -> list[dict[str, Any]]:
     """One entry per distinct wine in the cellar, with how many bottles and where."""
+    ratings = ratings or {}
     wines: dict[str, dict[str, Any]] = {}
     for b in bottles:
         key = wine_key(b)
@@ -288,6 +290,8 @@ def cellar_wines(bottles: Iterable[dict[str, Any]], racks: list[dict[str, Any]],
                 "bottles": 0,
                 "bottle_ids": [],
                 "locations": [],
+                "rating": (ratings.get(key) or {}).get("rating"),
+                "tasting_notes": (ratings.get(key) or {}).get("notes", ""),
             }
         entry["bottles"] += 1
         entry["bottle_ids"].append(b.get("id"))
@@ -340,6 +344,8 @@ def local_pairing(dish: str, wines: list[dict[str, Any]], limit: int = 3) -> lis
             score += 0.5
         if w["status"] in (STATUS_WAIT,):
             score -= 1
+        if w.get("rating"):
+            score += (w["rating"] - 3) * 0.4
         if score <= 0:
             continue
         if common:
@@ -349,3 +355,42 @@ def local_pairing(dish: str, wines: list[dict[str, Any]], limit: int = 3) -> lis
         scored.append((score, w["key"], reason))
     scored.sort(key=lambda s: -s[0])
     return [{"key": k, "reason": r} for _, k, r in scored[:limit]]
+
+
+
+# ── Ratings and value ─────────────────────────────────────────────────────────
+
+def wine_ratings(history: Iterable[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+    """Average vote per wine from the bottles already drunk, with the latest note."""
+    out: dict[str, dict[str, Any]] = {}
+    for h in history:
+        rating = h.get("rating")
+        notes = str(h.get("tasting_notes") or "").strip()
+        if not rating and not notes:
+            continue
+        entry = out.setdefault(wine_key(h), {"sum": 0, "count": 0, "notes": "", "at": ""})
+        if rating:
+            entry["sum"] += int(rating)
+            entry["count"] += 1
+        if notes and str(h.get("removed_at") or "") >= entry["at"]:
+            entry["notes"], entry["at"] = notes, str(h.get("removed_at") or "")
+    return {
+        key: {"rating": round(e["sum"] / e["count"], 1) if e["count"] else None,
+              "count": e["count"], "notes": e["notes"]}
+        for key, e in out.items()
+    }
+
+
+def cellar_value(bottles: Iterable[dict[str, Any]]) -> dict[str, Any]:
+    """Total price of the bottles in the cellar (only those with a price)."""
+    total, priced, count = 0.0, 0, 0
+    for b in bottles:
+        count += 1
+        try:
+            price = float(b.get("price"))
+        except (TypeError, ValueError):
+            continue
+        if price > 0:
+            total += price
+            priced += 1
+    return {"total": round(total, 2), "priced": priced, "bottles": count}

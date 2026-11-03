@@ -27,7 +27,7 @@ def async_register(hass: HomeAssistant) -> None:
         ws_subscribe, ws_get_data, ws_add_bottles, ws_update_bottle, ws_move_bottle,
         ws_remove_bottle, ws_get_history, ws_restore, ws_save_rack, ws_delete_rack,
         ws_get_label, ws_request_label, ws_take_code, ws_update_settings, ws_get_alerts,
-        ws_ai_recognize, ws_ai_fill, ws_pair,
+        ws_ai_recognize, ws_ai_fill, ws_pair, ws_rate_history,
     ):
         websocket_api.async_register_command(hass, handler)
 
@@ -45,9 +45,18 @@ def _snapshot(hass: HomeAssistant) -> dict[str, Any]:
     flagged = {
         bid: status for status, items in alerts.items() for e in items for bid in e["bottle_ids"]
     }
+    from .logic import cellar_value, wine_key, wine_ratings
+
+    ratings = wine_ratings(store.history)
+
+    def past(b: dict[str, Any]) -> dict[str, Any]:
+        r = ratings.get(wine_key(b))
+        return {"past_rating": r["rating"], "past_count": r["count"], "past_notes": r["notes"]} if r else {}
+
     return {
         "racks": sorted(store.racks, key=lambda r: r.get("order", 0)),
-        "bottles": [{**b, "alert": flagged.get(b["id"])} for b in store.bottles],
+        "bottles": [{**b, "alert": flagged.get(b["id"]), **past(b)} for b in store.bottles],
+        "value": cellar_value(store.bottles),
         "settings": {
             "label_format": core.label_format(store),
             CONF_AUTO_LABELS: bool(store.settings.get(CONF_AUTO_LABELS, DEFAULT_AUTO_LABELS)),
@@ -113,51 +122,76 @@ async def ws_ai_fill(hass, connection, msg) -> None:
 
 @websocket_api.websocket_command({
     vol.Required("type"): "taponbon/pair",
-    vol.Required("dish"): vol.All(str, vol.Length(max=300)),
+    vol.Optional("dish"): vol.All(str, vol.Length(max=300)),
+    vol.Optional("courses"): vol.All([vol.All(str, vol.Length(max=200))], vol.Length(max=8)),
 })
 @websocket_api.async_response
 async def ws_pair(hass, connection, msg) -> None:
-    """Suggest which wines of the cellar go with a dish."""
+    """Suggest which wines of the cellar go with a dish, or with a whole menu."""
     from datetime import date
 
     from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-    from .logic import cellar_wines, local_pairing
+    from .logic import cellar_wines, local_pairing, wine_ratings
 
     store = _store(hass, connection, msg)
     if store is None:
         return
-    dish = msg["dish"].strip()
-    if not dish:
+    courses = [c.strip() for c in msg.get("courses") or [] if c.strip()]
+    dish = (msg.get("dish") or "").strip()
+    if not dish and not courses:
         connection.send_error(msg["id"], "no_dish", "Scrivi cosa mangi")
         return
+    if len(courses) == 1:
+        dish, courses = courses[0], []
     lead = int(store.settings.get(CONF_ALERT_DAYS, DEFAULT_ALERT_DAYS))
-    wines = cellar_wines(store.bottles, store.racks, date.today(), lead)
+    wines = cellar_wines(store.bottles, store.racks, date.today(), lead, wine_ratings(store.history))
     if not wines:
         connection.send_error(msg["id"], "empty", "La cantina è vuota: non ho niente da consigliarti")
         return
 
-    def pick(index: int, reason: str) -> dict[str, Any]:
-        return {**wines[index], "reason": reason}
+    def pick(index: int | None, reason: str) -> dict[str, Any] | None:
+        return {**wines[index], "reason": reason} if index is not None else None
 
     key, model = _gemini(hass)
     note = ""
     if key:
+        session = async_get_clientsession(hass)
         try:
-            result = await ai.async_generate(
-                async_get_clientsession(hass), key, model, ai.pairing_prompt(dish, wines),
-                parse=lambda payload: ai.parse_pairing(payload, len(wines)),
-            )
-            connection.send_result(msg["id"], {
-                "source": "ai", "advice": result["advice"],
-                "picks": [pick(p["index"], p["reason"]) for p in result["picks"]],
-            })
+            if courses:
+                result = await ai.async_generate(
+                    session, key, model, ai.menu_prompt(courses, wines),
+                    parse=lambda payload: ai.parse_menu(payload, len(courses), len(wines)),
+                )
+                connection.send_result(msg["id"], {
+                    "source": "ai", "advice": result["advice"],
+                    "courses": [{"course": c, "wine": pick(r["index"], r["reason"]), "reason": r["reason"]}
+                                for c, r in zip(courses, result["courses"])],
+                    "one": pick(result["one"]["index"], result["one"]["reason"]) if result["one"] else None,
+                })
+            else:
+                result = await ai.async_generate(
+                    session, key, model, ai.pairing_prompt(dish, wines),
+                    parse=lambda payload: ai.parse_pairing(payload, len(wines)),
+                )
+                connection.send_result(msg["id"], {
+                    "source": "ai", "advice": result["advice"],
+                    "picks": [pick(p["index"], p["reason"]) for p in result["picks"]],
+                })
             return
         except ai.AIError as err:
             note = f"Gemini non disponibile ({err}); ecco un consiglio semplificato."
     else:
         note = "Consiglio semplificato: aggiungi la chiave Gemini nelle opzioni per uno più preciso."
     index = {w["key"]: i for i, w in enumerate(wines)}
+    if courses:
+        out = []
+        for course in courses:
+            best = local_pairing(course, wines, limit=1)
+            wine = pick(index[best[0]["key"]], best[0]["reason"]) if best else None
+            out.append({"course": course, "wine": wine, "reason": wine["reason"] if wine else ""})
+        connection.send_result(msg["id"], {"source": "local", "advice": note, "courses": out, "one": None})
+        return
     picks = [pick(index[p["key"]], p["reason"]) for p in local_pairing(dish, wines)]
     connection.send_result(msg["id"], {"source": "local", "advice": note, "picks": picks})
 
@@ -247,13 +281,15 @@ async def ws_move_bottle(hass, connection, msg) -> None:
     vol.Required("type"): "taponbon/remove_bottle",
     vol.Required("bottle_id"): str,
     vol.Optional("reason", default="drank"): vol.In(list(REMOVAL_REASONS)),
+    vol.Optional("rating"): vol.Any(None, vol.All(int, vol.Range(min=1, max=5))),
+    vol.Optional("tasting_notes"): vol.Any(None, vol.All(str, vol.Length(max=1000))),
 })
 @websocket_api.async_response
 async def ws_remove_bottle(hass, connection, msg) -> None:
     store = _store(hass, connection, msg)
     if not store:
         return
-    entry = store.remove_bottle(msg["bottle_id"], msg["reason"])
+    entry = store.remove_bottle(msg["bottle_id"], msg["reason"], msg.get("rating"), msg.get("tasting_notes"))
     if entry is None:
         connection.send_error(msg["id"], "not_found", "Bottiglia non trovata")
         return
@@ -267,6 +303,26 @@ def ws_get_history(hass, connection, msg) -> None:
     store = _store(hass, connection, msg)
     if store:
         connection.send_result(msg["id"], {"history": list(reversed(store.history))[:500]})
+
+
+@websocket_api.websocket_command({
+    vol.Required("type"): "taponbon/rate_history",
+    vol.Required("history_id"): str,
+    vol.Optional("rating"): vol.Any(None, vol.All(int, vol.Range(min=1, max=5))),
+    vol.Optional("tasting_notes"): vol.Any(None, vol.All(str, vol.Length(max=1000))),
+})
+@websocket_api.async_response
+async def ws_rate_history(hass, connection, msg) -> None:
+    """Vote / write notes for a bottle already taken out (also after a QR scan)."""
+    store = _store(hass, connection, msg)
+    if not store:
+        return
+    entry = store.rate_history(msg["history_id"], msg.get("rating"), msg.get("tasting_notes"))
+    if entry is None:
+        connection.send_error(msg["id"], "not_found", "Voce non trovata nello storico")
+        return
+    await core.async_changed(hass)
+    connection.send_result(msg["id"], {"entry": entry})
 
 
 @websocket_api.websocket_command({

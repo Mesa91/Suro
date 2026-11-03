@@ -21,6 +21,9 @@
       },
       "drink_soon": {
         "name": "Da bere presto"
+      },
+      "value": {
+        "name": "Valore della cantina"
       }
     }
   },
