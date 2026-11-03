@@ -42,6 +42,32 @@ export interface Bottle {
   past_rating?: number | null;
   past_count?: number;
   past_notes?: string;
+  /** Set aside for an occasion: excluded from pairings. */
+  reserved_for?: string;
+  reserved_until?: string;
+}
+
+export interface Wish extends Partial<Bottle> {
+  id: string;
+  name: string;
+  type: string;
+  added_at: string;
+  source: "manual" | "rebuy";
+  where?: string;
+  wish_notes?: string;
+  rating?: number;
+}
+
+export interface InventoryReport {
+  started_at: string;
+  rack_id: string | null;
+  total: number;
+  seen: number;
+  unknown: number;
+  last: { code: string; name: string | null; vintage: number | null; result: string } | null;
+  missing: string[];
+  misplaced: string[];
+  found_taken: string[];
 }
 
 export interface HistoryEntry extends Bottle {
@@ -60,6 +86,8 @@ export interface Snapshot {
   reasons: Record<string, string>;
   history_count: number;
   value?: { total: number; priced: number; bottles: number };
+  wishlist?: Wish[];
+  inventory?: InventoryReport | null;
   ai: boolean;
   printer: boolean;
   climate: {

@@ -41,12 +41,12 @@ export class HistoryDialog extends LitElement {
   }
 
   private async _saveRating(h: HistoryEntry) {
-    await this.card.ws({
+    const res = await this.card.ws({
       type: "taponbon/rate_history", history_id: h.history_id,
       rating: this._stars, tasting_notes: this._tasting.trim(),
     });
     this._editing = null;
-    this.card.toast("Voto salvato");
+    this.card.toast(res?.wishlisted ? "Voto salvato. Era l'ultima: messa nei desideri da ricomprare ♡" : "Voto salvato");
     this._load();
   }
 

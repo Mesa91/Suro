@@ -12,8 +12,8 @@ from typing import Any
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import Store
 
-from .const import DEFAULT_RACK, MAX_RACK_SIDE, STORAGE_KEY, STORAGE_VERSION, WINE_TYPES
-from .logic import new_code, new_id, occupied, plan_positions, rack_capacity, shelves_of, slot_exists
+from .const import DEFAULT_RACK, MAX_RACK_SIDE, REBUY_MIN_RATING, STORAGE_KEY, STORAGE_VERSION, WINE_TYPES
+from .logic import new_code, new_id, occupied, plan_positions, rack_capacity, shelves_of, slot_exists, wine_key
 
 # Wine fields a bottle carries; anything else sent by a client is ignored.
 WINE_FIELDS = {
@@ -65,12 +65,13 @@ class TaponBonStore:
                 "bottles": [],
                 "history": [],
                 "settings": {},
+                "wishlist": [],
             }
             self.data = data
             await self.async_save()
             return
         self.data = data
-        for key, default in (("racks", []), ("bottles", []), ("history", []), ("settings", {})):
+        for key, default in (("racks", []), ("bottles", []), ("history", []), ("settings", {}), ("wishlist", [])):
             self.data.setdefault(key, default)
         for rack in self.racks:
             if not rack.get("shelves"):
@@ -110,6 +111,14 @@ class TaponBonStore:
     @property
     def settings(self) -> dict[str, Any]:
         return self.data["settings"]
+
+    @property
+    def wishlist(self) -> list[dict[str, Any]]:
+        return self.data["wishlist"]
+
+    @property
+    def inventory(self) -> dict[str, Any] | None:
+        return self.data.get("inventory")
 
     def _all_codes(self) -> set[str]:
         codes = {b.get("code") for b in self.bottles}
@@ -242,6 +251,118 @@ class TaponBonStore:
         self.bottles.append(bottle)
         return bottle
 
+    # ── reservations ─────────────────────────────────────────────────────────
+
+    def reserve_bottle(self, bottle_id: str, reserved_for: str | None, until: str | None) -> dict[str, Any] | None:
+        """Set aside a bottle for an occasion (empty text and date = no longer reserved)."""
+        bottle = self.get_bottle(bottle_id)
+        if bottle is None:
+            return None
+        text = str(reserved_for or "").strip()[:200]
+        day = _iso_day(until)
+        for key in ("reserved_for", "reserved_until", "reserved_notified"):
+            bottle.pop(key, None)
+        if text or day:
+            bottle["reserved_for"] = text or "Riservata"
+            if day:
+                bottle["reserved_until"] = day
+        return bottle
+
+    # ── wishlist ─────────────────────────────────────────────────────────────
+
+    def add_wish(self, wine: dict[str, Any], where: str = "", note: str = "", source: str = "manual",
+                 rating: int | None = None) -> dict[str, Any]:
+        wish = {
+            **clean_wine(wine), "id": new_id("w"), "added_at": _now(), "source": source,
+            "where": str(where or "").strip()[:200], "wish_notes": str(note or "").strip()[:1000],
+        }
+        if rating:
+            wish["rating"] = int(rating)
+        wish.setdefault("type", "red")
+        self.wishlist.append(wish)
+        return wish
+
+    def update_wish(self, wish_id: str, changes: dict[str, Any]) -> dict[str, Any] | None:
+        wish = next((w for w in self.wishlist if w["id"] == wish_id), None)
+        if wish is None:
+            return None
+        wish.update(clean_wine(changes))
+        for key in ("where", "wish_notes"):
+            if key in changes:
+                wish[key] = str(changes[key] or "").strip()[:1000]
+        return wish
+
+    def maybe_rebuy(self, entry: dict[str, Any]) -> dict[str, Any] | None:
+        """Last bottle of a wine you loved: put it on the wishlist to buy again."""
+        if entry.get("reason") != "drank" or (entry.get("rating") or 0) < REBUY_MIN_RATING:
+            return None
+        key = wine_key(entry)
+        if any(wine_key(b) == key for b in self.bottles) or any(wine_key(w) == key for w in self.wishlist):
+            return None
+        note = "Da ricomprare" + (f": «{entry['tasting_notes']}»" if entry.get("tasting_notes") else "")
+        return self.add_wish(entry, note=note, source="rebuy", rating=entry.get("rating"))
+
+    def remove_wish(self, wish_id: str) -> bool:
+        before = len(self.wishlist)
+        self.data["wishlist"] = [w for w in self.wishlist if w["id"] != wish_id]
+        return len(self.wishlist) != before
+
+    # ── inventory check ──────────────────────────────────────────────────────
+
+    def inventory_start(self, rack_id: str | None) -> dict[str, Any]:
+        if rack_id is not None and self.get_rack(rack_id) is None:
+            rack_id = None
+        self.data["inventory"] = {"started_at": _now(), "rack_id": rack_id, "seen": [], "found_taken": [],
+                                  "unknown": 0, "last": None}
+        return self.data["inventory"]
+
+    def inventory_stop(self) -> None:
+        self.data.pop("inventory", None)
+
+    def inventory_scan(self, code: str) -> dict[str, Any]:
+        """Mark a bottle as physically present; never takes anything out."""
+        inv = self.inventory
+        if inv is None:
+            return {"result": "inactive"}
+        bottle = self.get_by_code(code)
+        if bottle is not None:
+            already = code in inv["seen"]
+            if not already:
+                inv["seen"].append(code)
+            misplaced = bool(inv.get("rack_id")) and bottle.get("rack_id") != inv["rack_id"]
+            inv["last"] = {"code": code, "name": bottle.get("name"), "vintage": bottle.get("vintage"),
+                           "result": "misplaced" if misplaced else ("again" if already else "ok")}
+            return {"result": inv["last"]["result"], "bottle": bottle}
+        past = self.history_by_code(code)
+        if past is not None:
+            if past["history_id"] not in inv["found_taken"]:
+                inv["found_taken"].append(past["history_id"])
+            inv["last"] = {"code": code, "name": past.get("name"), "vintage": past.get("vintage"),
+                           "result": "found_taken"}
+            return {"result": "found_taken", "entry": past}
+        inv["unknown"] += 1
+        inv["last"] = {"code": code, "name": None, "vintage": None, "result": "unknown"}
+        return {"result": "unknown"}
+
+    def inventory_report(self) -> dict[str, Any] | None:
+        inv = self.inventory
+        if inv is None:
+            return None
+        rack_id = inv.get("rack_id")
+        scope = [b for b in self.bottles if rack_id is None or b.get("rack_id") == rack_id]
+        seen = set(inv["seen"])
+        missing = [b for b in scope if b.get("code") not in seen]
+        misplaced = [b for b in self.bottles if b.get("code") in seen and rack_id and b.get("rack_id") != rack_id]
+        found = [h for h in self.history if h.get("history_id") in set(inv["found_taken"])]
+        return {
+            "started_at": inv["started_at"], "rack_id": rack_id, "total": len(scope),
+            "seen": sum(1 for b in scope if b.get("code") in seen), "unknown": inv["unknown"],
+            "last": inv.get("last"),
+            "missing": [b["id"] for b in missing],
+            "misplaced": [b["id"] for b in misplaced],
+            "found_taken": [h["history_id"] for h in found],
+        }
+
     # ── racks ────────────────────────────────────────────────────────────────
 
     def save_rack(self, rack: dict[str, Any]) -> tuple[dict[str, Any], int]:
@@ -288,6 +409,15 @@ class TaponBonStore:
 
 
 HISTORY_ONLY = ("history_id", "removed_at", "reason", "rating", "tasting_notes")
+
+
+def _iso_day(value: Any) -> str | None:
+    from datetime import date
+
+    try:
+        return date.fromisoformat(str(value)[:10]).isoformat() if value else None
+    except ValueError:
+        return None
 
 
 def _apply_rating(entry: dict[str, Any], rating: Any, notes: Any, clear: bool = False) -> None:

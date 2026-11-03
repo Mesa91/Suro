@@ -28,6 +28,9 @@ export class BottleDialog extends LitElement {
   @state() private _rating = false;
   @state() private _stars: number | null = null;
   @state() private _tasting = "";
+  @state() private _reserving = false;
+  @state() private _resFor = "";
+  @state() private _resUntil = "";
 
   protected willUpdate(changed: PropertyValues) {
     if (changed.has("data") && this._label && this.data.settings.label_format !== this._label.label_format) {
@@ -40,6 +43,7 @@ export class BottleDialog extends LitElement {
         this._label = null;
         this._editing = false;
         this._rating = false;
+        this._reserving = false;
         this._loadLabel();
       }
     }
@@ -72,11 +76,30 @@ export class BottleDialog extends LitElement {
         if (this._stars) msg.rating = this._stars;
         if (this._tasting.trim()) msg.tasting_notes = this._tasting.trim();
       }
-      await this.card.ws(msg);
+      const res = await this.card.ws(msg);
+      if (res?.wishlisted) {
+        this.card.toast(`${wineTitle(this.bottle)} era l'ultima: l'ho messa nella lista dei desideri da ricomprare ♡`);
+        this._close();
+        return;
+      }
       this.card.toast(rated && this._stars
         ? `${wineTitle(this.bottle)}: bevuta, voto ${this._stars}/5. Salute!`
         : `${wineTitle(this.bottle)}: ${this.data.reasons[reason]?.toLowerCase() || "tolta"}. La trovi nello storico.`);
       this._close();
+    } finally {
+      this._busy = false;
+    }
+  }
+
+  private async _saveReserve(clear = false) {
+    this._busy = true;
+    try {
+      await this.card.ws({
+        type: "taponbon/reserve_bottle", bottle_id: this.bottle.id,
+        reserved_for: clear ? "" : this._resFor.trim() || "Riservata", reserved_until: clear ? null : this._resUntil || null,
+      });
+      this.card.toast(clear ? "Riserva tolta" : "Bottiglia riservata: non verrà proposta negli abbinamenti");
+      this._reserving = false;
     } finally {
       this._busy = false;
     }
@@ -155,7 +178,36 @@ export class BottleDialog extends LitElement {
         ${b.alert === "closing" ? html`<span class="badge warn">Da bere presto</span>` : nothing}
         ${b.alert === "past" ? html`<span class="badge bad">Oltre la finestra</span>` : nothing}
         <span class="where">📍 ${locationText(b, this.data.racks)}</span>
+        ${!this._reserving
+          ? html`<button class="btn small res-btn" @click=${() => {
+              this._resFor = b.reserved_for || "";
+              this._resUntil = b.reserved_until || "";
+              this._reserving = true;
+            }}>${b.reserved_for ? "🔒 Modifica riserva" : "🔒 Riserva"}</button>`
+          : nothing}
       </div>
+      ${b.reserved_for && !this._reserving
+        ? html`<div class="reserved">🔒 <b>Riservata</b>: ${b.reserved_for}${b.reserved_until
+            ? html` · ${new Date(b.reserved_until + "T12:00").toLocaleDateString("it-IT", { day: "numeric", month: "long", year: "numeric" })}` : nothing}
+            <div class="note">Non viene proposta negli abbinamenti${b.reserved_until ? "; quel giorno ti arriva un promemoria" : ""}.</div></div>`
+        : nothing}
+      ${this._reserving
+        ? html`<div class="reserve-form">
+            <div class="form">
+              <label class="field">Per cosa
+                <input type="text" maxlength="200" placeholder="Es. anniversario, annata di nascita…" .value=${this._resFor}
+                  @input=${(e: Event) => (this._resFor = (e.target as HTMLInputElement).value)} /></label>
+              <label class="field">Quando (facoltativo)
+                <input type="date" .value=${this._resUntil}
+                  @input=${(e: Event) => (this._resUntil = (e.target as HTMLInputElement).value)} /></label>
+            </div>
+            <div class="row" style="justify-content:flex-end;margin-top:10px">
+              ${b.reserved_for ? html`<button class="btn small" ?disabled=${this._busy} @click=${() => this._saveReserve(true)}>Togli riserva</button>` : nothing}
+              <button class="btn small" @click=${() => (this._reserving = false)}>Annulla</button>
+              <button class="btn small primary" ?disabled=${this._busy} @click=${() => this._saveReserve()}>Salva</button>
+            </div>
+          </div>`
+        : nothing}
       ${b.past_count || b.past_notes
         ? html`<div class="past">
             <span class="past-head">Già bevuto${b.past_count ? html` ${b.past_count === 1 ? "una volta" : `${b.past_count} volte`}` : nothing}</span>
@@ -211,6 +263,7 @@ export class BottleDialog extends LitElement {
 
   private _renderRate() {
     return html`<div class="rate">
+      ${this.bottle.reserved_for ? html`<div class="note">🔒 Era riservata: «${this.bottle.reserved_for}»</div>` : nothing}
       <div class="rate-q">Com'era?</div>
       ${renderStars(this._stars, (v) => (this._stars = v), true)}
       <div class="rate-hint">${["Tocca le stelle per votarla", "Deludente", "Così così", "Buono", "Molto buono", "Eccezionale"][this._stars || 0]}</div>
@@ -253,6 +306,26 @@ export class BottleDialog extends LitElement {
   static styles = [
     sharedStyles,
     css`
+      .res-btn {
+        margin-left: auto;
+      }
+      .reserved {
+        margin: 2px 0 14px;
+        padding: 10px 12px;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid var(--tb-line, var(--divider-color));
+      }
+      .reserve-form {
+        margin: 2px 0 14px;
+        padding: 12px;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.04);
+      }
+      .reserve-form .row {
+        display: flex;
+        gap: 6px;
+      }
       .past {
         margin: 2px 0 14px;
         padding: 10px 12px;

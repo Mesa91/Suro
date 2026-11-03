@@ -1,6 +1,6 @@
 import { LitElement, html, css, nothing, PropertyValues } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
-import { Bottle, CardConfig, HistoryEntry, Rack, Snapshot, capacityOf, matches, shelvesOf, wineTitle } from "./types";
+import { Bottle, CardConfig, HistoryEntry, InventoryReport, Rack, Snapshot, Wish, capacityOf, matches, shelvesOf, wineTitle } from "./types";
 import { sharedStyles } from "./styles";
 import { BOTTLE_DEFS, EMPTY_SVG, bottleSvg } from "./bottle";
 import "./bottle-dialog";
@@ -8,9 +8,14 @@ import "./add-dialog";
 import "./racks-dialog";
 import "./history-dialog";
 import "./pair-dialog";
+import "./wishlist-dialog";
+import "./inventory-dialog";
 
 type Dialog =
-  | { kind: "add"; rackId: string | null; row: number | null; col: number | null }
+  | { kind: "add"; rackId: string | null; row: number | null; col: number | null;
+      mode?: "cellar" | "wish"; prefill?: Partial<Wish> | null; wishId?: string | null }
+  | { kind: "wishlist" }
+  | { kind: "inventory"; report: InventoryReport }
   | { kind: "bottle"; bottleId: string }
   | { kind: "racks" }
   | { kind: "history" }
@@ -102,6 +107,11 @@ export class TaponBonCard extends LitElement {
   // ── interactions ─────────────────────────────────────────────────────────
 
   private _onCell(rack: Rack, row: number, col: number, bottle?: Bottle) {
+    if (this._data?.inventory) {
+      // During an inventory check a tap means "this one is here", like a scan.
+      if (bottle) this.ws({ type: "taponbon/take_code", code: `taponbon-${bottle.code}` });
+      return;
+    }
     if (this._moving) {
       const moving = this._moving;
       this._moving = null;
@@ -161,6 +171,9 @@ export class TaponBonCard extends LitElement {
             ＋ Aggiungi
           </button>
           <button class="btn" title="Che vino apro con questo piatto?" @click=${() => (this._dialog = { kind: "pair" })}>🍽 Abbina</button>
+          <button class="btn" title="Lista dei desideri" @click=${() => (this._dialog = { kind: "wishlist" })}>
+            ♡ Desideri${d.wishlist?.length ? html` <span class="count">${d.wishlist.length}</span>` : nothing}
+          </button>
           <button class="btn" title="Storico" @click=${() => (this._dialog = { kind: "history" })}>🕓 Storico</button>
           <button class="btn" title="Scaffali e impostazioni" @click=${() => (this._dialog = { kind: "racks" })}>⚙︎</button>
         </div>
@@ -173,6 +186,8 @@ export class TaponBonCard extends LitElement {
             <span class="hint">cartellino dorato: da bere presto · rosso: oltre la finestra</span>
           </div>`
         : nothing}
+
+      ${d.inventory ? this._renderInventoryBanner(d, d.inventory) : nothing}
 
       ${this._moving
         ? html`<div class="banner moving">
@@ -212,6 +227,29 @@ export class TaponBonCard extends LitElement {
     `;
   }
 
+  private _renderInventoryBanner(d: Snapshot, inv: InventoryReport) {
+    const rack = d.racks.find((r) => r.id === inv.rack_id);
+    const last = inv.last;
+    const icon: Record<string, string> = { ok: "✓", again: "↺ già contata", misplaced: "⚠ fuori posto",
+      found_taken: "↩ risultava già tolta", unknown: "? codice sconosciuto" };
+    return html`<div class="banner inventory">
+      <div class="inv-text">
+        <b>📋 Inventario${rack ? ` · ${rack.name}` : ""}</b>
+        <span class="inv-count">${inv.seen}/${inv.total} trovate</span>
+        ${last ? html`<span class="hint">Ultima: ${last.name ? `${last.name}${last.vintage ? ` ${last.vintage}` : ""} ` : ""}${icon[last.result] || ""}</span>`
+          : html`<span class="hint">Scansiona i QR, o tocca le bottiglie che vedi</span>`}
+      </div>
+      <div class="inv-progress"><span style="width:${inv.total ? Math.round((inv.seen / inv.total) * 100) : 0}%"></span></div>
+      <div class="inv-actions">
+        <button class="btn small" @click=${() => this.ws({ type: "taponbon/inventory_stop" }).then(() => this.toast("Inventario annullato"))}>Annulla</button>
+        <button class="btn small primary" @click=${async () => {
+          const res = await this.ws({ type: "taponbon/inventory_stop" });
+          this._dialog = { kind: "inventory", report: res.inventory };
+        }}>Fine: vedi risultato</button>
+      </div>
+    </div>`;
+  }
+
   private _renderValue(d: Snapshot) {
     const v = d.value;
     if (!v || !v.priced) return nothing;
@@ -246,6 +284,12 @@ export class TaponBonCard extends LitElement {
     </div>`;
   }
 
+  private _invClass(d: Snapshot, b: Bottle) {
+    const inv = d.inventory;
+    if (!inv || (inv.rack_id && b.rack_id !== inv.rack_id)) return "";
+    return inv.missing.includes(b.id) ? "unseen" : "seen";
+  }
+
   private _inRack(d: Snapshot, rack: Rack) {
     return d.bottles.filter((b) => b.rack_id === rack.id && b.row != null && b.col != null);
   }
@@ -267,8 +311,8 @@ export class TaponBonCard extends LitElement {
               ${Array.from({ length: n }, (_, c) => {
                 const b = at.get(`${r}:${c}`);
                 return html`<button
-                  class="cell ${b ? "full" : "free"} ${b && this._dims(b) ? "dim" : ""} ${b && this._moving?.id === b.id ? "moving" : ""}"
-                  title=${b ? `${wineTitle(b)}${b.producer ? ` · ${b.producer}` : ""}` : `Mensola ${r + 1}, posto ${c + 1}: libero`}
+                  class="cell ${b ? "full" : "free"} ${b && this._dims(b) ? "dim" : ""} ${b && this._moving?.id === b.id ? "moving" : ""} ${b?.reserved_for ? "reserved" : ""} ${b ? this._invClass(d, b) : ""}"
+                  title=${b ? `${wineTitle(b)}${b.producer ? ` · ${b.producer}` : ""}${b.reserved_for ? ` · 🔒 ${b.reserved_for}` : ""}` : `Mensola ${r + 1}, posto ${c + 1}: libero`}
                   @click=${() => this._onCell(rack, r, c, b)}
                 >${b ? bottleSvg(b.type, b.alert) : EMPTY_SVG}</button>`;
               })}
@@ -286,7 +330,16 @@ export class TaponBonCard extends LitElement {
     const close = () => (this._dialog = null);
     switch (dlg.kind) {
       case "add":
-        return html`<tb-add-dialog .card=${this} .data=${d} .rackId=${dlg.rackId} .row=${dlg.row} .col=${dlg.col} @close=${close}></tb-add-dialog>`;
+        return html`<tb-add-dialog .card=${this} .data=${d} .rackId=${dlg.rackId} .row=${dlg.row} .col=${dlg.col}
+          .mode=${dlg.mode || "cellar"} .prefill=${dlg.prefill || null} .wishId=${dlg.wishId || null} @close=${close}></tb-add-dialog>`;
+      case "wishlist":
+        return html`<tb-wishlist-dialog .card=${this} .data=${d} @close=${close}
+          @add-wish=${() => (this._dialog = { kind: "add", rackId: null, row: null, col: null, mode: "wish" })}
+          @buy=${(e: CustomEvent) => (this._dialog = { kind: "add", rackId: null, row: null, col: null, mode: "cellar",
+            prefill: e.detail.wish, wishId: e.detail.wish.id })}></tb-wishlist-dialog>`;
+      case "inventory":
+        return html`<tb-inventory-dialog .card=${this} .data=${d} .report=${dlg.report} @close=${close}
+          @open-bottle=${(e: CustomEvent) => (this._dialog = { kind: "bottle", bottleId: e.detail.bottleId })}></tb-inventory-dialog>`;
       case "bottle": {
         const bottle = d.bottles.find((b) => b.id === dlg.bottleId);
         if (!bottle) return nothing;
@@ -523,6 +576,78 @@ export class TaponBonCard extends LitElement {
       @keyframes tb-sway {
         0%, 100% { transform: rotate(0deg); }
         50% { transform: rotate(-4deg); }
+      }
+      .cell.reserved::after {
+        content: "🔒";
+        position: absolute;
+        top: -2px;
+        right: -4px;
+        font-size: 9px;
+        filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.8));
+      }
+      .cell.unseen {
+        opacity: 0.28;
+        filter: grayscale(0.6);
+      }
+      .cell.seen::before {
+        content: "✓";
+        position: absolute;
+        left: 50%;
+        bottom: -3px;
+        transform: translateX(-50%);
+        z-index: 1;
+        font-size: 10px;
+        font-weight: 700;
+        line-height: 14px;
+        width: 14px;
+        border-radius: 50%;
+        text-align: center;
+        background: #2e7d32;
+        color: #fff;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+      }
+      .count {
+        display: inline-block;
+        min-width: 18px;
+        padding: 0 5px;
+        border-radius: 999px;
+        background: rgba(227, 179, 65, 0.2);
+        color: #e3b341;
+        font-size: 0.8em;
+        line-height: 18px;
+        text-align: center;
+      }
+      .banner.inventory {
+        background: rgba(46, 125, 50, 0.16);
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+      }
+      .inv-text {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px 14px;
+        align-items: baseline;
+      }
+      .inv-count {
+        font-variant-numeric: tabular-nums;
+      }
+      .inv-progress {
+        height: 4px;
+        border-radius: 2px;
+        background: rgba(255, 255, 255, 0.1);
+        overflow: hidden;
+      }
+      .inv-progress span {
+        display: block;
+        height: 100%;
+        background: #4caf50;
+        transition: width 0.3s ease;
+      }
+      .inv-actions {
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
       }
       .cell.dim {
         opacity: 0.15;

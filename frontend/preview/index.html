@@ -23,7 +23,8 @@
     const reasons = { drank: "Bevuta", gifted: "Regalata", broken: "Rotta", spoiled: "Andata a male", deleted: "Eliminata", other: "Altro" };
     let n = 0; const id = (p) => p + (++n);
     const db = { racks: [{ id: "rack-a", name: "Scaffale", rows: 7, cols: 10, shelves: [10, 10, 10, 10, 10, 10, 10], order: 0 }], bottles: [], history: [],
-      settings: { auto_labels: true, alert_days: 180, label_format: "qr" } };
+      settings: { auto_labels: true, alert_days: 180, label_format: "qr" },
+      wishlist: [{ id: "w1", name: "Sassicaia", producer: "Tenuta San Guido", vintage: 2019, type: "red", region: "Bolgheri", added_at: "2026-10-01", source: "manual", where: "Cena da Marco", wish_notes: "Chiedere all'enoteca" }], inventory: null };
     const seed = [["Barolo Cannubi", "Brezza", 2016, "red", 2022, 2034, 3], ["Brunello di Montalcino", "Mastrojanni", 2015, "red", 2020, 2026, 2],
       ["Soave Classico", "Pieropan", 2019, "white", 2020, 2024, 1], ["Franciacorta Satèn", "Ca' del Bosco", null, "sparkling", null, 2027, 4],
       ["Chiaretto", "Zenato", 2023, "rose", 2024, 2026, 2], ["Passito di Pantelleria", "Donnafugata", 2018, "dessert", 2020, 2040, 1]];
@@ -38,7 +39,13 @@
     const past = (b) => { const hs = db.history.filter((h) => wk(h) === wk(b) && (h.rating || h.tasting_notes)); if (!hs.length) return {};
       const r = hs.filter((h) => h.rating); return { past_rating: r.length ? r.reduce((a, h) => a + h.rating, 0) / r.length : null, past_count: r.length, past_notes: (hs[hs.length - 1].tasting_notes || "") }; };
     const value = () => { const p = db.bottles.filter((b) => b.price > 0); return { total: p.reduce((a, b) => a + b.price, 0), priced: p.length, bottles: db.bottles.length }; };
-    const snap = () => ({ racks: db.racks, bottles: db.bottles.map((b) => ({ ...b, alert: alertOf(b), ...past(b) })), settings: db.settings, value: value(),
+    const invReport = () => { const inv = db.inventory; if (!inv) return null;
+      const scope = db.bottles.filter((b) => !inv.rack_id || b.rack_id === inv.rack_id);
+      return { started_at: "", rack_id: inv.rack_id, total: scope.length, seen: scope.filter((b) => inv.seen.includes(b.code)).length,
+        unknown: inv.unknown, last: inv.last, missing: scope.filter((b) => !inv.seen.includes(b.code)).map((b) => b.id),
+        misplaced: db.bottles.filter((b) => inv.seen.includes(b.code) && inv.rack_id && b.rack_id !== inv.rack_id).map((b) => b.id), found_taken: inv.found };
+    };
+    const snap = () => ({ racks: db.racks, bottles: db.bottles.map((b) => ({ ...b, alert: alertOf(b), ...past(b) })), settings: db.settings, value: value(), wishlist: [...db.wishlist].reverse(), inventory: invReport(),
       types, reasons, history_count: db.history.length, ai: true, printer: false,
       climate: { temperature_entity: "sensor.cantina_temperatura", humidity_entity: "sensor.cantina_umidita",
         temperature_min: 10, temperature_max: 16, humidity_min: 60, humidity_max: 80 } });
@@ -53,9 +60,19 @@
           const b = { ...m.wine, vintage: m.wine.vintage ? Number(m.wine.vintage) : null, drink_from: m.wine.drink_from ? Number(m.wine.drink_from) : null,
             drink_until: m.wine.drink_until ? Number(m.wine.drink_until) : null, id: id("b"), code: "new" + n,
             rack_id: s ? rack.id : null, row: s ? s[0] : null, col: s ? s[1] : null, added_at: new Date().toISOString() };
-          db.bottles.push(b); added.push(b); } changed(); return { bottles: added }; },
+          db.bottles.push(b); added.push(b); } if (m.wish_id) db.wishlist = db.wishlist.filter((w) => w.id !== m.wish_id); changed(); return { bottles: added }; },
       "taponbon/remove_bottle": (m) => { const i = db.bottles.findIndex((b) => b.id === m.bottle_id); const [b] = db.bottles.splice(i, 1);
         db.history.push({ ...b, history_id: id("h"), removed_at: new Date().toISOString(), reason: m.reason, rating: m.rating, tasting_notes: m.tasting_notes }); changed(); return {}; },
+      "taponbon/reserve_bottle": (m) => { const b = db.bottles.find((x) => x.id === m.bottle_id); delete b.reserved_for; delete b.reserved_until;
+        if (m.reserved_for) { b.reserved_for = m.reserved_for; if (m.reserved_until) b.reserved_until = m.reserved_until; } changed(); return { bottle: b }; },
+      "taponbon/wishlist_add": (m) => { const w = { ...m.wine, id: id("w"), added_at: new Date().toISOString(), source: "manual", where: m.where, wish_notes: m.wish_notes }; db.wishlist.push(w); changed(); return { wish: w }; },
+      "taponbon/wishlist_remove": (m) => { db.wishlist = db.wishlist.filter((w) => w.id !== m.wish_id); changed(); return {}; },
+      "taponbon/inventory_start": (m) => { db.inventory = { rack_id: m.rack_id || null, seen: [], found: [], unknown: 0, last: null }; changed(); return { inventory: invReport() }; },
+      "taponbon/inventory_stop": () => { const r = invReport(); db.inventory = null; changed(); return { inventory: r }; },
+      "taponbon/take_code": (m) => { const code = m.code.replace("taponbon-", ""); const b = db.bottles.find((x) => x.code === code);
+        if (db.inventory && b) { if (!db.inventory.seen.includes(code)) db.inventory.seen.push(code); db.inventory.last = { code, name: b.name, vintage: b.vintage, result: "ok" }; changed(); }
+        return { result: "inventory_ok" }; },
+      "taponbon/remove_bottles": (m) => { m.bottle_ids.forEach((i) => handlers["taponbon/remove_bottle"]({ bottle_id: i, reason: m.reason })); return { removed: m.bottle_ids.length }; },
       "taponbon/rate_history": (m) => { const h = db.history.find((x) => x.history_id === m.history_id); h.rating = m.rating || undefined; h.tasting_notes = m.tasting_notes || undefined; changed(); return { entry: h }; },
       "taponbon/move_bottle": (m) => { const b = db.bottles.find((x) => x.id === m.bottle_id);
         const o = db.bottles.find((x) => x.rack_id === m.rack_id && x.row === m.row && x.col === m.col);

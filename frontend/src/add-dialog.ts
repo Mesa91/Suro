@@ -49,6 +49,14 @@ export class AddDialog extends LitElement {
   @property({ attribute: false }) rackId: string | null = null;
   @property({ attribute: false }) row: number | null = null;
   @property({ attribute: false }) col: number | null = null;
+  /** "wish": the same form, saved to the wishlist instead of the cellar. */
+  @property({ attribute: false }) mode: "cellar" | "wish" = "cellar";
+  @property({ attribute: false }) prefill: Record<string, any> | null = null;
+  /** Buying a wish: it leaves the wishlist once added. */
+  @property({ attribute: false }) wishId: string | null = null;
+  @state() private _where = "";
+  @state() private _wishNotes = "";
+  private _prefilled = false;
   @state() private _values: Record<string, any> = { type: "red" };
   @state() private _quantity = 1;
   @state() private _busy = false;
@@ -245,6 +253,14 @@ export class AddDialog extends LitElement {
     </div>`;
   }
 
+  protected willUpdate() {
+    if (!this._prefilled && this.prefill) {
+      this._prefilled = true;
+      const skip = new Set(["id", "added_at", "source", "where", "wish_notes", "rating"]);
+      this._values = { type: "red", ...Object.fromEntries(Object.entries(this.prefill).filter(([k, v]) => !skip.has(k) && v != null)) };
+    }
+  }
+
   private _close() {
     this.dispatchEvent(new CustomEvent("close"));
   }
@@ -252,6 +268,17 @@ export class AddDialog extends LitElement {
   private async _save() {
     if (!String(this._values.name || "").trim()) {
       this.card.toast("Scrivi almeno il nome del vino");
+      return;
+    }
+    if (this.mode === "wish") {
+      this._busy = true;
+      try {
+        await this.card.ws({ type: "taponbon/wishlist_add", wine: this._values, where: this._where, wish_notes: this._wishNotes });
+        this.card.toast("Aggiunto alla lista dei desideri");
+        this._close();
+      } finally {
+        this._busy = false;
+      }
       return;
     }
     this._busy = true;
@@ -263,6 +290,7 @@ export class AddDialog extends LitElement {
         rack_id: this.rackId,
         row: this.row,
         col: this.col,
+        wish_id: this.wishId,
       });
       const added: Bottle[] = res.bottles;
       const unplaced = added.filter((b) => !b.rack_id).length;
@@ -270,11 +298,26 @@ export class AddDialog extends LitElement {
         unplaced
           ? `Aggiunte ${added.length} bottiglie, ${unplaced} da sistemare: scaffale pieno`
           : added.length > 1 ? `Aggiunte ${added.length} bottiglie` : "Bottiglia aggiunta",
-      );
+      ) + (this.wishId ? " e tolta dai desideri" : "");
       this._close();
     } finally {
       this._busy = false;
     }
+  }
+
+  private _renderWishFields() {
+    return html`<div class="form" style="margin-top:10px">
+      <label class="field wide">
+        Dove l'hai assaggiato
+        <input type="text" maxlength="200" placeholder="Es. cena da Marco, Osteria del Ponte…" .value=${this._where}
+          @input=${(e: Event) => (this._where = (e.target as HTMLInputElement).value)} />
+      </label>
+      <label class="field wide">
+        Nota
+        <textarea rows="2" maxlength="1000" placeholder="Es. chiedere all'enoteca sotto casa, prezzo visto 25 €…"
+          .value=${this._wishNotes} @input=${(e: Event) => (this._wishNotes = (e.target as HTMLTextAreaElement).value)}></textarea>
+      </label>
+    </div>`;
   }
 
   render() {
@@ -291,7 +334,7 @@ export class AddDialog extends LitElement {
             <div style="display:flex;gap:16px;align-items:flex-end">
               <div style="width:34px;flex:none;filter:drop-shadow(0 8px 10px rgba(0,0,0,.55))">${bottleSvg(this._values.type || "red")}</div>
               <div>
-                <div class="eyebrow">Nuovo in cantina</div>
+                <div class="eyebrow">${this.mode === "wish" ? "Lista dei desideri" : this.wishId ? "Comprato!" : "Nuovo in cantina"}</div>
                 <div class="dialog-title">${String(this._values.name || "").trim() || "Aggiungi vino"}</div>
               </div>
             </div>
@@ -300,7 +343,7 @@ export class AddDialog extends LitElement {
           <div class="dialog-body">
             ${this._renderAI()}
             ${renderWineForm(this.data, this._values, (k, v) => (this._values = { ...this._values, [k]: v }))}
-            <div class="form" style="margin-top:10px">
+            ${this.mode === "wish" ? this._renderWishFields() : html`            <div class="form" style="margin-top:10px">
               <label class="field">
                 Quante bottiglie
                 <input type="number" min="1" max="100" .value=${String(this._quantity)}
@@ -310,12 +353,13 @@ export class AddDialog extends LitElement {
             </div>
             ${this.data.settings.auto_labels
               ? html`<p class="note">Per ogni bottiglia verrà richiesta la stampa dell'etichetta QR.</p>`
-              : nothing}
+              : nothing}`}
           </div>
           <div class="dialog-foot">
             <button class="btn" @click=${this._close}>Annulla</button>
             <button class="btn primary" ?disabled=${this._busy} @click=${this._save}>
-              ${this._busy ? "Salvo…" : `Aggiungi ${this._quantity > 1 ? `${this._quantity} bottiglie` : "bottiglia"}`}
+              ${this._busy ? "Salvo…" : this.mode === "wish" ? "♡ Aggiungi ai desideri"
+                : `Aggiungi ${this._quantity > 1 ? `${this._quantity} bottiglie` : "bottiglia"}`}
             </button>
           </div>
         </div>

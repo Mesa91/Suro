@@ -28,6 +28,8 @@ def async_register(hass: HomeAssistant) -> None:
         ws_remove_bottle, ws_get_history, ws_restore, ws_save_rack, ws_delete_rack,
         ws_get_label, ws_request_label, ws_take_code, ws_update_settings, ws_get_alerts,
         ws_ai_recognize, ws_ai_fill, ws_pair, ws_rate_history,
+        ws_reserve_bottle, ws_remove_bottles, ws_wishlist_add, ws_wishlist_update, ws_wishlist_remove,
+        ws_inventory_start, ws_inventory_stop,
     ):
         websocket_api.async_register_command(hass, handler)
 
@@ -57,6 +59,8 @@ def _snapshot(hass: HomeAssistant) -> dict[str, Any]:
         "racks": sorted(store.racks, key=lambda r: r.get("order", 0)),
         "bottles": [{**b, "alert": flagged.get(b["id"]), **past(b)} for b in store.bottles],
         "value": cellar_value(store.bottles),
+        "wishlist": list(reversed(store.wishlist)),
+        "inventory": store.inventory_report(),
         "settings": {
             "label_format": core.label_format(store),
             CONF_AUTO_LABELS: bool(store.settings.get(CONF_AUTO_LABELS, DEFAULT_AUTO_LABELS)),
@@ -145,7 +149,8 @@ async def ws_pair(hass, connection, msg) -> None:
     if len(courses) == 1:
         dish, courses = courses[0], []
     lead = int(store.settings.get(CONF_ALERT_DAYS, DEFAULT_ALERT_DAYS))
-    wines = cellar_wines(store.bottles, store.racks, date.today(), lead, wine_ratings(store.history))
+    available = [b for b in store.bottles if not b.get("reserved_for")]  # set aside for an occasion
+    wines = cellar_wines(available, store.racks, date.today(), lead, wine_ratings(store.history))
     if not wines:
         connection.send_error(msg["id"], "empty", "La cantina è vuota: non ho niente da consigliarti")
         return
@@ -227,6 +232,7 @@ def ws_get_data(hass, connection, msg) -> None:
     vol.Optional("rack_id"): vol.Any(str, None),
     vol.Optional("row"): vol.Any(int, None),
     vol.Optional("col"): vol.Any(int, None),
+    vol.Optional("wish_id"): vol.Any(str, None),
 })
 @websocket_api.async_response
 async def ws_add_bottles(hass, connection, msg) -> None:
@@ -234,6 +240,8 @@ async def ws_add_bottles(hass, connection, msg) -> None:
     if not store:
         return
     added = store.add_bottles(msg["wine"], msg["quantity"], msg.get("rack_id"), msg.get("row"), msg.get("col"))
+    if msg.get("wish_id"):
+        store.remove_wish(msg["wish_id"])  # bought: it leaves the wishlist
     await core.async_changed(hass)
     connection.send_result(msg["id"], {"bottles": added})
     hass.async_create_task(core.async_on_added(hass, added))
@@ -293,8 +301,118 @@ async def ws_remove_bottle(hass, connection, msg) -> None:
     if entry is None:
         connection.send_error(msg["id"], "not_found", "Bottiglia non trovata")
         return
+    wish = store.maybe_rebuy(entry)
     await core.async_changed(hass)
-    connection.send_result(msg["id"], {"history_id": entry["history_id"]})
+    connection.send_result(msg["id"], {"history_id": entry["history_id"], "wishlisted": bool(wish)})
+
+
+@websocket_api.websocket_command({
+    vol.Required("type"): "taponbon/remove_bottles",
+    vol.Required("bottle_ids"): [str],
+    vol.Optional("reason", default="missing"): vol.In(list(REMOVAL_REASONS)),
+})
+@websocket_api.async_response
+async def ws_remove_bottles(hass, connection, msg) -> None:
+    """Take several bottles out at once (e.g. not found during an inventory check)."""
+    store = _store(hass, connection, msg)
+    if not store:
+        return
+    removed = [e for e in (store.remove_bottle(bid, msg["reason"]) for bid in msg["bottle_ids"]) if e]
+    await core.async_changed(hass)
+    connection.send_result(msg["id"], {"removed": len(removed)})
+
+
+@websocket_api.websocket_command({
+    vol.Required("type"): "taponbon/reserve_bottle",
+    vol.Required("bottle_id"): str,
+    vol.Optional("reserved_for"): vol.Any(None, vol.All(str, vol.Length(max=200))),
+    vol.Optional("reserved_until"): vol.Any(None, str),
+})
+@websocket_api.async_response
+async def ws_reserve_bottle(hass, connection, msg) -> None:
+    """Set aside a bottle for an occasion; empty values remove the reservation."""
+    store = _store(hass, connection, msg)
+    if not store:
+        return
+    bottle = store.reserve_bottle(msg["bottle_id"], msg.get("reserved_for"), msg.get("reserved_until"))
+    if bottle is None:
+        connection.send_error(msg["id"], "not_found", "Bottiglia non trovata")
+        return
+    await core.async_changed(hass)
+    connection.send_result(msg["id"], {"bottle": bottle})
+
+
+_WISH_EXTRA = {
+    vol.Optional("where"): vol.Any(None, vol.All(str, vol.Length(max=200))),
+    vol.Optional("wish_notes"): vol.Any(None, vol.All(str, vol.Length(max=1000))),
+}
+
+
+@websocket_api.websocket_command({vol.Required("type"): "taponbon/wishlist_add", vol.Required("wine"): dict, **_WISH_EXTRA})
+@websocket_api.async_response
+async def ws_wishlist_add(hass, connection, msg) -> None:
+    store = _store(hass, connection, msg)
+    if not store:
+        return
+    if not str(msg["wine"].get("name") or "").strip():
+        connection.send_error(msg["id"], "no_name", "Scrivi almeno il nome del vino")
+        return
+    wish = store.add_wish(msg["wine"], msg.get("where") or "", msg.get("wish_notes") or "")
+    await core.async_changed(hass)
+    connection.send_result(msg["id"], {"wish": wish})
+
+
+@websocket_api.websocket_command({
+    vol.Required("type"): "taponbon/wishlist_update", vol.Required("wish_id"): str, vol.Required("changes"): dict,
+})
+@websocket_api.async_response
+async def ws_wishlist_update(hass, connection, msg) -> None:
+    store = _store(hass, connection, msg)
+    if not store:
+        return
+    wish = store.update_wish(msg["wish_id"], msg["changes"])
+    if wish is None:
+        connection.send_error(msg["id"], "not_found", "Desiderio non trovato")
+        return
+    await core.async_changed(hass)
+    connection.send_result(msg["id"], {"wish": wish})
+
+
+@websocket_api.websocket_command({vol.Required("type"): "taponbon/wishlist_remove", vol.Required("wish_id"): str})
+@websocket_api.async_response
+async def ws_wishlist_remove(hass, connection, msg) -> None:
+    store = _store(hass, connection, msg)
+    if not store:
+        return
+    store.remove_wish(msg["wish_id"])
+    await core.async_changed(hass)
+    connection.send_result(msg["id"], {})
+
+
+@websocket_api.websocket_command({
+    vol.Required("type"): "taponbon/inventory_start", vol.Optional("rack_id"): vol.Any(str, None),
+})
+@websocket_api.async_response
+async def ws_inventory_start(hass, connection, msg) -> None:
+    """From now on scans only mark bottles as present, until the check is closed."""
+    store = _store(hass, connection, msg)
+    if not store:
+        return
+    store.inventory_start(msg.get("rack_id"))
+    await core.async_changed(hass)
+    connection.send_result(msg["id"], {"inventory": store.inventory_report()})
+
+
+@websocket_api.websocket_command({vol.Required("type"): "taponbon/inventory_stop"})
+@websocket_api.async_response
+async def ws_inventory_stop(hass, connection, msg) -> None:
+    store = _store(hass, connection, msg)
+    if not store:
+        return
+    report = store.inventory_report()
+    store.inventory_stop()
+    await core.async_changed(hass)
+    connection.send_result(msg["id"], {"inventory": report})
 
 
 @websocket_api.websocket_command({vol.Required("type"): "taponbon/get_history"})
@@ -321,8 +439,9 @@ async def ws_rate_history(hass, connection, msg) -> None:
     if entry is None:
         connection.send_error(msg["id"], "not_found", "Voce non trovata nello storico")
         return
+    wish = store.maybe_rebuy(entry)
     await core.async_changed(hass)
-    connection.send_result(msg["id"], {"entry": entry})
+    connection.send_result(msg["id"], {"entry": entry, "wishlisted": bool(wish)})
 
 
 @websocket_api.websocket_command({

@@ -148,6 +148,12 @@ export class RacksDialog extends LitElement {
     </div>`;
   }
 
+  private async _inventory(rackId: string | null) {
+    await this.card.ws({ type: "taponbon/inventory_start", rack_id: rackId });
+    this.card.toast("Inventario avviato: scansiona le bottiglie");
+    this._close();
+  }
+
   render() {
     const s = this.data.settings;
     const total = this.data.racks.reduce((a, r) => a + capacityOf(r), 0);
@@ -178,6 +184,18 @@ export class RacksDialog extends LitElement {
                 @change=${(e: Event) => this._setting("auto_labels", (e.target as HTMLInputElement).checked)} />
               Stampa l'etichetta QR quando aggiungo una bottiglia
             </label>
+
+            <div class="section">Controllo inventario</div>
+            <div class="note" style="margin-bottom:8px">
+              Scansiona una per una le bottiglie (con il telefono o con lo scanner): in questa modalità
+              non viene tolto nulla, alla fine vedi cosa manca, cosa è fuori posto e cosa risultava già bevuto.
+            </div>
+            <div class="types" style="margin-bottom:12px">
+              <button class="chip" @click=${() => this._inventory(null)}>Tutta la cantina</button>
+              ${this.data.racks.length > 1
+                ? this.data.racks.map((r) => html`<button class="chip" @click=${() => this._inventory(r.id)}>Solo ${r.name}</button>`)
+                : nothing}
+            </div>
 
             <div class="section">Finestra di beva</div>
             <div class="note" style="margin-bottom:8px">Avvisami prima che si chiuda:</div>

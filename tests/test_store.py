@@ -85,3 +85,41 @@ def test_rating_on_remove_and_later():
     assert "rating" not in e2 and "tasting_notes" not in e2
     back = st.restore(e1["history_id"])
     assert "rating" not in back and "tasting_notes" not in back
+
+
+def test_reserve_wishlist_rebuy_and_inventory():
+    st = load(None)
+    rack = st.racks[0]["id"]
+    a, b = st.add_bottles({"name": "Barolo", "vintage": 2016, "type": "red"}, 2, rack, 0, 0)
+    c = st.add_bottles({"name": "Soave", "type": "white"}, 1, None, None, None)[0]
+    st.move_bottle(c["id"], None, None, None)  # unplaced
+    assert c["rack_id"] is None
+
+    st.reserve_bottle(a["id"], "  40 anni ", "2030-03-12T00:00")
+    assert (a["reserved_for"], a["reserved_until"]) == ("40 anni", "2030-03-12")
+    st.reserve_bottle(a["id"], "", "bad")
+    assert "reserved_for" not in a and "reserved_until" not in a
+
+    # rebuy only when the last bottle of a well-rated wine is drunk
+    e1 = st.remove_bottle(a["id"], "drank", 5)
+    assert st.maybe_rebuy(e1) is None
+    e2 = st.remove_bottle(b["id"], "drank", 5, "top")
+    wish = st.maybe_rebuy(e2)
+    assert wish["source"] == "rebuy" and wish["name"] == "Barolo" and "top" in wish["wish_notes"]
+    assert st.maybe_rebuy(e2) is None  # not twice
+    assert st.remove_wish(wish["id"]) and not st.wishlist
+
+    # inventory: scans never remove, report lists missing / found again
+    st.inventory_start(None)
+    assert st.inventory_scan(c["code"])["result"] == "ok"
+    assert st.inventory_scan(e2["code"])["result"] == "found_taken"
+    assert st.inventory_scan("zzzz")["result"] == "unknown"
+    rep = st.inventory_report()
+    assert rep["total"] == 1 and rep["seen"] == 1 and rep["missing"] == []
+    assert rep["found_taken"] == [e2["history_id"]] and rep["unknown"] == 1
+    st.inventory_start(rack)
+    st.inventory_scan(c["code"])
+    rep = st.inventory_report()
+    assert rep["misplaced"] == [c["id"]] and rep["total"] == 0
+    st.inventory_stop()
+    assert st.inventory is None and st.inventory_report() is None

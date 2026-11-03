@@ -23,6 +23,8 @@ from .const import (
     DOMAIN,
     EVENT_BOTTLE_TAKEN,
     EVENT_DRINK_ALERT,
+    EVENT_INVENTORY_SCAN,
+    EVENT_RESERVED_DUE,
     EVENT_LABEL_REQUESTED,
     EVENT_SCAN_UNMATCHED,
     EVENT_UPDATED,
@@ -79,6 +81,18 @@ async def async_take_scanned(hass: HomeAssistant, raw: str, source: str) -> dict
     if store is None or scanned is None:
         return {"result": "not_ours"}
 
+    if store.inventory is not None:
+        # Inventory check in progress: a scan only says "this bottle is here".
+        if scanned.kind != "bottle":
+            return {"result": "ignored"}
+        result = store.inventory_scan(scanned.code)
+        await async_changed(hass)
+        hass.bus.async_fire(EVENT_INVENTORY_SCAN, {
+            "code": scanned.code, "result": result["result"], "source": source,
+            "name": (result.get("bottle") or result.get("entry") or {}).get("name"),
+        })
+        return {"result": f"inventory_{result['result']}"}
+
     if scanned.kind == "slot":
         bottle = store.bottle_at(scanned.rack_id, scanned.row, scanned.col)
         if bottle is None:
@@ -112,6 +126,8 @@ async def async_take_scanned(hass: HomeAssistant, raw: str, source: str) -> dict
     _notify(
         hass,
         f"Prelevata **{wine_title(bottle)}** ({location}). Ne restano {remaining}. "
+        + (f"Era riservata: «{bottle['reserved_for']}». " if bottle.get("reserved_for") else "")
+        +
         "Dopo averla bevuta puoi darle un voto dallo storico (🕓); se è stato un errore, "
         "da lì puoi anche rimetterla a posto.",
         "TaponBon: bottiglia prelevata", f"{DOMAIN}_scan",
@@ -273,6 +289,32 @@ async def async_check_alerts(hass: HomeAssistant, force: bool = False) -> dict[s
     return fresh
 
 
+async def async_check_reserved(hass: HomeAssistant, today: date | None = None) -> list[dict[str, Any]]:
+    """Remind once when a reserved bottle's day has come."""
+    store = get_store(hass)
+    if store is None:
+        return []
+    today_iso = (today or date.today()).isoformat()
+    due = [b for b in store.bottles
+           if b.get("reserved_until") and b["reserved_until"] <= today_iso and not b.get("reserved_notified")]
+    if not due:
+        return []
+    lines = [f"- **{wine_title(b)}** ({location_text(b, store.racks)}): {b.get('reserved_for') or 'riservata'}"
+             for b in due]
+    _notify(hass, "È arrivato il giorno per:\n" + "\n".join(lines)
+            + "\n\nSe non la apri più, togli la riserva dalla scheda della bottiglia.",
+            "TaponBon: bottiglie riservate", f"{DOMAIN}_reserved")
+    for b in due:
+        b["reserved_notified"] = True
+        hass.bus.async_fire(EVENT_RESERVED_DUE, {
+            "bottle_id": b["id"], "name": b.get("name"), "vintage": b.get("vintage"),
+            "reserved_for": b.get("reserved_for"), "reserved_until": b.get("reserved_until"),
+            "location": location_text(b, store.racks),
+        })
+    await async_changed(hass)
+    return due
+
+
 @callback
 def async_setup_daily_alerts(hass: HomeAssistant):
     async def _daily(_now: Any) -> None:
@@ -280,6 +322,10 @@ def async_setup_daily_alerts(hass: HomeAssistant):
             await async_check_alerts(hass)
         except Exception as err:
             _LOGGER.warning("Controllo finestre di beva non riuscito: %s", err)
+        try:
+            await async_check_reserved(hass)
+        except Exception as err:
+            _LOGGER.warning("Controllo bottiglie riservate non riuscito: %s", err)
 
     return async_track_time_change(hass, _daily, hour=ALERT_HOUR, minute=0, second=0)
 

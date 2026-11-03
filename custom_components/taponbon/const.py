@@ -8,7 +8,7 @@ STORAGE_VERSION = 1
 
 # Card: served from the integration folder and loaded on every dashboard.
 CARD_URL = "/taponbon/taponbon-card.js"
-CARD_VERSION = "20261103f"  # bump with every frontend build to bust the cache
+CARD_VERSION = "20261103g"  # bump with every frontend build to bust the cache
 
 # Wine types: key -> (Italian label, colour used on the rack).
 WINE_TYPES: dict[str, tuple[str, str]] = {
@@ -25,6 +25,7 @@ REMOVAL_REASONS: dict[str, str] = {
     "broken": "Rotta",
     "spoiled": "Andata a male",
     "deleted": "Eliminata",
+    "missing": "Non trovata",
     "other": "Altro",
 }
 
@@ -68,3 +69,7 @@ EVENT_CLIMATE_ALERT = f"{DOMAIN}_climate_alert"
 
 # Options: label printer (Niimbot via the hass-niimbot integration).
 CONF_PRINTER_DEVICE = "printer_device"
+
+EVENT_RESERVED_DUE = "taponbon_reserved_due"
+EVENT_INVENTORY_SCAN = "taponbon_inventory_scan"
+REBUY_MIN_RATING = 4
