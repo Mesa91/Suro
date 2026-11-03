@@ -93,6 +93,13 @@ def normalize(raw: dict[str, Any]) -> dict[str, Any]:
 
 def parse_response(payload: dict[str, Any]) -> dict[str, Any]:
     """Extract and normalise the JSON object from a generateContent response."""
+    data = _json_from(payload)
+    if isinstance(data, list):
+        data = data[0] if data else {}
+    return normalize(data)
+
+
+def _json_from(payload: dict[str, Any]) -> Any:
     try:
         text = "".join(p.get("text", "") for p in payload["candidates"][0]["content"]["parts"])
     except (KeyError, IndexError, TypeError) as err:
@@ -108,9 +115,44 @@ def parse_response(payload: dict[str, Any]) -> dict[str, Any]:
         if not match:
             raise AIError("Gemini non ha risposto con dei dati leggibili") from None
         data = json.loads(match.group(0))
-    if isinstance(data, list):
-        data = data[0] if data else {}
-    return normalize(data)
+    return data
+
+
+def pairing_prompt(dish: str, wines: list[dict[str, Any]], today: date | None = None) -> str:
+    year = (today or date.today()).year
+    status = {"wait": "ancora giovane", "ready": "pronto", "closing": "da bere presto", "past": "oltre la finestra"}
+    listing = [
+        {"id": i, "vino": " ".join(str(p) for p in (w["name"], w["vintage"]) if p), "produttore": w["producer"],
+         "tipo": w["type"], "vitigno": w["grape"], "zona": w["region"], "abbinamenti": w["food_pairings"],
+         "stato": status.get(w["status"], ""), "bottiglie": w["bottles"]}
+        for i, w in enumerate(wines)
+    ]
+    return f"""Sei un sommelier. Stasera si mangia: "{dish}".
+Questi sono TUTTI i vini disponibili in cantina (l'anno corrente è {year}):
+{json.dumps(listing, ensure_ascii=False)}
+Scegli SOLO tra questi vini i migliori abbinamenti per il piatto (da 1 a 3, il
+migliore per primo; meglio meno vini che un abbinamento forzato). A parità,
+preferisci i vini "da bere presto"; evita quelli "ancora giovane" se ce ne sono
+di pronti. Restituisci SOLO un oggetto JSON:
+{{"picks": [{{"id": <id del vino>, "reason": "1-2 frasi in italiano sul perché"}}],
+  "advice": "una frase in italiano: se nessun vino è davvero adatto, che stile
+             comprare; altrimenti un consiglio di servizio (temperatura, decanter)"}}"""
+
+
+def parse_pairing(payload: dict[str, Any], count: int) -> dict[str, Any]:
+    """{"picks": [{"index", "reason"}], "advice"} with ids checked against the list."""
+    data = _json_from(payload)
+    picks, seen = [], set()
+    for item in (data.get("picks") or []) if isinstance(data, dict) else []:
+        try:
+            index = int(item.get("id"))
+        except (TypeError, ValueError, AttributeError):
+            continue
+        if 0 <= index < count and index not in seen:
+            seen.add(index)
+            picks.append({"index": index, "reason": str(item.get("reason") or "").strip()})
+    advice = str(data.get("advice") or "").strip() if isinstance(data, dict) else ""
+    return {"picks": picks[:3], "advice": advice}
 
 
 class AIError(Exception):
@@ -184,27 +226,29 @@ def _strip_data_url(image: str) -> tuple[str, str]:
 _resolved: dict[str, str] = {}
 
 
-async def async_generate(session, api_key: str, model: str, prompt: str, images: list[str] | None = None) -> dict[str, Any]:
+async def async_generate(session, api_key: str, model: str, prompt: str, images: list[str] | None = None,
+                         parse=None) -> dict[str, Any]:
     """Call Gemini; if the model is gone, switch to the best available Flash."""
     model = _resolved.get(model or DEFAULT_MODEL, model or DEFAULT_MODEL)
     try:
-        return await _async_call(session, api_key, model, prompt, images)
+        return await _async_call(session, api_key, model, prompt, images, parse)
     except ModelNotFound:
         replacement = await async_pick_model(session, api_key)
         if not replacement or replacement == model:
             raise
         _resolved[model] = replacement
-        return await _async_call(session, api_key, replacement, prompt, images)
+        return await _async_call(session, api_key, replacement, prompt, images, parse)
     except ModelBusy:
         # The free tier is often the first to be throttled on the big model;
         # Flash-Lite is lighter, quicker and reads labels just as well.
         lite = await async_pick_model(session, api_key, lite=True) or "gemini-flash-lite-latest"
         if lite == model:
             raise
-        return await _async_call(session, api_key, lite, prompt, images)
+        return await _async_call(session, api_key, lite, prompt, images, parse)
 
 
-async def _async_call(session, api_key: str, model: str, prompt: str, images: list[str] | None) -> dict[str, Any]:
+async def _async_call(session, api_key: str, model: str, prompt: str, images: list[str] | None,
+                      parse=None) -> dict[str, Any]:
     import aiohttp
 
     parts: list[dict[str, Any]] = []
@@ -239,7 +283,7 @@ async def _async_call(session, api_key: str, model: str, prompt: str, images: li
         raise ModelBusy("Gemini non ha risposto in tempo: riprova tra qualche minuto.") from err
     except aiohttp.ClientError as err:
         raise AIError(f"Impossibile contattare Gemini: {err}") from err
-    return parse_response(payload)
+    return (parse or parse_response)(payload)
 
 
 async def async_check_key(session, api_key: str, model: str) -> str | None:

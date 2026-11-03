@@ -27,7 +27,7 @@ def async_register(hass: HomeAssistant) -> None:
         ws_subscribe, ws_get_data, ws_add_bottles, ws_update_bottle, ws_move_bottle,
         ws_remove_bottle, ws_get_history, ws_restore, ws_save_rack, ws_delete_rack,
         ws_get_label, ws_request_label, ws_take_code, ws_update_settings, ws_get_alerts,
-        ws_ai_recognize, ws_ai_fill,
+        ws_ai_recognize, ws_ai_fill, ws_pair,
     ):
         websocket_api.async_register_command(hass, handler)
 
@@ -109,6 +109,57 @@ async def ws_ai_fill(hass, connection, msg) -> None:
         connection.send_error(msg["id"], "no_name", "Scrivi almeno il nome del vino")
         return
     await _ai_call(hass, connection, msg, ai.fill_prompt(msg["wine"]), [])
+
+
+@websocket_api.websocket_command({
+    vol.Required("type"): "taponbon/pair",
+    vol.Required("dish"): vol.All(str, vol.Length(max=300)),
+})
+@websocket_api.async_response
+async def ws_pair(hass, connection, msg) -> None:
+    """Suggest which wines of the cellar go with a dish."""
+    from datetime import date
+
+    from homeassistant.helpers.aiohttp_client import async_get_clientsession
+
+    from .logic import cellar_wines, local_pairing
+
+    store = _store(hass, connection, msg)
+    if store is None:
+        return
+    dish = msg["dish"].strip()
+    if not dish:
+        connection.send_error(msg["id"], "no_dish", "Scrivi cosa mangi")
+        return
+    lead = int(store.settings.get(CONF_ALERT_DAYS, DEFAULT_ALERT_DAYS))
+    wines = cellar_wines(store.bottles, store.racks, date.today(), lead)
+    if not wines:
+        connection.send_error(msg["id"], "empty", "La cantina è vuota: non ho niente da consigliarti")
+        return
+
+    def pick(index: int, reason: str) -> dict[str, Any]:
+        return {**wines[index], "reason": reason}
+
+    key, model = _gemini(hass)
+    note = ""
+    if key:
+        try:
+            result = await ai.async_generate(
+                async_get_clientsession(hass), key, model, ai.pairing_prompt(dish, wines),
+                parse=lambda payload: ai.parse_pairing(payload, len(wines)),
+            )
+            connection.send_result(msg["id"], {
+                "source": "ai", "advice": result["advice"],
+                "picks": [pick(p["index"], p["reason"]) for p in result["picks"]],
+            })
+            return
+        except ai.AIError as err:
+            note = f"Gemini non disponibile ({err}); ecco un consiglio semplificato."
+    else:
+        note = "Consiglio semplificato: aggiungi la chiave Gemini nelle opzioni per uno più preciso."
+    index = {w["key"]: i for i, w in enumerate(wines)}
+    picks = [pick(index[p["key"]], p["reason"]) for p in local_pairing(dish, wines)]
+    connection.send_result(msg["id"], {"source": "local", "advice": note, "picks": picks})
 
 
 @websocket_api.websocket_command({vol.Required("type"): "taponbon/subscribe"})

@@ -261,3 +261,91 @@ def climate_status(value: Any, low: float, high: float) -> str | None:
     if number > high:
         return "high"
     return "ok"
+
+
+# ── Food pairing ──────────────────────────────────────────────────────────────
+
+def cellar_wines(bottles: Iterable[dict[str, Any]], racks: list[dict[str, Any]],
+                 today: date, lead_days: int) -> list[dict[str, Any]]:
+    """One entry per distinct wine in the cellar, with how many bottles and where."""
+    wines: dict[str, dict[str, Any]] = {}
+    for b in bottles:
+        key = wine_key(b)
+        entry = wines.get(key)
+        if entry is None:
+            status, days_left = window_status(b, today, lead_days)
+            entry = wines[key] = {
+                "key": key,
+                "name": b.get("name") or "",
+                "producer": b.get("producer") or "",
+                "vintage": b.get("vintage"),
+                "type": b.get("type") or "",
+                "grape": b.get("grape") or "",
+                "region": b.get("region") or "",
+                "food_pairings": b.get("food_pairings") or "",
+                "status": status,
+                "days_left": days_left,
+                "bottles": 0,
+                "bottle_ids": [],
+                "locations": [],
+            }
+        entry["bottles"] += 1
+        entry["bottle_ids"].append(b.get("id"))
+        entry["locations"].append(location_text(b, racks))
+    return sorted(wines.values(), key=lambda w: (w["type"], w["name"].lower()))
+
+
+_STOP = {"il", "lo", "la", "i", "gli", "le", "un", "una", "uno", "di", "da", "del", "della", "dei", "delle",
+         "al", "alla", "ai", "alle", "con", "in", "e", "ed", "o", "a", "per", "su", "allo", "agli", "nel", "nella"}
+
+# Very small sommelier fallback for when Gemini is not configured or fails.
+_DISH_TYPES: list[tuple[tuple[str, ...], tuple[str, ...]]] = [
+    (("pesce", "crud", "sushi", "ostric", "cozz", "vongol", "gamber", "scamp", "frutti di mare", "salmone",
+      "tonno", "branzino", "orata", "baccal", "polpo", "calamar", "seppi", "risotto alla pescatora"),
+     ("white", "sparkling", "rose")),
+    (("aperitivo", "antipast", "fritt", "tempura", "pizza"), ("sparkling", "white", "rose")),
+    (("formaggi stagionat", "parmigian", "pecorin", "gorgonzol", "erborinat"), ("red", "dessert")),
+    (("formagg", "mozzarell", "burrat", "ricott"), ("white", "sparkling", "rose")),
+    (("dolce", "torta", "dessert", "pasticc", "biscott", "crostat", "tiramis", "cioccolat", "panettone",
+      "pandoro", "frutta secca"), ("dessert", "sparkling")),
+    (("brasat", "stracott", "selvaggin", "cinghial", "cervo", "lepre", "agnell", "bistecc", "fiorentin",
+      "tagliat", "grigliat", "arrost", "manzo", "carne rossa", "ragù", "ragu", "spezzatin", "bollit",
+      "salsicc", "maiale", "costin", "tartufo", "fungh", "porcin"), ("red",)),
+    (("pollo", "tacchino", "coniglio", "vitello", "carne bianca", "verdur", "ortagg", "salum", "prosciutt",
+      "pasta", "lasagn", "pomodoro", "risotto"), ("red", "rose", "white")),
+]
+
+
+def _words(text: str) -> set[str]:
+    return {w for w in re.findall(r"[a-zàèéìòù]+", text.lower()) if len(w) > 2 and w not in _STOP}
+
+
+def local_pairing(dish: str, wines: list[dict[str, Any]], limit: int = 3) -> list[dict[str, Any]]:
+    """Rank cellar wines for a dish without AI: stored pairings first, then wine type."""
+    dish_l = dish.lower()
+    dish_words = _words(dish)
+    preferred: tuple[str, ...] = ()
+    for needles, types in _DISH_TYPES:
+        if any(n in dish_l for n in needles):
+            preferred = types
+            break
+    scored = []
+    for w in wines:
+        pair_words = _words(w.get("food_pairings") or "")
+        common = {d for d in dish_words for p in pair_words if d[:5] == p[:5]}
+        score = 3 * len(common)
+        if w["type"] in preferred:
+            score += 2 - preferred.index(w["type"]) * 0.5
+        if w["status"] == STATUS_CLOSING:
+            score += 0.5
+        if w["status"] in (STATUS_WAIT,):
+            score -= 1
+        if score <= 0:
+            continue
+        if common:
+            reason = f"Tra gli abbinamenti consigliati c'è {', '.join(sorted(common))}."
+        else:
+            reason = "Lo stile del vino va d'accordo con questo tipo di piatto."
+        scored.append((score, w["key"], reason))
+    scored.sort(key=lambda s: -s[0])
+    return [{"key": k, "reason": r} for _, k, r in scored[:limit]]

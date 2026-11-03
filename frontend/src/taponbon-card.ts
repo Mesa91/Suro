@@ -7,12 +7,14 @@ import "./bottle-dialog";
 import "./add-dialog";
 import "./racks-dialog";
 import "./history-dialog";
+import "./pair-dialog";
 
 type Dialog =
   | { kind: "add"; rackId: string | null; row: number | null; col: number | null }
   | { kind: "bottle"; bottleId: string }
   | { kind: "racks" }
   | { kind: "history" }
+  | { kind: "pair" }
   | null;
 
 @customElement("taponbon-card")
@@ -158,6 +160,7 @@ export class TaponBonCard extends LitElement {
           <button class="btn primary" @click=${() => (this._dialog = { kind: "add", rackId: null, row: null, col: null })}>
             ＋ Aggiungi
           </button>
+          <button class="btn" title="Che vino apro con questo piatto?" @click=${() => (this._dialog = { kind: "pair" })}>🍽 Abbina</button>
           <button class="btn" title="Storico" @click=${() => (this._dialog = { kind: "history" })}>🕓 Storico</button>
           <button class="btn" title="Scaffali e impostazioni" @click=${() => (this._dialog = { kind: "racks" })}>⚙︎</button>
         </div>
@@ -281,6 +284,9 @@ export class TaponBonCard extends LitElement {
       }
       case "racks":
         return html`<tb-racks-dialog .card=${this} .data=${d} @close=${close}></tb-racks-dialog>`;
+      case "pair":
+        return html`<tb-pair-dialog .card=${this} .data=${d} @close=${close}
+          @open-bottle=${(e: CustomEvent) => (this._dialog = { kind: "bottle", bottleId: e.detail.bottleId })}></tb-pair-dialog>`;
       case "history":
         return html`<tb-history-dialog .card=${this} .data=${d} @close=${close}></tb-history-dialog>`;
     }

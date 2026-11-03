@@ -69,6 +69,9 @@
       "taponbon/ai_recognize": (m) => (window.AI_CALLS = (window.AI_CALLS || []).concat([{ back: !!m.back_image }]), { wine: { name: "Rosé di Morgante", producer: "Morgante", vintage: 2023, type: "rose",
         region: "Sicilia DOC", country: "Italia", grape: "Nero d'Avola", alcohol: "12,5%", drink_from: 2024, drink_until: 2026,
         description: "Rosato tenue e floreale, con note di fragolina e agrumi. Fresco e sapido.", food_pairings: "crudi di pesce, couscous, pizza bianca" } }),
+      "taponbon/pair": (m) => { const ws = []; const seen = {}; for (const b of db.bottles) { const k = b.name + "|" + b.vintage; if (!seen[k]) { seen[k] = { key: k, name: b.name, producer: b.producer || "", vintage: b.vintage, type: b.type, status: (alertOf(b) || "ready"), bottles: 0, bottle_ids: [], locations: ["Scaffale · mensola " + ((b.row ?? 0) + 1) + ", posto " + ((b.col ?? 0) + 1)] }; ws.push(seen[k]); } seen[k].bottles++; seen[k].bottle_ids.push(b.id); }
+        const reds = ws.filter((w) => w.type === "red").slice(0, 2);
+        return new Promise((ok) => setTimeout(() => ok({ source: "ai", advice: "Servilo a 18 °C dopo mezz'ora di decanter.", picks: reds.map((w, i) => ({ ...w, reason: i ? "Più leggero, regge comunque il sugo." : "Tannino e struttura reggono la lunga cottura del " + m.dish.toLowerCase() + "." })) }), 600)); },
       "taponbon/ai_fill": (m) => ({ wine: { producer: "Brezza", region: "Barolo DOCG", country: "Italia", grape: "Nebbiolo", drink_from: 2024, drink_until: 2036 } }),
     };
     customElements.whenDefined("taponbon-card").then(() => {
@@ -76,7 +79,7 @@
     card.setConfig({ type: "custom:taponbon-card" });
     card.hass = {
       states: { "sensor.cantina_temperatura": { state: "17.4" }, "sensor.cantina_umidita": { state: "68" } },
-      callWS: async (m) => { const h = handlers[m.type]; if (!h) throw new Error("mock: " + m.type); return JSON.parse(JSON.stringify(h(m))); },
+      callWS: async (m) => { const h = handlers[m.type]; if (!h) throw new Error("mock: " + m.type); return JSON.parse(JSON.stringify(await h(m))); },
       connection: { subscribeMessage: async (cb) => { subs.push(cb); setTimeout(() => cb(snap())); return () => {}; } },
     };
     });

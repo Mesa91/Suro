@@ -53,3 +53,17 @@ def test_choose_model_prefers_newest_stable_flash():
     assert ai.choose_model(models) == "gemini-3.6-flash"
     assert ai.choose_model(models, lite=True) == "gemini-3.5-flash-lite"
     assert ai.choose_model([]) is None
+
+
+def test_parse_pairing_checks_ids():
+    out = ai.parse_pairing(_payload({"picks": [{"id": 1, "reason": "Tannino e grasso"}, {"id": 9}, {"id": "1"},
+                                               {"id": "0", "reason": "ok"}], "advice": "Decanta 1 ora"}), 2)
+    assert out == {"picks": [{"index": 1, "reason": "Tannino e grasso"}, {"index": 0, "reason": "ok"}],
+                   "advice": "Decanta 1 ora"}
+
+
+def test_pairing_prompt_lists_wines():
+    prompt = ai.pairing_prompt("brasato", [{"name": "Barolo", "vintage": 2016, "producer": "X", "type": "red",
+                                            "grape": "", "region": "", "food_pairings": "brasato",
+                                            "status": "closing", "bottles": 2}])
+    assert "brasato" in prompt and "da bere presto" in prompt and '"id": 0' in prompt

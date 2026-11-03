@@ -81,3 +81,22 @@ def test_niimbot_payload_sizes():
     assert qr["x"] + qr["width"] <= 240 and qr["y"] + qr["height"] <= 240
     full = labels.niimbot_payload("k7m2xq9p", ["Barolo", "2016 · Rosso", "Brezza", "Scaffale"], "full")
     assert (full["width"], full["height"]) == (400, 240) and len(full["payload"]) == 6
+
+
+def test_cellar_wines_and_local_pairing():
+    from datetime import date
+    from tb.logic import cellar_wines, local_pairing
+    racks = [{"id": "r", "name": "Scaffale", "shelves": [5, 5]}]
+    bottles = [
+        {"id": "1", "name": "Barolo", "producer": "Brezza", "vintage": 2016, "type": "red",
+         "food_pairings": "brasato, tartufo, formaggi stagionati", "rack_id": "r", "row": 0, "col": 0},
+        {"id": "2", "name": "barolo ", "producer": "Brezza", "vintage": 2016, "type": "red", "rack_id": "r", "row": 0, "col": 1},
+        {"id": "3", "name": "Vermentino", "type": "white", "food_pairings": "pesce, crudi", "rack_id": None},
+    ]
+    wines = cellar_wines(bottles, racks, date(2026, 11, 3), 180)
+    assert len(wines) == 2
+    barolo = next(w for w in wines if w["type"] == "red")
+    assert barolo["bottles"] == 2 and barolo["locations"][0] == "Scaffale · mensola 1, posto 1"
+    picks = local_pairing("Brasato al Barolo", wines)
+    assert picks[0]["key"] == barolo["key"]
+    assert local_pairing("spaghetti alle vongole", wines)[0]["key"] != barolo["key"]
