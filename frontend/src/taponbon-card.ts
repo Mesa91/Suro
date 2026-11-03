@@ -289,9 +289,17 @@ export class TaponBonCard extends LitElement {
   static styles = [
     sharedStyles,
     css`
+      :host {
+        display: block;
+        min-width: 0;
+        max-width: 100%;
+      }
       ha-card {
         overflow: hidden;
         position: relative;
+        container-type: inline-size;
+        container-name: tb;
+        max-width: 100%;
       }
       .header {
         display: flex;
@@ -355,7 +363,7 @@ export class TaponBonCard extends LitElement {
       .climate.na {
         opacity: 0.5;
       }
-      @media (max-width: 599px) {
+      @container tb (max-width: 599px) {
         .climates {
           margin-left: 0;
           order: 3;
@@ -405,16 +413,21 @@ export class TaponBonCard extends LitElement {
       }
       .racks {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr));
         gap: 14px;
         padding: 4px 16px 16px;
       }
-      @media (min-width: 600px) {
-        .racks.fixed {
-          grid-template-columns: repeat(var(--tb-columns), minmax(0, 1fr));
-        }
+      /* Colonne decise dalla larghezza reale della scheda (non dello schermo):
+         al massimo --tb-columns, ma vanno a capo quando ogni rastrelliera
+         scenderebbe sotto i 240px (es. barra laterale di HA aperta). */
+      .racks.fixed {
+        grid-template-columns: repeat(
+          auto-fit,
+          minmax(max(min(240px, 100%), calc((100% - (var(--tb-columns) - 1) * 14px) / var(--tb-columns))), 1fr)
+        );
       }
       .rack {
+        min-width: 0;
         border-radius: 18px;
         padding: 14px 14px 18px;
         background:
