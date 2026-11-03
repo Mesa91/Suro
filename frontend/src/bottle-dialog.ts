@@ -1,6 +1,6 @@
 import { LitElement, html, css, nothing, PropertyValues } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
-import { Bottle, Snapshot, WINE_FIELDS, locationText, windowText, wineTitle } from "./types";
+import { Bottle, Snapshot, WINE_FIELDS, locationText, maturity, windowText, wineTitle } from "./types";
 import { sharedStyles } from "./styles";
 import { renderWineForm } from "./add-dialog";
 import { BOTTLE_DEFS, bottleSvg } from "./bottle";
@@ -216,13 +216,14 @@ export class BottleDialog extends LitElement {
           </div>`
         : nothing}
       <dl class="facts">
-        ${WINE_FIELDS.filter((f) => !["name", "producer", "vintage", "drink_from", "drink_until"].includes(f.key as string)).map((f) => {
+        ${WINE_FIELDS.filter((f) => !["name", "producer", "vintage", "drink_from", "drink_until", "drink_peak"].includes(f.key as string)).map((f) => {
           const v = b[f.key];
           if (v == null || v === "") return nothing;
           return html`<dt>${f.label}</dt><dd>${f.key === "price" ? `${Number(v).toFixed(2)} €` : v}</dd>`;
         })}
         ${win ? html`<dt>Finestra di beva</dt><dd>${win}</dd>` : nothing}
       </dl>
+      ${this._renderMaturity(b)}
       <div class="label-box">
         ${this._label
           ? html`<img class="label ${this._label.label_format}" alt="Etichetta QR" src="data:image/png;base64,${this._label.png_base64}" />`
@@ -260,6 +261,49 @@ export class BottleDialog extends LitElement {
       }}>🍷 Bevuta</button>
     </div>`;
   }
+
+  private _renderMaturity(b: Bottle) {
+    const m = maturity(b);
+    const estimate = this.data.ai && !b.drink_peak
+      ? html`<button class="btn small" ?disabled=${this._busy} @click=${this._estimatePeak}>✨ Stima il picco</button>` : nothing;
+    if (!m) return this.data.ai ? html`<div class="maturity empty">${estimate}</div>` : nothing;
+    return html`<div class="maturity ${m.phase}">
+      <div class="m-head"><span class="m-label">${m.label}</span>${estimate}</div>
+      <div class="m-bar" style=${m.peakPos != null ? `background:linear-gradient(90deg,#5c6bc0 0%,#7cb342 ${Math.max(0, m.peakPos - 22)}%,#e3b341 ${Math.max(0, m.peakPos - 4)}%,#e3b341 ${Math.min(100, m.peakPos + 4)}%,#ef6c00 ${Math.min(100, m.peakPos + 22)}%,#8d2b2b 100%)` : ""}>
+        ${m.peakPos != null ? html`<span class="m-peak" style="left:${m.peakPos}%" title="Picco ${m.peak}"></span>` : nothing}
+        <span class="m-today" style="left:${m.today}%" title="Oggi"></span>
+      </div>
+      <div class="m-scale"><span>${m.start}</span>
+        ${m.peak && m.peakPos != null && m.peakPos > 14 && m.peakPos < 86
+          ? html`<span class="m-peak-label" style="left:${m.peakPos}%">picco ${m.peak}</span>` : nothing}
+        <span>${m.end}</span></div>
+    </div>`;
+  }
+
+  private _estimatePeak = async () => {
+    this._busy = true;
+    try {
+      const b = this.bottle;
+      const res = await this.card.ws({ type: "taponbon/ai_fill", wine: {
+        name: b.name, producer: b.producer, vintage: b.vintage, type: b.type, region: b.region, grape: b.grape } });
+      const w = res.wine || {};
+      const changes: Record<string, unknown> = {};
+      for (const k of ["drink_peak", "drink_from", "drink_until"] as const) if (w[k] && !(b as any)[k]) changes[k] = w[k];
+      const lo = Number(changes.drink_from ?? b.drink_from) || 0;
+      const hi = Number(changes.drink_until ?? b.drink_until) || 9999;
+      if (changes.drink_peak) changes.drink_peak = Math.min(hi, Math.max(lo, Number(changes.drink_peak)));
+      if (!changes.drink_peak) {
+        this.card.toast("Gemini non ha saputo stimare il picco di questo vino");
+        return;
+      }
+      await this.card.ws({ type: "taponbon/update_bottle", bottle_id: b.id, changes, same_wine: true });
+      this.card.toast(`Al suo meglio nel ${changes.drink_peak}`);
+    } catch {
+      /* shown by the card */
+    } finally {
+      this._busy = false;
+    }
+  };
 
   private _renderRate() {
     return html`<div class="rate">
@@ -306,6 +350,73 @@ export class BottleDialog extends LitElement {
   static styles = [
     sharedStyles,
     css`
+      .maturity {
+        margin: 6px 0 14px;
+      }
+      .maturity.empty {
+        display: flex;
+        justify-content: flex-end;
+      }
+      .m-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 8px;
+      }
+      .m-label {
+        font-weight: 600;
+        font-size: 0.92em;
+      }
+      .maturity.peak .m-label {
+        color: #e3b341;
+      }
+      .maturity.declining .m-label,
+      .maturity.past .m-label {
+        color: #ef9a6a;
+      }
+      .maturity.young .m-label {
+        color: #90caf9;
+      }
+      .m-bar {
+        position: relative;
+        height: 8px;
+        border-radius: 4px;
+        background: linear-gradient(90deg, #5c6bc0 0%, #7cb342 30%, #e3b341 55%, #e3b341 62%, #ef6c00 85%, #8d2b2b 100%);
+        opacity: 0.85;
+      }
+      .m-peak {
+        position: absolute;
+        top: -3px;
+        width: 2px;
+        height: 14px;
+        margin-left: -1px;
+        background: rgba(255, 255, 255, 0.7);
+      }
+      .m-today {
+        position: absolute;
+        top: 50%;
+        width: 14px;
+        height: 14px;
+        margin: -7px 0 0 -7px;
+        border-radius: 50%;
+        background: #fff;
+        border: 3px solid #1c1a1a;
+        box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.6), 0 2px 6px rgba(0, 0, 0, 0.6);
+      }
+      .m-peak-label {
+        position: absolute;
+        transform: translateX(-50%);
+      }
+      .m-scale {
+        position: relative;
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.75em;
+        color: var(--secondary-text-color);
+        margin-top: 6px;
+        font-variant-numeric: tabular-nums;
+      }
       .res-btn {
         margin-left: auto;
       }

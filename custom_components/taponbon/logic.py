@@ -285,6 +285,7 @@ def cellar_wines(bottles: Iterable[dict[str, Any]], racks: list[dict[str, Any]],
                 "grape": b.get("grape") or "",
                 "region": b.get("region") or "",
                 "food_pairings": b.get("food_pairings") or "",
+                "drink_peak": b.get("drink_peak"),
                 "status": status,
                 "days_left": days_left,
                 "bottles": 0,
@@ -394,3 +395,91 @@ def cellar_value(bottles: Iterable[dict[str, Any]]) -> dict[str, Any]:
             total += price
             priced += 1
     return {"total": round(total, 2), "priced": priced, "bottles": count}
+
+
+
+# ── "Do I already have it?" ───────────────────────────────────────────────────
+
+_NOISE = {"docg", "doc", "igt", "igp", "dop", "aoc", "riserva", "classico", "superiore", "vino", "vini",
+          "cantina", "cantine", "azienda", "agricola", "tenuta", "tenute", "societa", "srl", "spa", "the"}
+
+
+def _norm(text: Any) -> str:
+    import unicodedata
+
+    text = unicodedata.normalize("NFKD", str(text or "")).encode("ascii", "ignore").decode().lower()
+    words = re.findall(r"[a-z0-9]+", text)
+    return " ".join(w for w in words if w not in _NOISE and not re.fullmatch(r"(19|20)\d\d", w))
+
+
+def _similar(a: str, b: str) -> float:
+    from difflib import SequenceMatcher
+
+    if not a or not b:
+        return 0.0
+    if a == b:
+        return 1.0
+    ta, tb = set(a.split()), set(b.split())
+    overlap = len(ta & tb) / max(1, min(len(ta), len(tb)))
+    return max(SequenceMatcher(None, a, b).ratio(), overlap * 0.95)
+
+
+def wine_match(target: dict[str, Any], item: dict[str, Any]) -> str | None:
+    """"same" (same wine and vintage), "vintage" (other vintage), "similar", or None."""
+    name = _similar(_norm(target.get("name")), _norm(item.get("name")))
+    tp, ip = _norm(target.get("producer")), _norm(item.get("producer"))
+    producer = _similar(tp, ip) if tp and ip else None
+    if name < 0.72 or (producer is not None and producer < 0.6):
+        # A label often names the producer as the wine ("Gaja Barbaresco"):
+        # accept when one side's producer+name equals the other's name.
+        joined = _similar(_norm(f"{target.get('producer') or ''} {target.get('name') or ''}"),
+                          _norm(f"{item.get('producer') or ''} {item.get('name') or ''}"))
+        if joined < 0.85:
+            return None
+    strong = name >= 0.9 and (producer is None or producer >= 0.8)
+    tv, iv = target.get("vintage"), item.get("vintage")
+    if strong and (tv == iv or not tv):
+        return "same"
+    if strong:
+        return "vintage"
+    return "similar"
+
+
+def check_wine(target: dict[str, Any], bottles: list[dict[str, Any]], history: list[dict[str, Any]],
+               wishlist: list[dict[str, Any]], racks: list[dict[str, Any]]) -> dict[str, Any]:
+    """Everything known about a wine seen in a shop: in the cellar, drunk, wished."""
+    order = {"same": 0, "vintage": 1, "similar": 2}
+
+    def group(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        out: dict[str, dict[str, Any]] = {}
+        for it in items:
+            level = wine_match(target, it)
+            if level is None:
+                continue
+            entry = out.setdefault(wine_key(it), {
+                "match": level, "name": it.get("name") or "", "producer": it.get("producer") or "",
+                "vintage": it.get("vintage"), "type": it.get("type") or "", "items": [],
+            })
+            entry["items"].append(it)
+        return sorted(out.values(), key=lambda e: (order[e["match"]], -(e["vintage"] or 0)))
+
+    cellar = []
+    for e in group(bottles):
+        items = e.pop("items")
+        cellar.append({**e, "bottles": len(items), "bottle_ids": [b["id"] for b in items],
+                       "locations": [location_text(b, racks) for b in items],
+                       "reserved": sum(1 for b in items if b.get("reserved_for"))})
+    drunk = []
+    for e in group([h for h in history if h.get("reason") == "drank"]):
+        items = e.pop("items")
+        rated = [h["rating"] for h in items if h.get("rating")]
+        last = max(items, key=lambda h: str(h.get("removed_at") or ""))
+        notes = next((h.get("tasting_notes") for h in sorted(items, key=lambda h: str(h.get("removed_at") or ""),
+                                                            reverse=True) if h.get("tasting_notes")), "")
+        drunk.append({**e, "times": len(items), "rating": round(sum(rated) / len(rated), 1) if rated else None,
+                      "notes": notes or "", "last": last.get("removed_at")})
+    wished = []
+    for e in group(wishlist):
+        items = e.pop("items")
+        wished.append({**e, "wish_id": items[0]["id"], "source": items[0].get("source")})
+    return {"cellar": cellar, "drunk": drunk, "wished": wished}

@@ -18,7 +18,7 @@ from .logic import new_code, new_id, occupied, plan_positions, rack_capacity, sh
 # Wine fields a bottle carries; anything else sent by a client is ignored.
 WINE_FIELDS = {
     "name": str, "producer": str, "vintage": int, "type": str, "region": str,
-    "country": str, "grape": str, "drink_from": int, "drink_until": int,
+    "country": str, "grape": str, "drink_from": int, "drink_until": int, "drink_peak": int,
     "price": float, "notes": str, "description": str, "food_pairings": str,
     "alcohol": str, "image": str,
 }

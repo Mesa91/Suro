@@ -369,7 +369,7 @@ export class AddDialog extends LitElement {
 }
 
 /** Downscale a photo to keep the upload small (Gemini reads 1280 px fine). */
-async function shrink(file: File, max = 1280): Promise<string> {
+export async function shrink(file: File, max = 1280): Promise<string> {
   const url = URL.createObjectURL(file);
   try {
     const img = new Image();

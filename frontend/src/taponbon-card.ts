@@ -10,11 +10,13 @@ import "./history-dialog";
 import "./pair-dialog";
 import "./wishlist-dialog";
 import "./inventory-dialog";
+import "./check-dialog";
 
 type Dialog =
   | { kind: "add"; rackId: string | null; row: number | null; col: number | null;
       mode?: "cellar" | "wish"; prefill?: Partial<Wish> | null; wishId?: string | null }
   | { kind: "wishlist" }
+  | { kind: "check" }
   | { kind: "inventory"; report: InventoryReport }
   | { kind: "bottle"; bottleId: string }
   | { kind: "racks" }
@@ -171,6 +173,7 @@ export class TaponBonCard extends LitElement {
             ＋ Aggiungi
           </button>
           <button class="btn" title="Che vino apro con questo piatto?" @click=${() => (this._dialog = { kind: "pair" })}>🍽 Abbina</button>
+          <button class="btn" title="In enoteca: ce l'ho già?" @click=${() => (this._dialog = { kind: "check" })}>📷 Ce l'ho?</button>
           <button class="btn" title="Lista dei desideri" @click=${() => (this._dialog = { kind: "wishlist" })}>
             ♡ Desideri${d.wishlist?.length ? html` <span class="count">${d.wishlist.length}</span>` : nothing}
           </button>
@@ -370,6 +373,10 @@ export class TaponBonCard extends LitElement {
           @add-wish=${() => (this._dialog = { kind: "add", rackId: null, row: null, col: null, mode: "wish" })}
           @buy=${(e: CustomEvent) => (this._dialog = { kind: "add", rackId: null, row: null, col: null, mode: "cellar",
             prefill: e.detail.wish, wishId: e.detail.wish.id })}></tb-wishlist-dialog>`;
+      case "check":
+        return html`<tb-check-dialog .card=${this} .data=${d} @close=${close}
+          @buy=${(e: CustomEvent) => (this._dialog = { kind: "add", rackId: null, row: null, col: null, mode: "cellar",
+            prefill: e.detail.wine })}></tb-check-dialog>`;
       case "inventory":
         return html`<tb-inventory-dialog .card=${this} .data=${d} .report=${dlg.report} @close=${close}
           @open-bottle=${(e: CustomEvent) => (this._dialog = { kind: "bottle", bottleId: e.detail.bottleId })}></tb-inventory-dialog>`;

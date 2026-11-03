@@ -31,7 +31,7 @@
     let pos = 0;
     for (const [name, producer, vintage, type, f, u, q] of seed) for (let i = 0; i < q; i++, pos++)
       db.bottles.push({ id: id("b"), code: "k7m2xq9" + pos, name, producer, vintage, type, drink_from: f, drink_until: u,
-        rack_id: "rack-a", row: Math.floor(pos / 10), col: pos % 10, added_at: new Date().toISOString(), price: [38, 55, 16, 29, 12, null][seed.findIndex((x) => x[0] === name)] });
+        rack_id: "rack-a", row: Math.floor(pos / 10), col: pos % 10, added_at: new Date().toISOString(), price: [38, 55, 16, 29, 12, null][seed.findIndex((x) => x[0] === name)], drink_peak: name === "Barolo Cannubi" ? 2028 : null });
     db.history.push({ ...db.bottles[0], id: "old1", history_id: "h0", removed_at: "2026-09-12T20:00:00Z", reason: "drank", rating: 5, tasting_notes: "Splendido con il brasato, ricomprare" });
     const alertOf = (b) => { if (!b.drink_until) return null; const days = (new Date(b.drink_until, 11, 31) - new Date()) / 864e5;
       return days < 0 ? "past" : days <= db.settings.alert_days ? "closing" : null; };
@@ -64,6 +64,14 @@
       "taponbon/remove_bottle": (m) => { const i = db.bottles.findIndex((b) => b.id === m.bottle_id); const [b] = db.bottles.splice(i, 1);
         if (db.highlight) { db.highlight.groups = db.highlight.groups.filter((g) => !g.bottle_ids.includes(b.id)); if (!db.highlight.groups.length) db.highlight = null; }
         db.history.push({ ...b, history_id: id("h"), removed_at: new Date().toISOString(), reason: m.reason, rating: m.rating, tasting_notes: m.tasting_notes }); changed(); return {}; },
+      "taponbon/check_wine": (m) => { const w = m.wine || { name: "Barolo Cannubi", producer: "Brezza", vintage: 2016, type: "red", region: "Barolo DOCG" };
+        const q = (w.name || "").toLowerCase(); const hit = (b) => (b.name || "").toLowerCase().includes(q) || q.includes((b.name || "").toLowerCase());
+        const grp = {}; db.bottles.filter(hit).forEach((b) => { const k = b.name + b.vintage; (grp[k] = grp[k] || { match: !w.vintage || w.vintage === b.vintage ? "same" : "vintage", name: b.name, producer: b.producer, vintage: b.vintage, type: b.type, bottles: 0, bottle_ids: [], locations: [], reserved: 0 });
+          grp[k].bottles++; grp[k].bottle_ids.push(b.id); grp[k].locations.push("Scaffale · mensola " + (b.row + 1) + ", posto " + (b.col + 1)); if (b.reserved_for) grp[k].reserved++; });
+        const dr = db.history.filter((h) => hit(h) && h.reason === "drank");
+        return new Promise((ok) => setTimeout(() => ok({ wine: { type: "red", ...w }, cellar: Object.values(grp),
+          drunk: dr.length ? [{ match: "same", name: dr[0].name, producer: dr[0].producer, vintage: dr[0].vintage, times: dr.length, rating: 5, notes: dr[0].tasting_notes || "", last: dr[0].removed_at }] : [],
+          wished: db.wishlist.filter(hit).map((x) => ({ match: "same", name: x.name, vintage: x.vintage, wish_id: x.id, source: x.source })) }), 500)); },
       "taponbon/highlight": (m) => { db.highlight = { source: m.source, query: m.query, groups: m.groups }; changed(); return { highlight: db.highlight }; },
       "taponbon/highlight_clear": () => { db.highlight = null; changed(); return {}; },
       "taponbon/reserve_bottle": (m) => { const b = db.bottles.find((x) => x.id === m.bottle_id); delete b.reserved_for; delete b.reserved_until;
@@ -104,7 +112,7 @@
             courses: m.courses.map((c, i) => ({ course: c, wine: plan[i] ? { ...plan[i], reason: "" } : null, reason: plan[i] ? "Accompagna bene " + c.toLowerCase() + "." : "" })),
             one: { ...ws.find((w) => w.type === "sparkling"), reason: "Le bollicine reggono tutto il menu, dall'antipasto al dolce." } }), 600)); }
         return new Promise((ok) => setTimeout(() => ok({ source: "ai", advice: "Servilo a 18 °C dopo mezz'ora di decanter.", picks: reds.map((w, i) => ({ ...w, reason: i ? "Più leggero, regge comunque il sugo." : "Tannino e struttura reggono la lunga cottura del " + m.dish.toLowerCase() + "." })) }), 600)); },
-      "taponbon/ai_fill": (m) => ({ wine: { producer: "Brezza", region: "Barolo DOCG", country: "Italia", grape: "Nebbiolo", drink_from: 2024, drink_until: 2036 } }),
+      "taponbon/ai_fill": (m) => ({ wine: { producer: "Brezza", region: "Barolo DOCG", country: "Italia", grape: "Nebbiolo", drink_from: 2024, drink_until: 2036, drink_peak: 2030 } }),
     };
     customElements.whenDefined("taponbon-card").then(() => {
     const card = document.querySelector("taponbon-card");

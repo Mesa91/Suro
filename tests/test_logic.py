@@ -100,3 +100,33 @@ def test_cellar_wines_and_local_pairing():
     picks = local_pairing("Brasato al Barolo", wines)
     assert picks[0]["key"] == barolo["key"]
     assert local_pairing("spaghetti alle vongole", wines)[0]["key"] != barolo["key"]
+
+
+def test_check_wine_matches():
+    from tb.logic import check_wine, wine_match
+    seen = {"name": "Barolo Cannubi DOCG", "producer": "Brezza", "vintage": 2016}
+    assert wine_match(seen, {"name": "Barolo Cannubi", "producer": "Giacomo Brezza", "vintage": 2016}) == "same"
+    assert wine_match(seen, {"name": "barolo cannubi", "producer": "Brezza", "vintage": 2019}) == "vintage"
+    assert wine_match(seen, {"name": "Barolo Cannubi", "producer": "Marchesi di Barolo"}) is None
+    assert wine_match(seen, {"name": "Soave", "producer": "Brezza"}) is None
+    assert wine_match({"name": "Sassicaia"}, {"name": "Sassicaia Bolgheri", "producer": "Tenuta San Guido"}) in ("same", "similar")
+    racks = [{"id": "r", "name": "Scaffale", "shelves": [5]}]
+    bottles = [{"id": "1", "name": "Barolo Cannubi", "producer": "Brezza", "vintage": 2016, "rack_id": "r", "row": 0, "col": 2},
+               {"id": "2", "name": "Barolo Cannubi", "producer": "Brezza", "vintage": 2019, "rack_id": None,
+                "reserved_for": "x"}]
+    history = [{"name": "Barolo Cannubi", "producer": "Brezza", "vintage": 2016, "reason": "drank", "rating": 5,
+                "tasting_notes": "wow", "removed_at": "2026-01-01"},
+               {"name": "Barolo Cannubi", "producer": "Brezza", "vintage": 2016, "reason": "gifted"}]
+    wish = [{"id": "w", "name": "Barolo Cannubi", "producer": "Brezza", "vintage": 2021, "source": "manual"}]
+    out = check_wine(seen, bottles, history, wish, racks)
+    assert [c["vintage"] for c in out["cellar"]] == [2016, 2019]
+    assert out["cellar"][0]["match"] == "same" and out["cellar"][0]["locations"] == ["Scaffale · mensola 1, posto 3"]
+    assert out["cellar"][1]["reserved"] == 1
+    assert out["drunk"] == [{"match": "same", "name": "Barolo Cannubi", "producer": "Brezza", "vintage": 2016,
+                             "type": "", "times": 1, "rating": 5.0, "notes": "wow", "last": "2026-01-01"}]
+    assert out["wished"][0]["match"] == "vintage" and out["wished"][0]["wish_id"] == "w"
+
+
+def test_peak_is_clamped():
+    from tb import ai
+    assert ai.normalize({"drink_from": 2020, "drink_until": 2030, "drink_peak": 2040})["drink_peak"] == 2030

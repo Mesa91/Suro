@@ -30,6 +30,7 @@ FIELDS_DOC = """\
 - "alcohol": gradazione, es. "14%"
 - "drink_from": primo anno consigliato per berlo (intero)
 - "drink_until": ultimo anno consigliato per berlo (intero)
+- "drink_peak": anno in cui sarà al suo meglio (intero, tra drink_from e drink_until)
 - "description": 2-3 frasi in italiano su stile, profumi e gusto
 - "food_pairings": 3-5 abbinamenti in italiano separati da virgola
 """
@@ -42,7 +43,7 @@ le foto sono due, la prima è il fronte e la seconda il retro: usale entrambe) e
 restituisci SOLO un oggetto JSON con questi campi:
 {FIELDS_DOC}
 Regole: quello che leggi in etichetta ha la precedenza; quello che non si legge
-(finestra di beva, descrizione, abbinamenti, vitigno se assente) stimalo dalle
+(finestra di beva e anno di picco, descrizione, abbinamenti, vitigno se assente) stimalo dalle
 tue conoscenze sul vino e sull'annata. L'anno corrente è {year}. Se un campo è
 davvero impossibile da stabilire usa null. Niente testo fuori dal JSON."""
 
@@ -73,7 +74,7 @@ def normalize(raw: dict[str, Any]) -> dict[str, Any]:
             value = ", ".join(str(v) for v in value if v)
         if value not in (None, "") and str(value).strip().lower() not in ("null", "none", "n/a"):
             out[key] = str(value).strip()
-    for key in ("vintage", "drink_from", "drink_until"):
+    for key in ("vintage", "drink_from", "drink_until", "drink_peak"):
         year = _int_year(raw.get(key))
         if year:
             out[key] = year
@@ -86,6 +87,8 @@ def normalize(raw: dict[str, Any]) -> dict[str, Any]:
         out["type"] = kind
     if out.get("drink_from") and out.get("drink_until") and out["drink_from"] > out["drink_until"]:
         out["drink_from"], out["drink_until"] = out["drink_until"], out["drink_from"]
+    if out.get("drink_peak") and out.get("drink_from") and out.get("drink_until"):
+        out["drink_peak"] = min(max(out["drink_peak"], out["drink_from"]), out["drink_until"])
     if isinstance(out.get("alcohol"), str) and re.fullmatch(r"\d+([.,]\d+)?", out["alcohol"]):
         out["alcohol"] += "%"
     return out
@@ -125,6 +128,8 @@ def _wine_listing(wines: list[dict[str, Any]]) -> list[dict[str, Any]]:
         item = {"id": i, "vino": " ".join(str(p) for p in (w["name"], w["vintage"]) if p), "produttore": w["producer"],
                 "tipo": w["type"], "vitigno": w["grape"], "zona": w["region"], "abbinamenti": w["food_pairings"],
                 "stato": status.get(w["status"], ""), "bottiglie": w["bottles"]}
+        if w.get("drink_peak"):
+            item["picco"] = w["drink_peak"]
         if w.get("rating"):
             item["voto_mio"] = f"{w['rating']}/5"
         if w.get("tasting_notes"):

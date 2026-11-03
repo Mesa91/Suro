@@ -29,7 +29,7 @@ def async_register(hass: HomeAssistant) -> None:
         ws_get_label, ws_request_label, ws_take_code, ws_update_settings, ws_get_alerts,
         ws_ai_recognize, ws_ai_fill, ws_pair, ws_rate_history,
         ws_reserve_bottle, ws_remove_bottles, ws_wishlist_add, ws_wishlist_update, ws_wishlist_remove,
-        ws_inventory_start, ws_inventory_stop, ws_highlight, ws_highlight_clear,
+        ws_inventory_start, ws_inventory_stop, ws_highlight, ws_highlight_clear, ws_check_wine,
     ):
         websocket_api.async_register_command(hass, handler)
 
@@ -588,3 +588,44 @@ async def ws_highlight_clear(hass, connection, msg) -> None:
     store.clear_highlight()
     await core.async_changed(hass)
     connection.send_result(msg["id"], {})
+
+
+@websocket_api.websocket_command({
+    vol.Required("type"): "taponbon/check_wine",
+    vol.Optional("image"): str,
+    vol.Optional("back_image"): str,
+    vol.Optional("wine"): dict,
+})
+@websocket_api.async_response
+async def ws_check_wine(hass, connection, msg) -> None:
+    """In a shop: read a label (or take a typed name) and say what we know about that wine."""
+    from homeassistant.helpers.aiohttp_client import async_get_clientsession
+
+    from .logic import check_wine
+
+    store = _store(hass, connection, msg)
+    if not store:
+        return
+    wine = {k: v for k, v in (msg.get("wine") or {}).items() if v not in (None, "")}
+    if msg.get("image"):
+        key, model = _gemini(hass)
+        if not key:
+            connection.send_error(msg["id"], "no_ai", "Per leggere l'etichetta serve la chiave Gemini nelle opzioni "
+                                  "di TaponBon; intanto puoi scrivere il nome.")
+            return
+        images = [msg["image"]] + ([msg["back_image"]] if msg.get("back_image") else [])
+        try:
+            wine = await ai.async_generate(async_get_clientsession(hass), key, model, ai.label_prompt(), images)
+        except ai.AIError as err:
+            connection.send_error(msg["id"], "ai_error", str(err))
+            return
+    if not str(wine.get("name") or "").strip():
+        connection.send_error(msg["id"], "no_name", "Non riesco a capire che vino è: riprova o scrivi il nome")
+        return
+    if "vintage" in wine:
+        try:
+            wine["vintage"] = int(wine["vintage"])
+        except (TypeError, ValueError):
+            wine.pop("vintage")
+    result = check_wine(wine, store.bottles, store.history, store.wishlist, store.racks)
+    connection.send_result(msg["id"], {"wine": wine, **result})

@@ -28,6 +28,8 @@ export interface Bottle {
   grape?: string;
   drink_from?: number | null;
   drink_until?: number | null;
+  /** Year the wine should be at its best. */
+  drink_peak?: number | null;
   price?: number | null;
   notes?: string;
   alcohol?: string;
@@ -117,6 +119,7 @@ export const WINE_FIELDS: { key: keyof Bottle; label: string; kind: "text" | "nu
   { key: "grape", label: "Vitigno", kind: "text" },
   { key: "drink_from", label: "Da bere dal", kind: "year" },
   { key: "drink_until", label: "Da bere entro il", kind: "year" },
+  { key: "drink_peak", label: "Al suo meglio nel", kind: "year" },
   { key: "alcohol", label: "Gradazione", kind: "text" },
   { key: "price", label: "Prezzo (€)", kind: "number" },
   { key: "food_pairings", label: "Abbinamenti", kind: "area" },
@@ -163,3 +166,27 @@ export interface Highlight {
 /** Warm white for a plain search; one colour per course of a menu (same on the shelf LEDs). */
 export const SEARCH_COLOR = "#ffe2b0";
 export const COURSE_COLORS = ["#4fc3f7", "#81c784", "#e0525f", "#ffb74d", "#ba68c8", "#f48fb1", "#4db6ac", "#fff176"];
+
+/** Where a wine is in its life, for the maturity bar. */
+export function maturity(b: { drink_from?: number | null; drink_until?: number | null; drink_peak?: number | null },
+  year = new Date().getFullYear()) {
+  const from = b.drink_from || null;
+  const until = b.drink_until || null;
+  let peak = b.drink_peak || null;
+  if (!until && !peak) return null;
+  if (peak && from && peak < from) peak = from;
+  if (peak && until && peak > until) peak = until;
+  const start = from ?? Math.min(peak ?? until!, until ?? peak!) - 3;
+  const end = until ?? (peak! + 4);
+  let phase: "young" | "rising" | "peak" | "declining" | "past";
+  let label: string;
+  if (year > end) [phase, label] = ["past", "Oltre la finestra: da bere subito"];
+  else if (year < start) [phase, label] = ["young", "Ancora giovane: meglio aspettare"];
+  else if (peak && Math.abs(year - peak) <= 1) [phase, label] = ["peak", "Al massimo: è il momento giusto"];
+  else if (peak && year < peak) [phase, label] = ["rising", `In crescita: al meglio nel ${peak}`];
+  else if (peak) [phase, label] = ["declining", "Dopo il picco: da bere presto"];
+  else [phase, label] = ["rising", "Pronto da bere"];
+  const span = Math.max(1, end - start + 1);
+  const pos = (y: number) => Math.min(100, Math.max(0, ((y - start + 0.5) / span) * 100));
+  return { start, end, peak, phase, label, today: pos(year), peakPos: peak ? pos(peak) : null };
+}
