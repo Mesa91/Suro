@@ -64,20 +64,31 @@
     "step": {
       "init": {
         "title": "Opzioni di TaponBon",
-        "description": "Per leggere le etichette con l'intelligenza artificiale serve una chiave Gemini: la crei gratis su aistudio.google.com → Get API key.",
+        "description": "Chiave Gemini per leggere le etichette (gratis su aistudio.google.com), sensori della cantina con i limiti oltre i quali ricevere un avviso, e la stampante di etichette.",
         "data": {
           "gemini_api_key": "Chiave API Gemini",
-          "gemini_model": "Modello Gemini"
+          "gemini_model": "Modello Gemini",
+          "temperature_entity": "Sensore di temperatura della cantina",
+          "humidity_entity": "Sensore di umidità della cantina",
+          "temperature_min": "Temperatura minima",
+          "temperature_max": "Temperatura massima",
+          "humidity_min": "Umidità minima",
+          "humidity_max": "Umidità massima",
+          "printer_device": "Stampante di etichette (Niimbot)"
         },
         "data_description": {
-          "gemini_model": "Lascia gemini-flash-latest: usa sempre il modello Flash più recente."
+          "gemini_model": "Lascia gemini-flash-latest: usa sempre il modello Flash più recente.",
+          "temperature_min": "Per conservare il vino: 10–16 °C.",
+          "humidity_min": "Per conservare il vino: 60–80 %.",
+          "printer_device": "Facoltativo. Serve l'integrazione hass-niimbot; TaponBon stampa da solo le etichette."
         }
       }
     },
     "error": {
       "invalid_key": "La chiave non è valida.",
       "bad_model": "Questo modello non esiste.",
-      "cannot_connect": "Impossibile contattare Gemini: controlla la connessione."
+      "cannot_connect": "Impossibile contattare Gemini: controlla la connessione.",
+      "bad_range": "Il minimo deve essere più basso del massimo."
     }
   }
 }

@@ -8,7 +8,7 @@ import { BOTTLE_DEFS, bottleSvg } from "./bottle";
 interface Label {
   code: string;
   png_base64: string;
-  label_format: "qr" | "full";
+  label_format: "qr" | "qr30" | "full";
   width_mm: number;
   height_mm: number;
 }
@@ -89,8 +89,10 @@ export class BottleDialog extends LitElement {
   }
 
   private async _printOnPrinter() {
-    await this.card.ws({ type: "taponbon/request_label", bottle_id: this.bottle.id });
-    this.card.toast("Etichetta inviata alla stampante");
+    const res = await this.card.ws({ type: "taponbon/request_label", bottle_id: this.bottle.id });
+    this.card.toast(res.printed ? "Etichetta stampata" : this.data.printer
+      ? "Stampa non riuscita: guarda le notifiche di Home Assistant"
+      : "Richiesta inviata. Per stampare da solo, scegli la stampante nelle opzioni di TaponBon.");
   }
 
   private _printInBrowser() {
@@ -299,7 +301,8 @@ export class BottleDialog extends LitElement {
         background: rgba(255, 255, 255, 0.025);
         text-align: center;
       }
-      .label.qr {
+      .label.qr,
+      .label.qr30 {
         max-width: 140px;
         padding: 6px;
       }

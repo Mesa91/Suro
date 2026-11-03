@@ -64,20 +64,29 @@
     "step": {
       "init": {
         "title": "TaponBon options",
-        "description": "Reading labels with AI needs a Gemini API key (free at aistudio.google.com → Get API key).",
+        "description": "Gemini key for labels, cellar sensors with the limits that trigger an alert, and the label printer.",
         "data": {
           "gemini_api_key": "Gemini API key",
-          "gemini_model": "Gemini model"
+          "gemini_model": "Gemini model",
+          "temperature_entity": "Cellar temperature sensor",
+          "humidity_entity": "Cellar humidity sensor",
+          "temperature_min": "Minimum temperature",
+          "temperature_max": "Maximum temperature",
+          "humidity_min": "Minimum humidity",
+          "humidity_max": "Maximum humidity",
+          "printer_device": "Label printer (Niimbot)"
         },
         "data_description": {
-          "gemini_model": "Keep gemini-flash-latest: always the newest Flash model."
+          "gemini_model": "Keep gemini-flash-latest: always the newest Flash model.",
+          "printer_device": "Optional. Needs the hass-niimbot integration."
         }
       }
     },
     "error": {
       "invalid_key": "The key is not valid.",
       "bad_model": "This model does not exist.",
-      "cannot_connect": "Cannot reach Gemini."
+      "cannot_connect": "Cannot reach Gemini.",
+      "bad_range": "The minimum must be lower than the maximum."
     }
   }
 }

@@ -168,7 +168,7 @@ export class RacksDialog extends LitElement {
 
             <div class="section">Etichette</div>
             <div class="types" style="margin-bottom:12px">
-              ${[["qr", "Solo QR · 23 × 23 mm"], ["full", "QR e dati del vino · 50 × 30 mm"]].map(
+              ${[["qr", "Solo QR · 23 × 23 mm"], ["qr30", "Solo QR · 30 × 30 mm"], ["full", "QR e dati del vino · 50 × 30 mm"]].map(
                 ([fmt, label]) => html`<button class="chip ${s.label_format === fmt ? "active" : ""}"
                   @click=${() => this._setting("label_format", fmt)}>${label}</button>`,
               )}

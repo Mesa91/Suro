@@ -57,6 +57,8 @@ def _snapshot(hass: HomeAssistant) -> dict[str, Any]:
         "reasons": REMOVAL_REASONS,
         "history_count": len(store.history),
         "ai": bool(_gemini(hass)[0]),
+        "climate": core.climate_config(hass),
+        "printer": bool(core._options(hass).get("printer_device")),
     }
 
 
@@ -310,7 +312,7 @@ async def ws_take_code(hass, connection, msg) -> None:
     vol.Required("type"): "taponbon/update_settings",
     vol.Optional(CONF_AUTO_LABELS): bool,
     vol.Optional(CONF_ALERT_DAYS): vol.All(int, vol.Range(min=0, max=730)),
-    vol.Optional("label_format"): vol.In(list(labels.FORMATS)),
+    vol.Optional("label_format"): vol.In(list(labels.FORMATS)),  # "qr", "qr30", "full"
 })
 @websocket_api.async_response
 async def ws_update_settings(hass, connection, msg) -> None:

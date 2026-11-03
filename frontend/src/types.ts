@@ -49,11 +49,20 @@ export interface HistoryEntry extends Bottle {
 export interface Snapshot {
   racks: Rack[];
   bottles: Bottle[];
-  settings: { auto_labels: boolean; alert_days: number; label_format: "qr" | "full" };
+  settings: { auto_labels: boolean; alert_days: number; label_format: "qr" | "qr30" | "full" };
   types: Record<string, { label: string; color: string }>;
   reasons: Record<string, string>;
   history_count: number;
   ai: boolean;
+  printer: boolean;
+  climate: {
+    temperature_entity: string | null;
+    humidity_entity: string | null;
+    temperature_min: number;
+    temperature_max: number;
+    humidity_min: number;
+    humidity_max: number;
+  };
 }
 
 export interface CardConfig {

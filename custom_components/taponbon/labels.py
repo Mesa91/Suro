@@ -20,7 +20,7 @@ WIDTH, HEIGHT = 400, 240
 # Label formats: (width mm, height mm). "qr" is a small square with only the
 # QR (and the short code under it, in case the QR gets scuffed); "full" adds
 # name, vintage, type, producer and position.
-FORMATS = {"qr": (23, 23), "full": (50, 30)}
+FORMATS = {"qr": (23, 23), "qr30": (30, 30), "full": (50, 30)}
 DEFAULT_FORMAT = "qr"
 QR_PX = 272  # 23 mm at 300 dpi
 
@@ -130,7 +130,30 @@ def render_qr_only(code: str) -> bytes:
 
 
 def render(code: str, lines: list[str], fmt: str = DEFAULT_FORMAT) -> bytes:
-    return render_qr_only(code) if fmt == "qr" else render_png(code, lines)
+    return render_png(code, lines) if fmt == "full" else render_qr_only(code)
+
+
+def niimbot_payload(code: str, lines: list[str], fmt: str) -> dict:
+    """Data for the ``niimbot.print`` service (B1: 203 dpi, 8 dots per mm)."""
+    width_mm, height_mm = FORMATS.get(fmt, FORMATS["qr30"])
+    width, height = width_mm * 8, height_mm * 8
+    payload: list[dict] = []
+    if fmt == "full":
+        side = height - 40
+        payload.append({"type": "qrcode", "data": qr_payload_for(code), "x": 10, "y": 20, "width": side, "height": side})
+        x = side + 24
+        sizes = [26, 20, 20, 18]
+        y = 22
+        for i, text in enumerate(lines[:4]):
+            payload.append({"type": "text", "value": text[:24], "x": x, "y": y, "size": sizes[i]})
+            y += sizes[i] + 10
+        payload.append({"type": "text", "value": code, "x": x, "y": height - 30, "size": 16})
+    else:
+        side = height - 46
+        payload.append({"type": "qrcode", "data": qr_payload_for(code), "x": (width - side) // 2, "y": 8,
+                        "width": side, "height": side})
+        payload.append({"type": "text", "value": code, "x": width // 2 - len(code) * 5, "y": height - 34, "size": 18})
+    return {"payload": payload, "width": width, "height": height}
 
 
 def write_png(config_dir: str, code: str, lines: list[str], fmt: str = DEFAULT_FORMAT) -> str:

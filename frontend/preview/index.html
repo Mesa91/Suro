@@ -34,7 +34,9 @@
     const alertOf = (b) => { if (!b.drink_until) return null; const days = (new Date(b.drink_until, 11, 31) - new Date()) / 864e5;
       return days < 0 ? "past" : days <= db.settings.alert_days ? "closing" : null; };
     const snap = () => ({ racks: db.racks, bottles: db.bottles.map((b) => ({ ...b, alert: alertOf(b) })), settings: db.settings,
-      types, reasons, history_count: db.history.length, ai: true });
+      types, reasons, history_count: db.history.length, ai: true, printer: false,
+      climate: { temperature_entity: "sensor.cantina_temperatura", humidity_entity: "sensor.cantina_umidita",
+        temperature_min: 10, temperature_max: 16, humidity_min: 60, humidity_max: 80 } });
     const subs = [];
     const changed = () => subs.forEach((cb) => cb(snap()));
     const free = (rack) => { const t = new Set(db.bottles.filter((b) => b.rack_id === rack.id).map((b) => b.row + ":" + b.col));
@@ -73,6 +75,7 @@
     const card = document.querySelector("taponbon-card");
     card.setConfig({ type: "custom:taponbon-card" });
     card.hass = {
+      states: { "sensor.cantina_temperatura": { state: "17.4" }, "sensor.cantina_umidita": { state: "68" } },
       callWS: async (m) => { const h = handlers[m.type]; if (!h) throw new Error("mock: " + m.type); return JSON.parse(JSON.stringify(h(m))); },
       connection: { subscribeMessage: async (cb) => { subs.push(cb); setTimeout(() => cb(snap())); return () => {}; } },
     };

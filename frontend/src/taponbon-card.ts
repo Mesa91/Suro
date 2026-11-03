@@ -153,6 +153,7 @@ export class TaponBonCard extends LitElement {
             <div class="sub">${total} bottiglie · ${capacity - d.racks.reduce((s, r) => s + this._inRack(d, r).length, 0)} posti liberi</div>
           </div>
         </div>
+        ${this._renderClimate(d)}
         <div class="actions">
           <button class="btn primary" @click=${() => (this._dialog = { kind: "add", rackId: null, row: null, col: null })}>
             ＋ Aggiungi
@@ -206,6 +207,30 @@ export class TaponBonCard extends LitElement {
         : nothing}
       ${!d.racks.length ? html`<div class="empty">Nessuno scaffale: creane uno da ⚙︎.</div>` : nothing}
     `;
+  }
+
+  private _renderClimate(d: Snapshot) {
+    const c = d.climate;
+    if (!c || (!c.temperature_entity && !c.humidity_entity)) return nothing;
+    const chip = (entity: string | null, icon: string, unit: string, lo: number, hi: number, label: string) => {
+      if (!entity) return nothing;
+      const st = this.hass?.states?.[entity];
+      const value = st ? Number(st.state) : NaN;
+      const ok = !isNaN(value);
+      const status = !ok ? "na" : value < lo ? "low" : value > hi ? "high" : "ok";
+      const shown = ok ? value.toLocaleString("it-IT", { maximumFractionDigits: 1 }) : "—";
+      const hint = status === "ok" ? `${label} ideale (${lo}–${hi} ${unit})`
+        : status === "na" ? `${label} non disponibile`
+        : `${label} troppo ${status === "low" ? "bassa" : "alta"}: ideale ${lo}–${hi} ${unit}`;
+      return html`<button class="climate ${status}" title=${hint}
+        @click=${() => this.dispatchEvent(new CustomEvent("hass-more-info", { detail: { entityId: entity }, bubbles: true, composed: true }))}>
+        <span class="ci">${icon}</span><b>${shown}</b><span class="cu">${unit}</span>
+      </button>`;
+    };
+    return html`<div class="climates">
+      ${chip(c.temperature_entity, "🌡", "°C", c.temperature_min, c.temperature_max, "Temperatura")}
+      ${chip(c.humidity_entity, "💧", "%", c.humidity_min, c.humidity_max, "Umidità")}
+    </div>`;
   }
 
   private _inRack(d: Snapshot, rack: Rack) {
@@ -294,6 +319,48 @@ export class TaponBonCard extends LitElement {
       .muted {
         color: var(--secondary-text-color);
         font-size: 0.85em;
+      }
+      .climates {
+        display: flex;
+        gap: 6px;
+        margin-left: auto;
+        margin-right: 6px;
+      }
+      .climate {
+        display: inline-flex;
+        align-items: baseline;
+        gap: 4px;
+        padding: 7px 12px;
+        border-radius: 999px;
+        border: 1px solid var(--tb-line);
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--tb-ink, var(--primary-text-color));
+        font: inherit;
+        cursor: pointer;
+      }
+      .climate b {
+        font-size: 1.05em;
+        font-variant-numeric: tabular-nums;
+      }
+      .climate .cu,
+      .climate .ci {
+        font-size: 0.8em;
+        color: var(--tb-ink-2);
+      }
+      .climate.low,
+      .climate.high {
+        border-color: rgba(255, 160, 0, 0.6);
+        background: rgba(255, 160, 0, 0.12);
+      }
+      .climate.na {
+        opacity: 0.5;
+      }
+      @media (max-width: 599px) {
+        .climates {
+          margin-left: 0;
+          order: 3;
+          width: 100%;
+        }
       }
       .actions {
         display: flex;

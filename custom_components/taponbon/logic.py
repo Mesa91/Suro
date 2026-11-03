@@ -246,3 +246,18 @@ def label_lines(bottle: dict[str, Any], type_label: str, location: str) -> list[
     if location:
         lines.append(location)
     return lines
+
+
+# ── Cellar climate ────────────────────────────────────────────────────────────
+
+def climate_status(value: Any, low: float, high: float) -> str | None:
+    """"ok", "low", "high", or None when the reading is unavailable."""
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return None
+    if number < low:
+        return "low"
+    if number > high:
+        return "high"
+    return "ok"

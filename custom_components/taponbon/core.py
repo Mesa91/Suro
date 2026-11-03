@@ -179,14 +179,40 @@ def label_info(store: TaponBonStore, bottle: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _options(hass: HomeAssistant) -> dict[str, Any]:
+    entries = hass.config_entries.async_entries(DOMAIN)
+    return dict(entries[0].options) if entries else {}
+
+
 async def async_request_label(hass: HomeAssistant, bottle: dict[str, Any], reason: str) -> dict[str, Any]:
-    """Fire the event a printer automation listens to (with a ready PNG)."""
+    """Print the label on the configured printer, and fire the event for automations."""
+    from .const import CONF_PRINTER_DEVICE
+
     store = get_store(hass)
     info = label_info(store, bottle)
     info["label_path"] = await hass.async_add_executor_job(
         labels.write_png, hass.config.config_dir, bottle["code"], info["lines"], info["label_format"]
     )
     hass.bus.async_fire(EVENT_LABEL_REQUESTED, {**info, "reason": reason})
+
+    device = _options(hass).get(CONF_PRINTER_DEVICE)
+    info["printed"] = False
+    if device:
+        if not hass.services.has_service("niimbot", "print"):
+            _notify(hass, "La stampante è impostata ma l'integrazione Niimbot non è attiva.",
+                    "TaponBon: stampa", f"{DOMAIN}_print")
+        else:
+            try:
+                await hass.services.async_call(
+                    "niimbot", "print",
+                    labels.niimbot_payload(bottle["code"], info["lines"], info["label_format"]),
+                    target={"device_id": device}, blocking=True,
+                )
+                info["printed"] = True
+            except Exception as err:
+                _notify(hass, f"Non sono riuscito a stampare l'etichetta di **{wine_title(bottle)}**: {err}. "
+                        "Controlla che la stampante sia accesa e raggiungibile.",
+                        "TaponBon: stampa", f"{DOMAIN}_print")
     return info
 
 
@@ -255,3 +281,97 @@ def async_setup_daily_alerts(hass: HomeAssistant):
             _LOGGER.warning("Controllo finestre di beva non riuscito: %s", err)
 
     return async_track_time_change(hass, _daily, hour=ALERT_HOUR, minute=0, second=0)
+
+
+# ── Cellar climate ────────────────────────────────────────────────────────────
+
+def climate_config(hass: HomeAssistant) -> dict[str, Any]:
+    from .const import (
+        CONF_HUM_ENTITY, CONF_HUM_MAX, CONF_HUM_MIN, CONF_TEMP_ENTITY, CONF_TEMP_MAX, CONF_TEMP_MIN,
+        DEFAULT_HUM_MAX, DEFAULT_HUM_MIN, DEFAULT_TEMP_MAX, DEFAULT_TEMP_MIN,
+    )
+
+    o = _options(hass)
+    return {
+        "temperature_entity": o.get(CONF_TEMP_ENTITY) or None,
+        "humidity_entity": o.get(CONF_HUM_ENTITY) or None,
+        "temperature_min": float(o.get(CONF_TEMP_MIN, DEFAULT_TEMP_MIN)),
+        "temperature_max": float(o.get(CONF_TEMP_MAX, DEFAULT_TEMP_MAX)),
+        "humidity_min": float(o.get(CONF_HUM_MIN, DEFAULT_HUM_MIN)),
+        "humidity_max": float(o.get(CONF_HUM_MAX, DEFAULT_HUM_MAX)),
+    }
+
+
+@callback
+def async_setup_climate_monitor(hass: HomeAssistant):
+    """Alert when temperature or humidity stays out of range for a while."""
+    from datetime import timedelta
+
+    from homeassistant.helpers.event import async_call_later, async_track_state_change_event
+
+    from .const import CLIMATE_GRACE_MINUTES, EVENT_CLIMATE_ALERT
+    from .logic import climate_status
+
+    cfg = climate_config(hass)
+    watched = {
+        "temperatura": (cfg["temperature_entity"], cfg["temperature_min"], cfg["temperature_max"], "°C"),
+        "umidità": (cfg["humidity_entity"], cfg["humidity_min"], cfg["humidity_max"], "%"),
+    }
+    watched = {k: v for k, v in watched.items() if v[0]}
+    if not watched:
+        return lambda: None
+    pending: dict[str, Any] = {}
+    alerted: set[str] = set()
+
+    def _evaluate(name: str) -> None:
+        entity, low, high, unit = watched[name]
+        state = hass.states.get(entity)
+        status = climate_status(state.state if state else None, low, high)
+        if status in ("low", "high"):
+            if name in alerted or name in pending:
+                return
+
+            @callback
+            def _fire(_now: Any, name: str = name) -> None:
+                pending.pop(name, None)
+                current = hass.states.get(watched[name][0])
+                now_status = climate_status(current.state if current else None, low, high)
+                if now_status not in ("low", "high"):
+                    return
+                alerted.add(name)
+                word = "bassa" if now_status == "low" else "alta"
+                message = (f"In cantina la {name} è troppo {word}: {current.state} {unit} "
+                           f"(ideale {low:g}–{high:g} {unit}).")
+                _notify(hass, message, "TaponBon: clima della cantina", f"{DOMAIN}_climate_{name}")
+                hass.bus.async_fire(EVENT_CLIMATE_ALERT, {
+                    "measure": name, "status": now_status, "value": current.state, "unit": unit,
+                    "min": low, "max": high, "message": message,
+                })
+
+            pending[name] = async_call_later(hass, timedelta(minutes=CLIMATE_GRACE_MINUTES), _fire)
+        else:
+            cancel = pending.pop(name, None)
+            if cancel:
+                cancel()
+            if name in alerted and status == "ok":
+                alerted.discard(name)
+                persistent_notification.async_dismiss(hass, f"{DOMAIN}_climate_{name}")
+                hass.bus.async_fire(EVENT_CLIMATE_ALERT, {"measure": name, "status": "ok", "unit": unit,
+                                                          "min": low, "max": high, "message": f"La {name} è tornata normale."})
+
+    @callback
+    def _changed(event: Event) -> None:
+        for name, (entity, *_rest) in watched.items():
+            if entity == event.data.get("entity_id"):
+                _evaluate(name)
+
+    unsub = async_track_state_change_event(hass, [v[0] for v in watched.values()], _changed)
+    for name in watched:
+        _evaluate(name)
+
+    def _stop() -> None:
+        unsub()
+        for cancel in pending.values():
+            cancel()
+
+    return _stop

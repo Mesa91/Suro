@@ -63,3 +63,21 @@ def test_qr_only_label_is_square_and_decodable_size():
     png = labels.render("k7m2xq9p", [], "qr")
     assert Image.open(io.BytesIO(png)).size == (labels.QR_PX, labels.QR_PX)
     assert labels.render("k7m2xq9p", ["A"], "full") != png
+
+
+def test_climate_status():
+    assert lg.climate_status("12.5", 10, 16) == "ok"
+    assert lg.climate_status(8, 10, 16) == "low"
+    assert lg.climate_status("17", 10, 16) == "high"
+    assert lg.climate_status("unavailable", 10, 16) is None
+    assert lg.climate_status(None, 10, 16) is None
+
+
+def test_niimbot_payload_sizes():
+    p = labels.niimbot_payload("k7m2xq9p", ["Barolo"], "qr30")
+    assert (p["width"], p["height"]) == (240, 240)
+    qr = p["payload"][0]
+    assert qr["type"] == "qrcode" and qr["data"].endswith("taponbon-k7m2xq9p")
+    assert qr["x"] + qr["width"] <= 240 and qr["y"] + qr["height"] <= 240
+    full = labels.niimbot_payload("k7m2xq9p", ["Barolo", "2016 · Rosso", "Brezza", "Scaffale"], "full")
+    assert (full["width"], full["height"]) == (400, 240) and len(full["payload"]) == 6

@@ -20,6 +20,8 @@ quando un vino va bevuto.
 - **Etichette lette con l'AI** (Gemini, chiave gratuita): fotografi l'etichetta e
   si compilano nome, produttore, annata, tipo, zona, vitigno, finestra di beva,
   descrizione e abbinamenti; oppure scrivi il nome e "Completa dal nome".
+- **Clima della cantina**: temperatura e umidità in testa alla card, con un
+  avviso se restano fuori dai limiti (predefiniti 10–16 °C, 60–80 %) per 30 minuti.
 - **Storico** di bottiglie bevute, regalate, rotte… con "Rimetti" per gli errori.
 
 ## Installazione (HACS)
@@ -49,30 +51,18 @@ quando un vino va bevuto.
 | evento `taponbon_label_requested` | per la stampante: `qr_payload`, `name`, `vintage`, `type_label`, `producer`, `location`, `lines`, `label_path` |
 | evento `taponbon_bottle_taken` | bottiglia prelevata: `name`, `vintage`, `location`, `remaining` |
 | evento `taponbon_drink_alert` | `closing`, `past`, `message` |
+| evento `taponbon_climate_alert` | `measure`, `status` (`low`/`high`/`ok`), `value`, `message` |
 
-### Stampante Niimbot (integrazione `hass-niimbot`)
+### Stampante Niimbot
 
-```yaml
-alias: TaponBon - stampa etichetta
-triggers:
-  - trigger: event
-    event_type: taponbon_label_requested
-actions:
-  - action: niimbot.print
-    target:
-      device_id: <la tua stampante>
-    data:
-      width: 400
-      height: 240
-      payload:
-        - {type: qrcode, data: "{{ trigger.event.data.qr_payload }}", x: 10, y: 30, width: 170, height: 170}
-        - {type: text, value: "{{ trigger.event.data.name[:22] }}", x: 192, y: 24, size: 26}
-        - {type: text, value: "{{ trigger.event.data.vintage }} · {{ trigger.event.data.type_label }}", x: 192, y: 70, size: 20}
-        - {type: text, value: "{{ trigger.event.data.producer[:24] }}", x: 192, y: 100, size: 20}
-        - {type: text, value: "{{ trigger.event.data.location }}", x: 192, y: 130, size: 18}
-        - {type: text, value: "{{ trigger.event.data.code }}", x: 192, y: 205, size: 16}
-mode: queued
-```
+Con l'integrazione [`hass-niimbot`](https://github.com/eigger/hass-niimbot) installata,
+scegli la stampante in **Configura → Stampante di etichette**: TaponBon stampa da
+solo l'etichetta di ogni bottiglia aggiunta (e dal pulsante 🖨️ della scheda),
+nel formato scelto in ⚙︎ → Etichette (consigliato *Solo QR · 30 × 30 mm* con
+rotoli 30 × 30).
+
+Per altre stampanti c'è sempre l'evento `taponbon_label_requested`, con
+`qr_payload`, `lines` e `label_path` (PNG pronto).
 
 ### Notifica sul telefono quando prelevi una bottiglia
 

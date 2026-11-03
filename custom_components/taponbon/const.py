@@ -8,7 +8,7 @@ STORAGE_VERSION = 1
 
 # Card: served from the integration folder and loaded on every dashboard.
 CARD_URL = "/taponbon/taponbon-card.js"
-CARD_VERSION = "20261103a"  # bump with every frontend build to bust the cache
+CARD_VERSION = "20261103c"  # bump with every frontend build to bust the cache
 
 # Wine types: key -> (Italian label, colour used on the rack).
 WINE_TYPES: dict[str, tuple[str, str]] = {
@@ -52,3 +52,19 @@ SCAN_DEBOUNCE_SECONDS = 15
 # Options (config entry): Gemini.
 CONF_GEMINI_KEY = "gemini_api_key"
 CONF_GEMINI_MODEL = "gemini_model"
+
+# Options: cellar climate.
+CONF_TEMP_ENTITY = "temperature_entity"
+CONF_HUM_ENTITY = "humidity_entity"
+CONF_TEMP_MIN = "temperature_min"
+CONF_TEMP_MAX = "temperature_max"
+CONF_HUM_MIN = "humidity_min"
+CONF_HUM_MAX = "humidity_max"
+# A good cellar: 10-16 °C, 60-80 % (outside these for a while -> alert).
+DEFAULT_TEMP_MIN, DEFAULT_TEMP_MAX = 10.0, 16.0
+DEFAULT_HUM_MIN, DEFAULT_HUM_MAX = 60.0, 80.0
+CLIMATE_GRACE_MINUTES = 30  # out of range this long before alerting
+EVENT_CLIMATE_ALERT = f"{DOMAIN}_climate_alert"
+
+# Options: label printer (Niimbot via the hass-niimbot integration).
+CONF_PRINTER_DEVICE = "printer_device"
