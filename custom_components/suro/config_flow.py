@@ -1,4 +1,4 @@
-"""Config flow: one TaponBon per Home Assistant; options hold the Gemini key."""
+"""Config flow: one Suro per Home Assistant; options hold the Gemini key."""
 
 from __future__ import annotations
 
@@ -11,6 +11,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
+from . import migrate
 from .ai import DEFAULT_MODEL, async_check_key
 from .const import (
     CONF_GEMINI_KEY,
@@ -31,23 +32,25 @@ from .const import (
 )
 
 
-class TaponBonConfigFlow(ConfigFlow, domain=DOMAIN):
+class SuroConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     async def async_step_user(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         await self.async_set_unique_id(DOMAIN)
         self._abort_if_unique_id_configured()
         if user_input is not None:
-            return self.async_create_entry(title=NAME, data={})
+            old = migrate.old_entry(self.hass)
+            # Bring over the Gemini key, climate sensors and printer.
+            return self.async_create_entry(title=NAME, data={}, options=dict(old.options) if old else {})
         return self.async_show_form(step_id="user")
 
     @staticmethod
     @callback
     def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
-        return TaponBonOptionsFlow()
+        return SuroOptionsFlow()
 
 
-class TaponBonOptionsFlow(OptionsFlow):
+class SuroOptionsFlow(OptionsFlow):
     async def async_step_init(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         errors: dict[str, str] = {}
         current = dict(self.config_entry.options)

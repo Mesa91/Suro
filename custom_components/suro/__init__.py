@@ -1,4 +1,4 @@
-"""TaponBon: la cantina dei vini in Home Assistant."""
+"""Suro: la cantina dei vini in Home Assistant."""
 
 from __future__ import annotations
 
@@ -15,9 +15,9 @@ from homeassistant.core import CoreState, Event, HomeAssistant, ServiceCall, Ser
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 
-from . import core, websocket
+from . import core, migrate, websocket
 from .const import CARD_URL, CARD_VERSION, DOMAIN
-from .store import TaponBonStore
+from .store import SuroStore
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,7 +27,7 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     """Serve the card and load it on every dashboard (once per HA start)."""
-    card = Path(__file__).parent / "frontend" / "taponbon-card.js"
+    card = Path(__file__).parent / "frontend" / "suro-card.js"
     await hass.http.async_register_static_paths([StaticPathConfig(CARD_URL, str(card), False)])
     websocket.async_register(hass)
 
@@ -83,9 +83,19 @@ async def _async_register_resource(hass: HomeAssistant) -> bool:
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    store = TaponBonStore(hass)
+    store = SuroStore(hass)
     await store.async_load()
     hass.data.setdefault(DOMAIN, {})["store"] = store
+    if store.imported:
+        await store.async_save()
+
+    async def _migrate(_event: Event | None = None) -> None:
+        await migrate.async_migrate(hass, store.imported)
+
+    if hass.state is CoreState.running:
+        hass.async_create_task(_migrate())
+    else:
+        entry.async_on_unload(hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _migrate))
 
     _register_services(hass)
     entry.async_on_unload(core.async_setup_tag_listener(hass))
@@ -115,13 +125,13 @@ def _register_services(hass: HomeAssistant) -> None:
     def _require_store():
         store = core.get_store(hass)
         if store is None:
-            raise HomeAssistantError("TaponBon non è configurato")
+            raise HomeAssistantError("Suro non è configurato")
         return store
 
     async def take_bottle(call: ServiceCall) -> ServiceResponse:
         result = await core.async_take_scanned(hass, call.data["code"], source="service")
         if result["result"] == "not_ours":
-            raise HomeAssistantError(f"Non è un codice TaponBon: {call.data['code']}")
+            raise HomeAssistantError(f"Non è un codice Suro: {call.data['code']}")
         if not call.return_response:
             return None
         bottle = result.get("bottle") or {}

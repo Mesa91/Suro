@@ -1,12 +1,12 @@
 import asyncio
 
 from conftest import FakeStore
-from tb.store import TaponBonStore
+from tb.store import SuroStore
 
 
-def load(disk):
-    FakeStore.disk, FakeStore.saves = disk, 0
-    st = TaponBonStore(None)
+def load(disk, old=None):
+    FakeStore.disk, FakeStore.old, FakeStore.saves = disk, old, 0
+    st = SuroStore(None)
     asyncio.run(st.async_load())
     return st
 
@@ -163,3 +163,15 @@ def test_open_bottle_leaves_slot_and_inventory():
     entry = st.remove_bottle(a["id"], "drank", 4)
     back = st.restore(entry["history_id"])
     assert "opened_at" not in back
+
+
+def test_first_start_imports_the_old_taponbon_data():
+    old = {"racks": [{"id": "rack-a", "rows": 1, "cols": 3, "order": 0}],
+           "bottles": [{"id": "b1", "code": "k7m2xq9p", "name": "Barolo", "rack_id": "rack-a", "row": 0, "col": 0}],
+           "history": [], "settings": {"label_format": "50x30"}}
+    st = load(None, old)
+    assert st.imported and st.get_by_code("k7m2xq9p")["name"] == "Barolo"
+    assert st.settings == {"label_format": "50x30"} and st.wishlist == []
+    # once Suro has its own data, the old file is ignored
+    st = load({"racks": [], "bottles": [], "history": [], "settings": {}}, old)
+    assert not st.imported and st.bottles == []

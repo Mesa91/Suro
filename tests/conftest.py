@@ -6,18 +6,19 @@ import pathlib
 import sys
 import types
 
-ROOT = pathlib.Path(__file__).resolve().parents[1] / "custom_components" / "taponbon"
+ROOT = pathlib.Path(__file__).resolve().parents[1] / "custom_components" / "suro"
 
 
 class FakeStore:
     disk = None
+    old = None  # what the integration saved under its old name
     saves = 0
 
-    def __init__(self, *args, **kwargs):
-        pass
+    def __init__(self, hass=None, version=1, key="suro", **kwargs):
+        self.key = key
 
     async def async_load(self):
-        return copy.deepcopy(FakeStore.disk)
+        return copy.deepcopy(FakeStore.disk if self.key == "suro" else FakeStore.old)
 
     async def async_save(self, data):
         FakeStore.disk = copy.deepcopy(data)
@@ -35,11 +36,13 @@ _stub("homeassistant")
 _stub("homeassistant.core", HomeAssistant=object)
 _stub("homeassistant.helpers")
 _stub("homeassistant.helpers.storage", Store=FakeStore)
+_stub("homeassistant.components", persistent_notification=types.SimpleNamespace())
+_stub("homeassistant.config_entries", ConfigEntry=object, ConfigEntryDisabler=types.SimpleNamespace(USER="user"))
 
 pkg = types.ModuleType("tb")
 pkg.__path__ = [str(ROOT)]
 sys.modules["tb"] = pkg
-for name in ("const", "logic", "labels", "store", "ai"):
+for name in ("const", "logic", "labels", "migrate", "store", "ai"):
     spec = importlib.util.spec_from_file_location(f"tb.{name}", ROOT / f"{name}.py")
     mod = importlib.util.module_from_spec(spec)
     sys.modules[f"tb.{name}"] = mod
